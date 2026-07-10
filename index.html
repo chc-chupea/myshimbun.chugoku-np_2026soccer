@@ -1,0 +1,3891 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>中国新聞 My新聞づくり</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 14px;
+  background: #eee8dc;
+  color: #111;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif;
+}
+h1 { text-align: center; font-size: 24px; margin: 12px 0 6px; }
+.lead {
+  max-width: 620px;
+  margin: 0 auto 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: center;
+}
+.step, .editPanel, .controlPanel {
+  display: none;
+  max-width: 620px;
+  margin: 14px auto;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.16);
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+.step.active { display: block; }
+.step h2, .editPanel h2, .controlPanel h2 { margin: 0 0 8px; font-size: 21px; }
+.step p { font-size: 15px; line-height: 1.7; }
+.hint, .miniHelp {
+  background: #fff8d8;
+  border-left: 5px solid #e7a900;
+  padding: 10px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.miniHelp {
+  background: #eef7ff;
+  border-left-color: #2a8fd6;
+}
+input, textarea, button {
+  width: 100%;
+  font-size: 16px;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+input, textarea { border: 1px solid #bbb; background: #fff; }
+textarea { height: 150px; line-height: 1.7; }
+#sublogoInput, #editSublogo {
+  height: 76px;
+  resize: vertical;
+  line-height: 1.5;
+}
+button { border: none; background: #111; color: #fff; font-weight: bold; cursor: pointer; }
+.backBtn { background: #777; }
+
+.editSection {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-top: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.editSection summary {
+  cursor: pointer;
+  padding: 13px 14px;
+  font-size: 17px;
+  font-weight: 900;
+  background: #f4f4f4;
+  list-style: none;
+  position: relative;
+}
+
+.editSection summary::-webkit-details-marker {
+  display: none;
+}
+
+.editSection summary::after {
+  content: "＋";
+  position: absolute;
+  right: 14px;
+  font-weight: 900;
+}
+
+.editSection[open] summary::after {
+  content: "－";
+}
+
+.editSection > label,
+.editSection > input,
+.editSection > textarea,
+.editSection > .countLine,
+.editSection > .sublogoCount,
+.editSection > .miniHelp,
+.editSection > .controlGrid,
+.editSection > button {
+  width: calc(100% - 24px);
+  margin-left: 12px;
+  margin-right: 12px;
+}
+
+.editSection > label {
+  margin-top: 12px;
+}
+
+.editSection > button:last-child,
+.editSection > .countLine:last-child,
+.editSection > .sublogoCount:last-child {
+  margin-bottom: 12px;
+}
+
+.editPanel label { display: block; margin-top: 12px; font-weight: bold; font-size: 14px; }
+.countLine, .sublogoCount { font-size: 12px; color: #555; margin-top: 4px; line-height: 1.5; }
+.warn { color: #c00000; font-weight: bold; }
+.strongWarn {
+  color: #fff;
+  background: #c00000;
+  font-weight: bold;
+  padding: 4px 6px;
+  border-radius: 5px;
+  display: inline-block;
+}
+.editButtons, .controlGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.controlGrid { grid-template-columns: repeat(4, 1fr); }
+.editButtons button, .controlGrid button { margin-top: 10px; padding: 10px 4px; font-size: 14px; }
+
+#newspaperWrap { display: none; overflow-x: auto; padding: 8px 0 18px; }
+#newspaper {
+  width: 595px;
+  margin: 12px auto;
+  background: #fff;
+  border: 2px solid #222;
+  padding: 7px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+}
+.topline {
+  height: 20px;
+  font-size: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.4fr;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #222;
+  letter-spacing: 0.03em;
+}
+.paper-grid { display: grid; grid-template-columns: 1fr 112px; gap: 8px; }
+.main { padding-top: 5px; }
+.headline {
+  background: #3a2a4d;
+  color: #fff;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 39px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+  padding: 7px 6px 8px;
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+.photoFrame {
+  width: 100%;
+  height: 305px;
+  border: 1px solid #222;
+  background: #ddd;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.photoFrame:active { cursor: grabbing; }
+#previewPhoto {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: auto;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+.photoGuide {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(255,255,255,0.82);
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 4px;
+  border-radius: 5px;
+  pointer-events: none;
+}
+.caption { font-weight: bold; text-align: center; font-size: 15px; margin: 5px 0 4px; }
+.articleBox {
+  border-top: 1px solid #222;
+  padding-top: 8px;
+  width: 100%;
+}
+.article {
+  width: 100%;
+  height: 230px;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+
+
+
+
+
+
+
+
+
+#articleCanvas {
+  width: 100%;
+  height: 230px;
+  display: block;
+  background: #fff;
+}
+
+
+
+
+.side { border-left: 1px solid #222; padding: 5px 0 0 7px; text-align: center; }
+.logoImage { width: 100%; display: block; border: 2px solid #222; background: #fff; }
+.sublogo {
+  margin: 8px 0;
+  padding: 4px 2px;
+  border: 3px solid #d40000;
+  border-radius: 7px;
+  color: #d40000;
+  background: #fff;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: clamp(11px, 2.8vw, 18px);
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.sublogoInner {
+  display: block;
+  max-width: 100%;
+  transform-origin: center center;
+  white-space: normal;
+}
+.dateBox {
+  color: #0096c7;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 8px 0 6px;
+}
+.infoBox {
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+  padding: 6px 1px;
+  font-size: 9px;
+  line-height: 1.35;
+  text-align: left;
+}
+.reporterBox { font-size: 11px; font-weight: bold; margin-top: 4px; }
+.sideAd {
+  margin-top: 8px;
+  border: 1px solid #222;
+  min-height: 92px;
+  padding: 7px 3px;
+  background: #f7f7f7;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+.qrDummy {
+  width: 48px;
+  height: 48px;
+  margin: 7px auto 0;
+  background:
+    linear-gradient(90deg, #111 2px, transparent 2px) 0 0 / 8px 8px,
+    linear-gradient(#111 2px, transparent 2px) 0 0 / 8px 8px,
+    #fff;
+  border: 2px solid #111;
+}
+
+.previewEditNotice {
+  display: none;
+  max-width: 620px;
+  margin: 0 auto 10px;
+  padding: 10px;
+  background: #fff3cd;
+  color: #c00000;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.6;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+
+#workspace {
+  display: none;
+  max-width: 1180px;
+  margin: 12px auto 28px;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+#editorColumn {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+#previewColumn {
+  flex: 0 0 650px;
+  position: sticky;
+  top: 10px;
+  align-self: flex-start;
+  z-index: 5;
+}
+
+#workspace #newspaperWrap {
+  display: block;
+  overflow-x: auto;
+  padding: 0 0 10px;
+}
+
+#workspace #editPanel,
+#workspace #saveArea {
+  max-width: none;
+  margin: 0 0 12px;
+}
+
+#workspace #saveArea {
+  display: block;
+}
+
+.focusFlash {
+  outline: 4px solid #ff2b2b !important;
+  outline-offset: 3px;
+  animation: focusBlink 0.9s ease-in-out infinite;
+  position: relative;
+  z-index: 3;
+}
+
+@keyframes focusBlink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,43,43,0.25); }
+  50% { box-shadow: 0 0 0 8px rgba(255,43,43,0.18); }
+}
+
+#articleCanvas.focusFlash {
+  outline-offset: -2px;
+}
+
+@media (min-width: 901px) {
+  #workspace {
+    display: none;
+    flex-direction: row;
+  }
+
+  #previewColumn #newspaper {
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  #workspace {
+    display: none;
+    flex-direction: column;
+    margin: 0 auto 22px;
+  }
+
+  #previewColumn {
+    width: 100%;
+    flex: none;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #eee8dc;
+    padding: 6px 0 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  }
+
+  #previewColumn #newspaperWrap {
+    max-height: 42vh;
+    overflow: auto;
+    padding: 0;
+  }
+
+  #previewColumn #newspaper {
+    transform: scale(0.58);
+    transform-origin: top center;
+    margin: 0 auto;
+  }
+
+  #editorColumn {
+    width: 100%;
+  }
+
+  #workspace #editPanel {
+    margin-top: 10px;
+  }
+
+  .previewEditNotice {
+    display: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  #previewColumn #newspaper {
+    transform: scale(0.53);
+  }
+
+  #previewColumn #newspaperWrap {
+    max-height: 39vh;
+  }
+}
+
+#saveArea { display: none; max-width: 620px; margin: 12px auto 24px; text-align: center; }
+.notice {
+  color: #c00000;
+  font-weight: bold;
+  background: #fff3cd;
+  padding: 11px;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+@media (max-width: 640px) {
+  body { padding: 10px; }
+  #newspaper { transform-origin: top center; width: 595px; }
+  .lead { text-align: left; }
+}
+
+#newspaper canvas,
+#newspaper img {
+  image-rendering: high-quality;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+#articleCanvas {
+  text-rendering: geometricPrecision;
+}
+
+
+#articleCanvas {
+  image-rendering: auto;
+}
+
+
+.bottomAd {
+  margin-top: 9px;
+  border: 2px solid #ef8f2f;
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  min-height: 66px;
+  background: #fff;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  overflow: hidden;
+}
+
+.bottomAdLabel {
+  background: #ef8f2f;
+  color: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 2px;
+}
+
+.bottomAdText {
+  background: #fff;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7px 10px;
+  min-width: 0;
+}
+
+.bottomAdMain {
+  font-weight: 900;
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bottomAdSub {
+  margin-top: 3px;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+#photoStatus {
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+/* ===== ボタン配置改善 ===== */
+.stepButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.stepButtons .nextBtn {
+  order: 1;
+}
+
+.stepButtons .backBtn {
+  order: 2;
+}
+
+.stepButtons button {
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .stepButtons button {
+    max-width: 320px;
+  }
+}
+
+
+/* ===== 画像保存ボタン非表示 ===== */
+.imageSaveBtn {
+  display: none !important;
+}
+
+
+/* ===== 企画タイトル ===== */
+.eventTitle {
+  margin: 18px 0 22px;
+  padding: 14px 18px;
+  background: linear-gradient(90deg, #f07d21 0%, #ffb36c 100%);
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(20px, 4vw, 30px);
+  line-height: 1.4;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  letter-spacing: 0.03em;
+}
+
+.eventTitle small {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.62em;
+  font-weight: 700;
+  opacity: 0.95;
+}
+
+@media (max-width: 640px) {
+  .eventTitle {
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+}
+
+
+.lead {
+  margin-top: -6px;
+  margin-bottom: 22px;
+  text-align: center;
+  line-height: 1.9;
+}
+
+
+/* ===== 記事canvas高解像度表示 ===== */
+#articleCanvas {
+  image-rendering: auto !important;
+  text-rendering: geometricPrecision;
+  transform: translateZ(0);
+}
+
+#newspaper canvas {
+  image-rendering: auto !important;
+}
+
+
+/* ===== 超高解像度記事canvas ===== */
+#articleCanvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+}
+
+canvas {
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* ===== 編集画面：写真選び直し ===== */
+.photoEditButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: calc(100% - 24px);
+  margin: 12px;
+}
+
+.photoEditButtons button {
+  margin-top: 0;
+  font-size: 14px;
+  padding: 10px 6px;
+}
+
+.photoEditButtons .deletePhotoBtn {
+  background: #777;
+}
+
+.photoEditStatus {
+  width: calc(100% - 24px);
+  margin: 0 12px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #555;
+}
+
+
+/* ===== 写真選び直しボタン：単独表示 ===== */
+.photoEditButtons {
+  display: block !important;
+  grid-template-columns: none !important;
+}
+
+.photoEditButtons button {
+  width: 100% !important;
+  margin-top: 0 !important;
+  background: #111;
+}
+
+.deletePhotoBtn {
+  display: none !important;
+}
+
+
+/* ===== 完成版固定：記事欄大型化・長押し移動・文字量警告 ===== */
+.article {
+  height: 230px !important;
+}
+
+#articleCanvas {
+  height: 230px !important;
+}
+
+.bottomAd {
+  margin-top: 10px !important;
+  min-height: 62px;
+}
+
+.articleLengthNotice {
+  width: calc(100% - 24px);
+  margin: 8px 12px 12px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #eef7ff;
+  border-left: 5px solid #2a8fd6;
+  color: #333;
+  font-size: 13px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.articleLengthNotice.warn {
+  background: #fff3cd;
+  border-left-color: #e7a900;
+  color: #7a5200;
+}
+
+.articleLengthNotice.danger {
+  background: #ffe4e4;
+  border-left-color: #c00000;
+  color: #c00000;
+}
+
+.controlGrid button,
+.photoEditButtons button {
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.controlGrid button:active {
+  transform: scale(0.97);
+  opacity: 0.82;
+}
+
+#newspaper {
+  overflow: hidden !important;
+}
+
+.paper-grid {
+  grid-template-columns: minmax(0, 1fr) 112px !important;
+  overflow: hidden !important;
+}
+
+.main {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.side {
+  width: 112px !important;
+  min-width: 112px !important;
+  max-width: 112px !important;
+  overflow: hidden !important;
+}
+
+.articleBox,
+.article,
+#articleCanvas {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+
+/* ===== 記事ヒント重複防止 ===== */
+.articleLengthNotice.warn,
+.articleLengthNotice.danger {
+  display: none !important;
+}
+
+
+/* ===== STEP1：2歳お誕生日お祝いテーマ ===== */
+body {
+  background: linear-gradient(180deg, #fff2f7 0%, #fff9e8 55%, #eef9ff 100%) !important;
+}
+
+.step,
+.editPanel,
+.controlPanel {
+  background: #fffdf9 !important;
+  border: 1px solid #f7d7e5;
+  box-shadow: 0 4px 14px rgba(214, 133, 166, 0.18) !important;
+}
+
+.eventTitle {
+  background: linear-gradient(90deg, #f6a7c8 0%, #ffd8a8 55%, #bde9ff 100%) !important;
+  color: #7a3b52 !important;
+}
+
+.hint,
+.miniHelp {
+  background: #fff7e8 !important;
+  border-left-color: #f6a7c8 !important;
+}
+
+button {
+  background: #d96b9f !important;
+}
+
+.backBtn {
+  background: #8bbbd3 !important;
+}
+
+.headline {
+  background-color: var(--headline-bg-color, #f49ac1) !important;
+  color: var(--headline-text-color, #ffffff) !important;
+}
+
+.sublogo {
+  border-color: #f49ac1 !important;
+  color: #d94b8c !important;
+  background: #fff9fc !important;
+}
+
+.dateBox {
+  color: #5aaed6 !important;
+}
+
+.bottomAd {
+  border-color: #f6a7c8 !important;
+}
+
+.bottomAdLabel {
+  background: #f6a7c8 !important;
+  color: #fff !important;
+}
+
+.bottomAdText {
+  background: #fffdf9 !important;
+}
+
+.sideAd {
+  background: #fff7fc !important;
+  border-color: #f6a7c8 !important;
+}
+
+
+/* ===== STEP2：見出しデザイン選択 ===== */
+.headlineDesignBox {
+  width: calc(100% - 24px);
+  margin: 12px;
+  padding: 12px;
+  background: #fff7fb;
+  border-left: 5px solid #f49ac1;
+  border-radius: 10px;
+}
+
+.headlineDesignBox h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.headlineDesignBox label {
+  margin-top: 10px !important;
+}
+
+.headlineColorPicker {
+  width: 100%;
+  height: 46px;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+.fontChoiceGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.fontChoice {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #f1c8dc;
+  border-radius: 10px;
+  background: #fff;
+  color: #6f3a4f;
+  text-align: center;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.fontChoice input {
+  width: auto;
+  margin: 0 8px 0 0;
+}
+
+.fontChoice.checked {
+  border-color: #d96b9f;
+  background: #fff0f7;
+}
+
+.fontPrincess {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif !important;
+  letter-spacing: 0.05em;
+}
+
+.fontMaru {
+  font-family: "Yu Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif !important;
+  border-radius: 12px;
+}
+
+.fontPop {
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif !important;
+  letter-spacing: 0.08em;
+  transform: rotate(-0.3deg);
+}
+
+.fontCute {
+  font-family: "Comic Sans MS", "Yu Gothic", "Hiragino Sans", sans-serif !important;
+  letter-spacing: 0.03em;
+}
+
+.fontClassic {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif !important;
+}
+
+.headline.fontPrincess {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif !important;
+}
+
+.headline.fontMaru {
+  font-family: "Yu Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif !important;
+}
+
+.headline.fontPop {
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif !important;
+  letter-spacing: 0.09em;
+}
+
+.headline.fontCute {
+  font-family: "Comic Sans MS", "Yu Gothic", "Hiragino Sans", sans-serif !important;
+}
+
+.headline.fontClassic {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif !important;
+}
+
+
+/* ===== STEP2-2：フォント名と表示フォルムを一致させる ===== */
+
+/* 選択肢の見た目 */
+.fontChoice {
+  font-size: 22px !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+}
+
+.fontChoice input {
+  transform: scale(1.15);
+}
+
+/* 実際に指定するフォント。端末にない場合は後続候補へフォールバック */
+.fontPrincess {
+  font-family: "Yu Mincho", "游ヒラギノ明朝", "Hiragino Mincho ProN", "MS Mincho", serif !important;
+}
+
+.fontMaru {
+  font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 900;
+}
+
+.fontPop {
+  font-family: "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.fontCute {
+  font-family: "Comic Sans MS", "Comic Sans", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 900;
+}
+
+.fontClassic {
+  font-family: "MS Mincho", "ＭＳ ヒラギノ明朝", "Hiragino Mincho ProN", "Yu Mincho", serif !important;
+}
+
+/* 紙面見出しにも同じ指定を使う */
+.headline.fontPrincess {
+  font-family: "Yu Mincho", "游ヒラギノ明朝", "Hiragino Mincho ProN", "MS Mincho", serif !important;
+}
+
+.headline.fontMaru {
+  font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 900;
+}
+
+.headline.fontPop {
+  font-family: "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+}
+
+.headline.fontCute {
+  font-family: "Comic Sans MS", "Comic Sans", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 900;
+}
+
+.headline.fontClassic {
+  font-family: "MS Mincho", "ＭＳ ヒラギノ明朝", "Hiragino Mincho ProN", "Yu Mincho", serif !important;
+}
+
+
+/* ===== STEP2-3：安全な日本語フォント構成 ===== */
+
+.fontChoice {
+  font-size: 24px !important;
+  line-height: 1.5 !important;
+  text-align: center !important;
+  font-weight: 700;
+}
+
+.fontChoice input {
+  margin-right: 10px;
+  transform: scale(1.15);
+}
+
+/* ヒラギノゴシック */
+.fontHiraginoGothic {
+  font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif !important;
+}
+
+/* ヒラギノ明朝 */
+.fontHiraginoMincho {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "MS Mincho", serif !important;
+}
+
+/* Zen Maru Gothic */
+.fontZenMaru {
+  font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+  border-radius: 14px;
+}
+
+/* Kaisei Tokumin */
+.fontKaisei {
+  font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif !important;
+  letter-spacing: 0.12em;
+  transform: rotate(-0.4deg);
+}
+
+/* ドットゴシック */
+.fontDot {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif !important;
+  letter-spacing: 0.08em;
+  font-style: italic;
+}
+
+/* 見出し本体 */
+.headline.fontHiraginoGothic {
+  font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif !important;
+}
+
+.headline.fontHiraginoMincho {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "MS Mincho", serif !important;
+}
+
+.headline.fontZenMaru {
+  font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+}
+
+.headline.fontKaisei {
+  font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif !important;
+  letter-spacing: 0.12em;
+}
+
+.headline.fontDot {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif !important;
+  letter-spacing: 0.08em;
+  font-style: italic;
+}
+
+
+/* ===== STEP2-4：指定フォント構成 ===== */
+
+.fontChoice {
+  font-size: 24px !important;
+  line-height: 1.5 !important;
+  text-align: center !important;
+  font-weight: 700;
+}
+
+.fontChoice input {
+  margin-right: 10px;
+  transform: scale(1.15);
+}
+
+/* ヒラギノゴシック */
+.fontHiraginoGothic {
+  font-family: "Hiragino Sans", "ヒラギノ角ゴ ProN", sans-serif !important;
+}
+
+/* ヒラギノ明朝 */
+.fontHiraginoMincho {
+  font-family: "Hiragino Mincho ProN", "ヒラギノ明朝 ProN", serif !important;
+}
+
+/* Zen Maru Gothic */
+.fontZenMaru {
+  font-family: Zen Maru Gothic, sans-serif !important;
+  letter-spacing: 0.03em;
+}
+
+/* Kaisei Tokumin */
+.fontKaisei {
+  font-family: "Kaisei Tokumin", "Yu Mincho", serif !important;
+  letter-spacing: 0.05em;
+}
+
+/* ドットゴシック */
+.fontDot {
+  font-family: "DotGothic16", "Yu Gothic", sans-serif !important;
+  letter-spacing: 0.08em;
+}
+
+/* 紙面見出し */
+.headline.fontHiraginoGothic {
+  font-family: "Hiragino Sans", "ヒラギノ角ゴ ProN", sans-serif !important;
+}
+
+.headline.fontHiraginoMincho {
+  font-family: "Hiragino Mincho ProN", "ヒラギノ明朝 ProN", serif !important;
+}
+
+.headline.fontZenMaru {
+  font-family: Zen Maru Gothic, sans-serif !important;
+}
+
+.headline.fontKaisei {
+  font-family: "Kaisei Tokumin", "Yu Mincho", serif !important;
+  letter-spacing: 0.05em;
+}
+
+.headline.fontDot {
+  font-family: "DotGothic16", "Yu Gothic", sans-serif !important;
+  letter-spacing: 0.08em;
+}
+
+
+/* ===== STEP2-5：Zen Maru Gothic / DotGothic16 修正版 ===== */
+
+.fontZenMaru {
+  font-family: Zen Maru Gothic, "Helvetica Neue", Helvetica, sans-serif !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.headline.fontZenMaru {
+  font-family: Zen Maru Gothic, "Helvetica Neue", Helvetica, sans-serif !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fontDot {
+  font-family: "DotGothic16", sans-serif !important;
+  letter-spacing: 0.05em;
+}
+
+.headline.fontDot {
+  font-family: "DotGothic16", sans-serif !important;
+  letter-spacing: 0.05em;
+}
+
+
+/* ===== STEP2-6：Zen Maru Gothic / Kiwi Maru ===== */
+
+/* Zen Maru Gothic */
+.fontZenMaru {
+  font-family: "Zen Maru Gothic", "Yu Gothic", sans-serif !important;
+  letter-spacing: 0.03em;
+}
+
+.headline.fontZenMaru {
+  font-family: "Zen Maru Gothic", "Yu Gothic", sans-serif !important;
+  letter-spacing: 0.03em;
+}
+
+/* Kiwi Maru */
+.fontKiwi {
+  font-family: "Kiwi Maru", "Yu Mincho", serif !important;
+  letter-spacing: 0.04em;
+}
+
+.headline.fontKiwi {
+  font-family: "Kiwi Maru", "Yu Mincho", serif !important;
+  letter-spacing: 0.04em;
+}
+
+
+/* ===== STEP2-7：フォント6種類を確定 ===== */
+.fontChoice {
+  font-size: 24px !important;
+  line-height: 1.5 !important;
+  text-align: center !important;
+  font-weight: 700;
+}
+
+.fontChoice input {
+  margin-right: 10px;
+  transform: scale(1.15);
+}
+
+.fontHiraginoGothic,
+.headline.fontHiraginoGothic {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 900;
+}
+
+.fontHiraginoMincho,
+.headline.fontHiraginoMincho {
+  font-family: "Hiragino Mincho ProN", "ヒラギノ明朝 ProN", "Yu Mincho", "MS Mincho", serif !important;
+  font-weight: 900;
+}
+
+.fontZenMaru,
+.headline.fontZenMaru {
+  font-family: "Zen Maru Gothic", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.fontKaisei,
+.headline.fontKaisei {
+  font-family: "Kaisei Tokumin", "Yu Mincho", serif !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.fontDot,
+.headline.fontDot {
+  font-family: "DotGothic16", "Yu Gothic", sans-serif !important;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.fontKiwi,
+.headline.fontKiwi {
+  font-family: "Kiwi Maru", "Yu Mincho", serif !important;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+
+/* ===== STEP2-8：フォントごとの見出し文字間隔自動調整 ===== */
+.headline.fontHiraginoGothic {
+  letter-spacing: 0.04em !important;
+}
+
+.headline.fontHiraginoMincho {
+  letter-spacing: 0.08em !important;
+}
+
+.headline.fontZenMaru {
+  letter-spacing: 0.12em !important;
+}
+
+.headline.fontKaisei {
+  letter-spacing: 0.10em !important;
+}
+
+.headline.fontDot {
+  letter-spacing: 0.18em !important;
+}
+
+.headline.fontKiwi {
+  letter-spacing: 0.14em !important;
+}
+
+
+.fontChoice.fontHiraginoGothic { letter-spacing: 0.04em !important; }
+.fontChoice.fontHiraginoMincho { letter-spacing: 0.08em !important; }
+.fontChoice.fontZenMaru { letter-spacing: 0.12em !important; }
+.fontChoice.fontKaisei { letter-spacing: 0.10em !important; }
+.fontChoice.fontDot { letter-spacing: 0.18em !important; }
+.fontChoice.fontKiwi { letter-spacing: 0.14em !important; }
+
+
+/* ===== STEP2-10安全版：見出し背景色を反映 ===== */
+.headline {
+  background-color: var(--headline-bg-color, #f49ac1) !important;
+}
+
+/* ===== トップ横長サンプル付きバナー ===== */
+.heroTitleWithSample {
+  max-width: 1180px;
+  margin: 18px auto 22px;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: linear-gradient(90deg, #f8b8dc 0%, #ffe2b8 50%, #bdeeff 100%) !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(214,133,166,0.18);
+}
+
+.eventSampleImage {
+  width: 120px;
+  height: auto;
+  display: block;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+  background: #fff;
+}
+
+.eventTitleText {
+  text-align: center;
+}
+
+.eventTitleName {
+  font-size: 24px;
+  font-weight: 700;
+  color: #7a5463;
+  line-height: 1.3;
+}
+
+.eventTitleMain {
+  font-size: clamp(26px, 4vw, 42px);
+  font-weight: 900;
+  color: #e85b7f;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
+}
+
+.eventTitleSub {
+  margin-top: 6px;
+  font-size: 15px;
+  color: #7a5463;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .heroTitleWithSample {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .eventSampleImage {
+    width: 80px;
+  }
+
+  .eventTitleName {
+    font-size: 16px;
+  }
+
+  .eventTitleMain {
+    font-size: 23px;
+  }
+
+  .eventTitleSub {
+    font-size: 12px;
+  }
+}
+
+
+
+/* ===== 東広島芸陽会杯サッカー大会テーマ ===== */
+body {
+  background: linear-gradient(180deg, #eef7ff 0%, #fffaf0 55%, #f2fff4 100%) !important;
+}
+.step,
+.editPanel,
+.controlPanel {
+  background: #ffffff !important;
+  border: 1px solid #cfe6f5;
+  box-shadow: 0 4px 14px rgba(45, 116, 173, 0.16) !important;
+}
+.heroTitleWithSample {
+  background: linear-gradient(90deg, #0057b8 0%, #6fd3ff 100%) !important;
+  box-shadow: 0 4px 14px rgba(15,94,156,0.18) !important;
+}
+.eventTitleName,
+.eventTitleMain,
+.eventTitleSub {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.22);
+}
+.hint,
+.miniHelp {
+  background: #fff8e8 !important;
+  border-left-color: #f4a33a !important;
+}
+button {
+  background: #0f5e9c !important;
+}
+.backBtn {
+  background: #6c8798 !important;
+}
+.headline {
+  background-color: var(--headline-bg-color, #0f5e9c) !important;
+  color: var(--headline-text-color, #ffffff) !important;
+}
+.sublogo {
+  border-color: #0f5e9c !important;
+  color: #0f5e9c !important;
+  background: #f7fbff !important;
+}
+.dateBox {
+  color: #0f5e9c !important;
+}
+.bottomAd {
+  border-color: #f4a33a !important;
+}
+.bottomAdLabel {
+  background: #f4a33a !important;
+}
+.sideAd {
+  background: #f7fbff !important;
+  border-color: #0f5e9c !important;
+}
+.headlineDesignBox {
+  background: #f7fbff !important;
+  border-left-color: #0f5e9c !important;
+}
+.fontChoice {
+  border-color: #cfe6f5 !important;
+  color: #0f3f68 !important;
+}
+.fontChoice.checked {
+  border-color: #0f5e9c !important;
+  background: #eaf6ff !important;
+}
+
+
+/* ===== スマホで楽しく使うための改修 ===== */
+.mobileOnly { display: none; }
+
+.funLead {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.86);
+  color: #083b68;
+  font-weight: 900;
+  line-height: 1.7;
+}
+
+.step h2::before {
+  display: inline-block;
+  margin-right: 4px;
+}
+
+#photoInput {
+  min-height: 56px;
+  background: #f7fbff;
+  border: 2px dashed #0f5e9c;
+}
+
+.step .nextBtn {
+  min-height: 54px;
+  font-size: 17px;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.18);
+}
+
+.previewToolBar {
+  display: none;
+  gap: 8px;
+  padding: 8px 10px 0;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+.previewToolBar button {
+  margin-top: 0;
+  padding: 10px 8px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+.previewZoomModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 31, 58, 0.88);
+  padding: 12px;
+}
+
+.previewZoomModal.open {
+  display: block;
+}
+
+.previewZoomHeader {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 760px;
+  margin: 0 auto 10px;
+  color: #fff;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-weight: 900;
+}
+
+.previewZoomHeader button {
+  width: auto;
+  min-width: 96px;
+  margin: 0;
+  padding: 10px 14px;
+  background: #fff !important;
+  color: #0f5e9c;
+  border-radius: 999px;
+}
+
+.previewZoomScroll {
+  height: calc(100vh - 58px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  text-align: center;
+}
+
+.previewZoomClone {
+  display: inline-block;
+  transform-origin: top center;
+}
+
+.quickHintChips {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  width: calc(100% - 24px);
+  margin: 10px 12px 12px;
+}
+
+.quickHintChips button {
+  margin: 0;
+  padding: 10px 8px;
+  font-size: 13px;
+  background: #eaf6ff !important;
+  color: #0f3f68;
+  border: 1px solid #b7def7;
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 8px;
+  }
+
+  h1 {
+    font-size: 18px;
+    margin: 8px 0 4px;
+  }
+
+  .heroTitleWithSample {
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px auto 14px;
+    padding: 14px 12px 16px;
+    border-radius: 16px;
+  }
+
+  .eventSampleImage {
+    width: min(72vw, 250px) !important;
+    max-height: 230px;
+    object-fit: contain;
+    border-radius: 6px;
+  }
+
+  .eventTitleName {
+    font-size: 15px !important;
+  }
+
+  .eventTitleMain {
+    font-size: clamp(22px, 7vw, 30px) !important;
+    letter-spacing: 0.02em;
+  }
+
+  .eventTitleSub {
+    font-size: 13px !important;
+  }
+
+  .step,
+  .editPanel,
+  .controlPanel {
+    margin: 10px auto;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .step h2,
+  .editPanel h2 {
+    font-size: 22px;
+  }
+
+  .step p,
+  .hint,
+  .miniHelp {
+    font-size: 15px;
+  }
+
+  input,
+  textarea,
+  button {
+    font-size: 16px;
+  }
+
+  .mobileOnly {
+    display: block;
+  }
+
+  .previewToolBar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #previewColumn {
+    position: relative !important;
+    top: auto !important;
+    padding-top: 2px !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  #previewColumn #newspaperWrap {
+    max-height: none !important;
+    overflow: auto !important;
+    padding-top: 4px !important;
+  }
+
+  #previewColumn #newspaper {
+    transform: scale(0.56) !important;
+    transform-origin: top center !important;
+    margin-bottom: -340px !important;
+  }
+
+  #editorColumn {
+    padding-top: 4px;
+  }
+
+  .controlGrid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px;
+  }
+
+  .controlGrid button {
+    min-height: 46px;
+    font-size: 15px;
+  }
+
+  .photoGuide {
+    font-size: 12px;
+    background: rgba(255,255,255,0.92);
+  }
+}
+
+@media (max-width: 420px) {
+  #previewColumn #newspaper {
+    transform: scale(0.52) !important;
+    margin-bottom: -370px !important;
+  }
+}
+
+
+
+/* ===== 無料イベント：後日販売所お届けフォーム ===== */
+.deliveryModeBox {
+  margin-top: 14px;
+  padding: 14px;
+  background: #eef9ff;
+  border: 2px solid #6fd3ff;
+  border-radius: 12px;
+  text-align: left;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+.deliveryModeBox h3 {
+  margin: 0 0 8px;
+  color: #0057b8;
+  font-size: 18px;
+}
+.deliveryModeBox p {
+  margin: 6px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.deliveryFormGrid {
+  margin-top: 10px;
+}
+.deliveryFormGrid label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 900;
+  font-size: 14px;
+}
+.deliveryRequired {
+  color: #c00000;
+  font-size: 12px;
+  margin-left: 4px;
+}
+.deliveryNote {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff;
+  border-left: 5px solid #0057b8;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.deliverySubmitBtn {
+  background: #0057b8 !important;
+}
+.deliveryStatus {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  color: #0057b8;
+  font-weight: 900;
+  line-height: 1.7;
+  display: none;
+}
+.deliveryComplete {
+  margin-top: 14px;
+  padding: 16px;
+  background: #e8fff0;
+  border: 2px solid #38a169;
+  border-radius: 12px;
+  color: #126b37;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  display: none;
+}
+.deliveryComplete strong {
+  font-size: 24px;
+}
+@media (max-width: 640px) {
+  .deliveryModeBox {
+    padding: 13px;
+  }
+  .deliveryModeBox h3 {
+    font-size: 17px;
+  }
+}
+
+
+
+/* ===== 任意アンケート ===== */
+.surveyBox {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 12px;
+  background: #f7fbff;
+  border: 1px solid #cfe6f5;
+  border-radius: 10px;
+}
+.surveyBox h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #0f5e9c;
+}
+.surveyBox p {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.surveyOptions {
+  display: grid;
+  gap: 6px;
+}
+.surveyOptions label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 9px;
+  background: #fff;
+  border: 1px solid #d8e7f0;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.surveyOptions input[type="radio"] {
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ===== 受付終了表示 ===== */
+.receptionClosedBox {
+  display: none;
+  max-width: 720px;
+  margin: 18px auto 28px;
+  padding: 24px 20px;
+  background: #ffffff;
+  border: 3px solid #0f5e9c;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(15,94,156,0.18);
+  text-align: center;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+.receptionClosedBox h2 {
+  margin: 0 0 12px;
+  color: #0f5e9c;
+  font-size: clamp(24px, 6vw, 34px);
+  line-height: 1.35;
+}
+.receptionClosedBox p {
+  margin: 8px 0;
+  color: #123;
+  font-size: 16px;
+  line-height: 1.8;
+  font-weight: 700;
+}
+.receptionClosedBox .closedThanks {
+  margin-top: 14px;
+  padding: 12px;
+  background: #eef7ff;
+  border-radius: 12px;
+  color: #0f3f68;
+}
+body.receptionClosed .step,
+body.receptionClosed #workspace,
+body.receptionClosed #saveArea,
+body.receptionClosed #newspaperWrap,
+body.receptionClosed .previewEditNotice {
+  display: none !important;
+}
+body.receptionClosed .receptionClosedBox {
+  display: block;
+}
+
+</style>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Tokumin:wght@400;700&family=Kiwi+Maru:wght@400;500&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+<h1>中国新聞 My新聞づくり</h1>
+
+
+<div class="eventTitle heroTitleWithSample">
+  <img
+    src="sample-soccer.png"
+    alt="東広島芸陽会杯サッカー大会の完成サンプル"
+    class="eventSampleImage"
+  />
+
+  <div class="eventTitleText">
+    <div class="eventTitleName">2026年8月23日（日）開催</div>
+    <div class="eventTitleMain">第6回中国新聞東広島芸陽会杯<br/>サッカー大会を新聞記事にしよう！</div>
+    <div class="eventTitleSub">見たこと・感じたこと、仲間のがんばりを記事に書こう</div>
+    <div class="funLead mobileOnly">スマホで写真を選んで、見出しをつけたら、世界に1枚の大会新聞が完成！</div>
+  </div>
+</div>
+
+<div id="receptionClosedBox" class="receptionClosedBox" aria-live="polite">
+  <h2>受付は終了しました</h2>
+  <p>第6回中国新聞東広島芸陽会杯サッカー大会<br/>My新聞づくりにご参加いただき、ありがとうございました。</p>
+  <p class="closedThanks">お申し込みいただいた新聞は、順次販売所よりお届けします。</p>
+</div>
+
+
+
+<section class="step active" id="step1">
+<h2>① ベストショットを選ぼう</h2>
+<p>試合のワクワクが伝わる写真を選んでください。</p>
+<input accept="image/*" id="photoInput" type="file"/>
+<div id="photoStatus" class="countLine">写真はあとから選び直せます。まずは1枚選んでスタート！</div>
+<button class="nextBtn" onclick="nextStep(2)">次へ</button>
+</section>
+<section class="step" id="step2">
+<h2>② 新聞名をつけよう</h2>
+<p>あなただけの「自由な新聞名」にできます。長い時は自動改行されます。あとから編集で改行位置も直せます。</p>
+<div class="hint">例：第6回大会新聞<br/>例：東広島芸陽会杯サッカー新聞<br/>例：全力プレー特別号</div>
+<textarea id="sublogoInput" placeholder="例：第6回大会新聞"></textarea>
+<button class="nextBtn" onclick="nextStep(3)">次へ</button>
+<button class="backBtn" onclick="nextStep(1)">戻る</button>
+
+</section>
+<section class="step" id="step3">
+<h2>③ 大きな見出しをつけよう</h2>
+<p>写真を見た人が「読んでみたい」と思う短いタイトルにしましょう。</p>
+<div class="hint">例：仲間とつないだ 夏の一勝<br/>例：最後まで全力プレー<br/>例：白熱の東広島芸陽会杯</div>
+<input id="headlineInput" placeholder="見出しを入力"/>
+
+<div class="headlineDesignBox">
+  <h3>見出しをデコる</h3>
+  <label for="headlineColorPicker">背景色</label>
+  <input class="headlineColorPicker" id="headlineColorPicker" type="color" value="#0f5e9c" oninput="setHeadlineBgColor(this.value)" />
+ 
+
+  <label>フォント</label>
+  <label for="headlineTextColorPicker">文字色</label>
+  <input class="headlineColorPicker"
+         id="headlineTextColorPicker"
+         type="color"
+         value="#ffffff"
+         oninput="setHeadlineTextColor(this.value)" />
+
+
+<div class="fontChoiceGrid">
+  <label class="fontChoice fontHiraginoGothic">
+    <input type="radio" name="headlineFontStart" value="fontHiraginoGothic" onchange="setHeadlineFontClass(this.value)" checked>
+    ヒラギノゴシック
+  </label>
+  <label class="fontChoice fontHiraginoMincho">
+    <input type="radio" name="headlineFontStart" value="fontHiraginoMincho" onchange="setHeadlineFontClass(this.value)">
+    ヒラギノ明朝
+  </label>
+  <label class="fontChoice fontZenMaru">
+    <input type="radio" name="headlineFontStart" value="fontZenMaru" onchange="setHeadlineFontClass(this.value)">
+    Zen Maru Gothic
+  </label>
+  <label class="fontChoice fontKaisei">
+    <input type="radio" name="headlineFontStart" value="fontKaisei" onchange="setHeadlineFontClass(this.value)">
+    Kaisei Tokumin
+  </label>
+  <label class="fontChoice fontDot">
+    <input type="radio" name="headlineFontStart" value="fontDot" onchange="setHeadlineFontClass(this.value)">
+    ドットゴシック
+  </label>
+  <label class="fontChoice fontKiwi">
+    <input type="radio" name="headlineFontStart" value="fontKiwi" onchange="setHeadlineFontClass(this.value)">
+    Kiwi Maru
+  </label>
+</div>
+
+</div>
+
+
+<button class="nextBtn" onclick="nextStep(4)">次へ</button>
+<button class="backBtn" onclick="nextStep(2)">戻る</button>
+
+</section>
+<section class="step" id="step4">
+<h2>④ 記事を書こう</h2>
+<p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
+<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。</div>
+<textarea id="articleInput" placeholder="記事本文を入力"></textarea>
+<button class="nextBtn" onclick="nextStep(5)">次へ</button>
+<button class="backBtn" onclick="nextStep(3)">戻る</button>
+
+</section>
+<section class="step" id="step5">
+<h2>⑤ 日にちを入れよう</h2>
+<p>写真を撮った日、または新聞発行日を入れてください。</p>
+<input id="dateInput" type="date" value="2026-08-23"/>
+<button class="nextBtn" onclick="nextStep(6)">次へ</button>
+<button class="backBtn" onclick="nextStep(4)">戻る</button>
+
+</section>
+<section class="step" id="step6">
+<h2>⑥ 記者名を書こう</h2>
+<p>作った人の名前やニックネームを入れてください。</p>
+<input id="reporterInput" placeholder="例：記者 （氏名）"/>
+<button class="nextBtn" onclick="makeNewspaper()">新聞プレビューを見る</button>
+<button class="backBtn" onclick="nextStep(5)">戻る</button>
+
+</section><div id="workspace">
+<div id="editorColumn"><div class="editPanel" id="editPanel">
+<h2>編集する</h2>
+<div class="miniHelp">
+    必要な項目だけ開いて編集できます。記事欄は読みやすく大きめにし、文字量に応じて自動調整します。
+  </div>
+<details class="editSection" open="">
+<summary>サブ題字</summary>
+<label for="editSublogo"></label>
+<textarea id="editSublogo" oninput="updatePreviewText()" placeholder="例：第6回大会記念新聞"></textarea>
+<div class="sublogoCount" id="sublogoCount">目安：8文字くらいまで。長い場合は自動改行・自動縮小します。</div>
+</details>
+<details class="editSection">
+<summary>見出し</summary>
+<label for="editHeadline"></label>
+<input id="editHeadline" oninput="headlineShortLevel = 0; updatePreviewText()" placeholder="見出しを入力"/>
+<div class="countLine" id="headlineCount">目安：18文字くらいまで</div>
+<button onclick="makeHeadlineShorter()" type="button">見出しを短くする</button>
+
+<div class="headlineDesignBox">
+  <h3>見出しをデコる</h3>
+  <label for="editHeadlineColorPicker">背景色</label>
+  <input class="headlineColorPicker" id="editHeadlineColorPicker" type="color" value="#0f5e9c" oninput="setHeadlineBgColor(this.value)" />
+
+
+ <label>フォント</label>
+
+  <label for="editHeadlineTextColorPicker">文字色</label>
+  <input class="headlineColorPicker"
+         id="editHeadlineTextColorPicker"
+         type="color"
+         value="#ffffff"
+         oninput="setHeadlineTextColor(this.value)" />
+
+<div class="fontChoiceGrid">
+  <label class="fontChoice fontHiraginoGothic">
+    <input type="radio" name="headlineFontEdit" value="fontHiraginoGothic" onchange="setHeadlineFontClass(this.value)" checked>
+    ヒラギノゴシック
+  </label>
+  <label class="fontChoice fontHiraginoMincho">
+    <input type="radio" name="headlineFontEdit" value="fontHiraginoMincho" onchange="setHeadlineFontClass(this.value)">
+    ヒラギノ明朝
+  </label>
+  <label class="fontChoice fontZenMaru">
+    <input type="radio" name="headlineFontEdit" value="fontZenMaru" onchange="setHeadlineFontClass(this.value)">
+    Zen Maru Gothic
+  </label>
+  <label class="fontChoice fontKaisei">
+    <input type="radio" name="headlineFontEdit" value="fontKaisei" onchange="setHeadlineFontClass(this.value)">
+    Kaisei Tokumin
+  </label>
+  <label class="fontChoice fontDot">
+    <input type="radio" name="headlineFontEdit" value="fontDot" onchange="setHeadlineFontClass(this.value)">
+    ドットゴシック
+  </label>
+  <label class="fontChoice fontKiwi">
+    <input type="radio" name="headlineFontEdit" value="fontKiwi" onchange="setHeadlineFontClass(this.value)">
+    Kiwi Maru
+  </label>
+</div>
+
+</div>
+
+
+</details>
+<details class="editSection">
+<summary>記事</summary>
+<label for="editArticle"></label>
+<textarea id="editArticle" oninput="updatePreviewText()" placeholder="記事本文を入力"></textarea>
+<div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
+<div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
+<div class="quickHintChips">
+  <button type="button" onclick="insertQuickArticle('hit')">走った・守ったことを書く</button>
+  <button type="button" onclick="insertQuickArticle('team')">仲間との声かけを書く</button>
+  <button type="button" onclick="insertQuickArticle('feeling')">感じたことを書く</button>
+</div>
+<button onclick="addArticleHint()">記事のヒントを追加</button>
+</details>
+<details class="editSection">
+<summary>日付・記者名</summary>
+<label for="editDate">日にち</label>
+<input id="editDate" oninput="updatePreviewText()" type="date"/>
+<label for="editReporter">記者名</label>
+<input id="editReporter" oninput="updatePreviewText()" placeholder="例：記者 （氏名）"/>
+</details>
+<details class="editSection">
+<summary>写真変更＆移動</summary>
+<div class="photoEditButtons">
+  <button type="button" onclick="reselectPhoto()">写真を選び直す</button>
+</div>
+<div class="photoEditStatus" id="editPhotoStatus">写真を変更したい時は「写真を選び直す」を押してください。下のボタンで位置を調整できます。ボタンは長押しできます。</div>
+
+<div class="controlGrid">
+<button type="button" data-hold-action="nudge" data-hold-a="0" data-hold-b="-10" onclick="nudgePhoto(0,-10)">↑</button>
+<button type="button" data-hold-action="scale" data-hold-a="1.05" onclick="changeScale(1.05)">拡大</button>
+<button type="button" data-hold-action="rotate" data-hold-a="-3" onclick="rotatePhoto(-3)">左回転</button>
+<button type="button" data-hold-action="rotate" data-hold-a="3" onclick="rotatePhoto(3)">右回転</button>
+<button type="button" data-hold-action="nudge" data-hold-a="-10" data-hold-b="0" onclick="nudgePhoto(-10,0)">←</button>
+<button type="button" data-hold-action="nudge" data-hold-a="0" data-hold-b="10" onclick="nudgePhoto(0,10)">↓</button>
+<button type="button" data-hold-action="nudge" data-hold-a="10" data-hold-b="0" onclick="nudgePhoto(10,0)">→</button>
+<button type="button" data-hold-action="scale" data-hold-a="0.95" onclick="changeScale(0.95)">縮小</button>
+</div>
+<button class="backBtn" onclick="resetPhotoPosition()">写真位置をリセット</button>
+</details>
+</div><div id="saveArea">
+<p class="notice">文字や写真位置を調整したあと、無料イベントのお申し込みへ進んでください。控えとしてPDF保存もできます。</p>
+
+<button class="deliverySubmitBtn" onclick="scrollToDeliveryForm()">無料イベントで申し込む（1部無料・後日販売所からお届け）</button>
+<button onclick="saveAsPDF()">控え用にA4 PDFとして保存</button>
+<button class="backBtn" onclick="resetForm()">最初から作り直す</button>
+
+<div class="deliveryModeBox" id="deliveryFormBox">
+  <h3>無料イベント申込</h3>
+  <p><strong>1部無料</strong>で、完成した新聞を後日お近くの中国新聞販売所からお届けします。</p>
+  <div class="deliveryNote">
+    お届けは配達エリアに限らせていただきます。お申し込み後、受付番号を表示します。
+  </div>
+  <div class="deliveryFormGrid">
+    <label for="customerName">お名前<span class="deliveryRequired">必須</span></label>
+    <input id="customerName" autocomplete="name" placeholder="例：山田 太郎" />
+
+    <label for="customerKana">ふりがな<span class="deliveryRequired">必須</span></label>
+    <input id="customerKana" placeholder="例：やまだ たろう" />
+
+    <label for="customerPhone">電話番号<span class="deliveryRequired">必須</span></label>
+    <input id="customerPhone" inputmode="tel" autocomplete="tel" placeholder="例：09012345678" />
+
+    <label for="customerAddress">お届け先住所<span class="deliveryRequired">必須</span></label>
+    <textarea id="customerAddress" autocomplete="street-address" placeholder="例：東広島市西条町〇〇1-2-3"></textarea>
+
+    <label for="customerTeam">所属チーム・学校名</label>
+    <input id="customerTeam" placeholder="例：〇〇サッカークラブ" />
+
+    <label for="customerGrade">学年</label>
+    <input id="customerGrade" placeholder="例：小学5年" />
+
+    <label for="customerQuantity">希望枚数</label>
+    <input id="customerQuantity" type="number" min="1" max="1" value="1" readonly />
+    <div class="countLine">無料イベントのため、希望枚数は1部固定です。</div>
+
+    <label for="customerMemo">連絡メモ</label>
+    <textarea id="customerMemo" placeholder="例：不在が多い時間帯、表札名が違う場合など"></textarea>
+
+    <div class="surveyBox">
+      <h4>アンケート①（任意）</h4>
+      <p>現在の新聞購読状況を教えてください。</p>
+      <div class="surveyOptions">
+        <label><input type="radio" name="subscriptionStatus" value="chugoku" data-label="中国新聞を購読中">中国新聞を購読中</label>
+        <label><input type="radio" name="subscriptionStatus" value="digital" data-label="中国新聞デジタルを購読中">中国新聞デジタルを購読中</label>
+        <label><input type="radio" name="subscriptionStatus" value="other" data-label="中国新聞以外の新聞を購読中">中国新聞以外の新聞を購読中</label>
+        <label><input type="radio" name="subscriptionStatus" value="none" data-label="新聞は購読していない">新聞は購読していない</label>
+      </div>
+    </div>
+
+    <div class="surveyBox">
+      <h4>アンケート②（任意）</h4>
+      <p>中国新聞を購読されていない方へ</p>
+      <div class="surveyOptions">
+        <label><input type="radio" name="interestStatus" value="trial" data-label="中国新聞を読んでみたい">中国新聞を読んでみたい</label>
+        <label><input type="radio" name="interestStatus" value="catalog" data-label="資料だけ欲しい">資料だけ欲しい</label>
+        <label><input type="radio" name="interestStatus" value="none" data-label="今は希望しない">今は希望しない</label>
+      </div>
+    </div>
+  </div>
+  <button class="deliverySubmitBtn" type="button" onclick="submitFreeDeliveryOrder()">この内容で申し込む</button>
+  <div class="deliveryStatus" id="deliveryStatus"></div>
+  <div class="deliveryComplete" id="deliveryComplete"></div>
+</div>
+</div></div>
+<div id="previewColumn">
+<div class="previewToolBar">
+  <button type="button" onclick="openPreviewZoom()">新聞を大きく見る</button>
+  <button type="button" onclick="scrollToEditor()">編集に戻る</button>
+</div>
+<div id="newspaperWrap">
+<div id="newspaper">
+<div class="topline">
+<span>特別号</span><span>中国新聞</span><span>東広島芸陽会杯新聞</span><span id="topDate">年月日　【号外】</span>
+</div>
+<div class="paper-grid">
+<main class="main">
+<div class="headline" id="outHeadline">仲間とつないだ 夏の一勝</div>
+<div aria-label="写真配置エリア" class="photoFrame" id="photoFrame" tabindex="0">
+<img alt="記念写真" id="previewPhoto"/>
+<div class="photoGuide" id="photoGuide">マウスで写真を動かせます</div>
+</div>
+<div class="caption">思い出の一枚</div>
+<div class="articleBox"><div class="article" id="outArticle"><canvas id="articleCanvas"></canvas></div></div>
+<div class="bottomAd">
+<div class="bottomAdLabel">保存版</div>
+<div class="bottomAdText">
+<div class="bottomAdMain">大会の思い出を新聞に。</div>
+<div class="bottomAdSub">写真・見出し・記事で作る、自分だけの大会新聞。</div>
+</div>
+</div>
+</main>
+<aside class="side">
+<img alt="中国新聞 題字" class="logoImage" src="chugoku-logo.jpg"/>
+<div class="sublogo" id="outSublogo"><span class="sublogoInner" id="outSublogoInner">My<br/>記念新聞</span></div>
+<div class="dateBox" id="outDate">月日（曜日）</div>
+<div class="infoBox">
+          発行所<br/>中国新聞 My新聞づくり編集部<br/>
+<div class="reporterBox" id="outReporter">記者 ○○○</div>
+</div>
+</aside>
+</div>
+</div>
+</div><p class="previewEditNotice" id="previewEditNotice">「編集する」を開いて修正すると、紙面にすぐ反映されます。</p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
+let photoPressTimer = null;
+let photoPressInterval = null;
+
+function startPhotoHold(actionName, a, b) {
+  stopPhotoHold();
+
+  const run = () => {
+    if (actionName === "nudge") {
+      nudgePhoto(a, b);
+    } else if (actionName === "scale") {
+      changeScale(a);
+    } else if (actionName === "rotate") {
+      rotatePhoto(a);
+    }
+  };
+
+  run();
+
+  photoPressTimer = setTimeout(() => {
+    photoPressInterval = setInterval(run, 70);
+  }, 280);
+}
+
+function stopPhotoHold() {
+  if (photoPressTimer) {
+    clearTimeout(photoPressTimer);
+    photoPressTimer = null;
+  }
+
+  if (photoPressInterval) {
+    clearInterval(photoPressInterval);
+    photoPressInterval = null;
+  }
+}
+
+function setupPhotoHoldButtons() {
+  const buttons = document.querySelectorAll("[data-hold-action]");
+  buttons.forEach(btn => {
+    if (btn.dataset.holdReady === "1") return;
+    btn.dataset.holdReady = "1";
+
+    const action = btn.dataset.holdAction;
+    const a = Number(btn.dataset.holdA || 0);
+    const b = Number(btn.dataset.holdB || 0);
+
+    btn.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      startPhotoHold(action, a, b);
+    });
+
+    btn.addEventListener("pointerup", stopPhotoHold);
+    btn.addEventListener("pointerleave", stopPhotoHold);
+    btn.addEventListener("pointercancel", stopPhotoHold);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
+
+
+
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+
+<script>
+let photoData = "";
+let photoObjectUrl = "";
+let headlineShortLevel = 0;
+let photoState = { x: 0, y: 0, scale: 7, rotate: 0 };
+let activePointers = new Map();
+let dragStart = null;
+let pinchStart = null;
+
+const photo = document.getElementById("previewPhoto");
+const photoFrame = document.getElementById("photoFrame");
+
+function applyPhotoTransform() {
+  photo.style.transform =
+    "translate(-50%, -50%) translate(" + photoState.x + "px, " + photoState.y + "px) scale(" +
+    photoState.scale + ") rotate(" + photoState.rotate + "deg)";
+}
+
+function nextStep(num) {
+  document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
+  document.getElementById("step" + num).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.getElementById("photoInput").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  const status = document.getElementById("photoStatus");
+
+  if (!file) return;
+
+  // 前のblob URLを解放
+  if (photoObjectUrl) {
+    URL.revokeObjectURL(photoObjectUrl);
+    photoObjectUrl = "";
+  }
+
+  // まずblob URLで即時表示する。GitHub Pagesでも反映が速く安定する。
+  photoObjectUrl = URL.createObjectURL(file);
+  photoData = photoObjectUrl;
+
+  // 写真変更時は位置を初期化
+  resetPhotoPosition();
+
+  const preview = document.getElementById("previewPhoto");
+  if (preview) {
+    preview.src = photoObjectUrl;
+    preview.onload = function() {
+      applyPhotoTransform();
+    };
+  }
+
+  if (status) {
+    status.innerText = "写真を読み込みました。次へ進もう！";
+    const editStatus = document.getElementById("editPhotoStatus");
+    if (editStatus) editStatus.innerText = "写真を読み込みました。";
+  }
+
+  // 保存・PDF用に、裏側でDataURL化しておく
+  const reader = new FileReader();
+
+  reader.onload = function(event) {
+    photoData = event.target.result;
+
+    // すでに紙面表示中ならDataURLへ差し替える
+    const currentPreview = document.getElementById("previewPhoto");
+    if (currentPreview) {
+      currentPreview.src = photoData;
+      currentPreview.onload = function() {
+        applyPhotoTransform();
+      };
+    }
+
+    if (status) {
+      status.innerText = "写真の準備が完了しました。いい感じです！";
+      const editStatus = document.getElementById("editPhotoStatus");
+      if (editStatus) editStatus.innerText = "写真を変更しました。位置を調整できます。";
+    }
+  };
+
+  reader.onerror = function() {
+    console.warn("FileReader failed. Blob preview is still available.");
+    if (status) {
+      status.innerText = "写真は表示できますが、保存時に失敗する場合があります。別の写真もお試しください。";
+    }
+  };
+
+  reader.readAsDataURL(file);
+});
+
+function formatSideDate(dateText) {
+  if (!dateText) return "発行：記念日";
+  const d = new Date(dateText + "T00:00:00");
+  const week = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
+  return (d.getMonth() + 1) + "月" + d.getDate() + "日（" + week + "）";
+}
+
+function formatTopDate(dateText) {
+  if (!dateText) return "号外";
+  const d = new Date(dateText + "T00:00:00");
+  return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+}
+
+function formatDate(dateText) {
+  // 互換用：題字下の日付は従来どおり月日・曜日表示
+  return formatSideDate(dateText);
+}
+
+function autoBreakSublogo(text) {
+  const raw = (text || "My大会新聞").trim();
+  if (raw.includes("\n")) return raw;
+
+  const noSpaceLen = raw.replace(/\s/g, "").length;
+  if (noSpaceLen <= 8) return raw;
+
+  const breakWords = ["記念", "新聞", "特別", "卒業", "入学", "七五三", "誕生日", "運動会", "ハイハイ", "ニュース", "号外"];
+  for (const word of breakWords) {
+    const idx = raw.indexOf(word);
+    if (idx > 1 && idx < raw.length - 1) {
+      return raw.slice(0, idx) + "\n" + raw.slice(idx);
+    }
+  }
+
+  const mid = Math.ceil(raw.length / 2);
+  let best = mid;
+  for (let i = mid; i >= 1; i--) {
+    if (raw[i] === " " || raw[i] === "　") { best = i; break; }
+  }
+  return raw.slice(0, best).trim() + "\n" + raw.slice(best).trim();
+}
+
+function setSublogoText(text) {
+  const broken = autoBreakSublogo(text);
+  const inner = document.getElementById("outSublogoInner");
+  inner.innerHTML = broken.replace(/\n/g, "<br>");
+
+  const len = broken.replace(/\s/g, "").length;
+  const lines = broken.split("\n").length;
+  let scale = 1;
+
+  if (len >= 16) scale = 0.62;
+  else if (len >= 13) scale = 0.70;
+  else if (len >= 10) scale = 0.82;
+  else if (len >= 8 && lines >= 2) scale = 0.92;
+
+  inner.style.transform = "scale(" + scale + ")";
+}
+
+
+function showWorkspace() {
+  const workspace = document.getElementById("workspace");
+  if (workspace) workspace.style.display = "flex";
+
+  const newspaperWrap = document.getElementById("newspaperWrap");
+  if (newspaperWrap) newspaperWrap.style.display = "block";
+
+  const editPanel = document.getElementById("editPanel");
+  if (editPanel) editPanel.style.display = "block";
+
+  const saveArea = document.getElementById("saveArea");
+  if (saveArea) saveArea.style.display = "block";
+}
+
+function hideWorkspace() {
+  const workspace = document.getElementById("workspace");
+  if (workspace) workspace.style.display = "none";
+}
+
+function clearFocusFlash() {
+  document.querySelectorAll(".focusFlash").forEach(el => {
+    el.classList.remove("focusFlash");
+  });
+}
+
+function flashPaperPart(part) {
+  clearFocusFlash();
+
+  let target = null;
+
+  if (part === "sublogo") {
+    target = document.getElementById("outSublogo");
+  } else if (part === "headline") {
+    target = document.getElementById("outHeadline");
+  } else if (part === "article") {
+    target = document.getElementById("articleCanvas") || document.getElementById("outArticle");
+  } else if (part === "date") {
+    target = document.getElementById("outDate");
+  } else if (part === "reporter") {
+    target = document.getElementById("outReporter");
+  } else if (part === "photo") {
+    target = document.getElementById("photoFrame");
+  }
+
+  if (target) {
+    target.classList.add("focusFlash");
+  }
+}
+
+function setupEditFocusHighlights() {
+  const mapping = [
+    ["editSublogo", "sublogo"],
+    ["editHeadline", "headline"],
+    ["editArticle", "article"],
+    ["editDate", "date"],
+    ["editReporter", "reporter"]
+  ];
+
+  mapping.forEach(([inputId, part]) => {
+    const el = document.getElementById(inputId);
+    if (!el || el.dataset.focusBound === "1") return;
+    el.dataset.focusBound = "1";
+    el.addEventListener("focus", () => flashPaperPart(part));
+    el.addEventListener("input", () => flashPaperPart(part));
+  });
+
+  const photoButtons = document.querySelectorAll(".controlGrid button, button[onclick='resetPhotoPosition()']");
+  photoButtons.forEach(btn => {
+    if (btn.dataset.focusBound === "1") return;
+    btn.dataset.focusBound = "1";
+    btn.addEventListener("click", () => flashPaperPart("photo"));
+    btn.addEventListener("focus", () => flashPaperPart("photo"));
+  });
+
+  const photoFrame = document.getElementById("photoFrame");
+  if (photoFrame && photoFrame.dataset.focusBound !== "1") {
+    photoFrame.dataset.focusBound = "1";
+    photoFrame.addEventListener("pointerdown", () => flashPaperPart("photo"));
+    photoFrame.addEventListener("focus", () => flashPaperPart("photo"));
+  }
+}
+
+
+function makeNewspaper() {
+  const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
+  const headline = document.getElementById("headlineInput").value.trim() || "仲間とつないだ 夏の一勝";
+  const article = document.getElementById("articleInput").value.trim() ||
+    "第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。";
+  const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
+  const reporter = document.getElementById("reporterInput").value.trim() || "記者 （氏名）";
+
+  document.getElementById("editSublogo").value = autoBreakSublogo(sublogo);
+  document.getElementById("editHeadline").value = headline;
+  document.getElementById("editArticle").value = article;
+  document.getElementById("editDate").value = dateRaw;
+  document.getElementById("editReporter").value = reporter;
+
+  if (photoData) {
+    photo.src = photoData;
+    photo.onload = function() {
+      applyPhotoTransform();
+    };
+  } else {
+    photo.removeAttribute("src");
+    const status = document.getElementById("photoStatus");
+    if (status) status.innerText = "写真が未選択です。";
+  }
+
+  // STEP3の設定画面で選んだ見出し色・文字色を、完成サンプルへ確実に引き継ぐ
+  const startHeadlineColorPicker = document.getElementById("headlineColorPicker");
+  if (startHeadlineColorPicker && startHeadlineColorPicker.value) {
+    window.selectedHeadlineBgColor = startHeadlineColorPicker.value;
+  }
+  const startHeadlineTextColorPicker = document.getElementById("headlineTextColorPicker");
+  if (startHeadlineTextColorPicker && startHeadlineTextColorPicker.value) {
+    window.selectedHeadlineTextColor = startHeadlineTextColorPicker.value;
+  }
+
+  resetPhotoPosition();
+  updatePreviewText();
+
+  document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
+  showWorkspace();
+  if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
+  updateArticleLengthNotice(document.getElementById("editArticle") ? document.getElementById("editArticle").value : "");
+  const previewNotice = document.getElementById("previewEditNotice");
+  if (previewNotice) previewNotice.style.display = "block";
+  setTimeout(() => photoFrame.focus(), 300);
+  window.scrollTo({ top: document.getElementById("workspace").offsetTop, behavior: "smooth" });
+}
+
+
+
+
+function updateArticleLengthNotice(text) {
+  const notice = document.getElementById("articleLengthNotice");
+  if (!notice) return;
+
+  const len = String(text || "").replace(/\s/g, "").length;
+  notice.classList.remove("warn", "danger");
+
+  if (len <= 0) {
+    notice.textContent = "記事を入力すると、文字量に合わせて紙面の文字サイズと間隔を自動調整します。";
+  } else if (len <= 150) {
+    notice.textContent = "現在 " + len + "文字：読みやすい大きさで表示できます。";
+  } else if (len <= 240) {
+    notice.classList.add("warn");
+    notice.textContent = "現在 " + len + "文字：紙面に収まるよう、文字サイズと間隔を自然に調整します。";
+  } else if (len <= 300) {
+    notice.classList.add("warn");
+    notice.textContent = "現在 " + len + "文字：長めです。文字サイズと間隔を詰めて表示します。";
+  } else {
+    notice.classList.add("danger");
+    notice.textContent = "現在 " + len + "文字：かなり長いです。全文が入らない場合は短くしてください。";
+  }
+}
+
+
+
+function updatePreviewText() {
+  const sublogo = document.getElementById("editSublogo").value.trim() || "My大会新聞";
+  const headline = document.getElementById("editHeadline").value.trim() || "見出し";
+  const article = document.getElementById("editArticle").value.trim() || "記事本文が入ります。";
+  const dateRaw = document.getElementById("editDate").value || "2026-08-23";
+  const sideDate = formatSideDate(dateRaw);
+  const topDate = formatTopDate(dateRaw);
+  const reporter = document.getElementById("editReporter").value.trim() || "記者 （氏名）";
+
+  setSublogoText(sublogo);
+  document.getElementById("outHeadline").innerText = headline;
+  renderArticleText(article);
+  updateArticleLengthNotice(article);
+  document.getElementById("outDate").innerText = sideDate;
+  document.getElementById("topDate").innerText = topDate + "　";
+  document.getElementById("outReporter").innerText = reporter;
+  updateTextCounts();
+  fitArticleText();
+  applyHeadlineDesignSafe();
+}
+
+
+function renderArticleText(text) {
+  const articleEl = document.getElementById("outArticle");
+  const safeText = text || "記事本文が入ります。";
+  articleEl.dataset.rawText = safeText;
+  drawArticleCanvas();
+}
+
+function normalizeArticleText(text) {
+  return (text || "記事本文が入ります。")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .trim();
+}
+
+
+function prepareArticleCharsWithIndent(text) {
+  const normalized = normalizeArticleText(text);
+  const lines = normalized.split("\n");
+  const chars = [];
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+
+    // 空行は段落区切りとして扱う
+    if (!trimmed) {
+      if (chars.length && chars[chars.length - 1] !== "\n") {
+        chars.push("\n");
+      }
+      return;
+    }
+
+    // 2段落目以降は列を変える
+    if (index > 0 && chars.length && chars[chars.length - 1] !== "\n") {
+      chars.push("\n");
+    }
+
+    // 段落頭の一字下げ
+    chars.push("__INDENT__");
+
+    Array.from(trimmed).forEach(ch => chars.push(ch));
+  });
+
+  return chars;
+}
+
+
+function measureVerticalArticle(chars, fontSize, lineGap, colGap, maxH) {
+  const lineHeight = fontSize + lineGap;
+  const charsPerCol = Math.max(1, Math.floor(maxH / lineHeight));
+  const colCount = Math.max(1, Math.ceil(chars.length / charsPerCol));
+  const needW = colCount * fontSize + Math.max(0, colCount - 1) * colGap;
+  return { charsPerCol, colCount, needW, lineHeight };
+}
+
+
+
+
+
+
+
+function toHalfWidthNumberText(text) {
+  return text.replace(/[０-９]/g, s =>
+    String.fromCharCode(s.charCodeAt(0) - 65248)
+  );
+}
+
+function isDigitChar(ch) {
+  return /^[0-9０-９]$/.test(ch);
+}
+
+function shouldDrawTwoDigitHorizontal(chars, i) {
+  if (!chars[i] || !chars[i + 1]) return false;
+
+  // 今の文字と次の文字が数字
+  if (!isDigitChar(chars[i]) || !isDigitChar(chars[i + 1])) return false;
+
+  // 直前も数字なら、3桁以上の途中なので対象外
+  if (i > 0 && isDigitChar(chars[i - 1])) return false;
+
+  // 2文字後も数字なら、3桁以上なので対象外
+  if (chars[i + 2] && isDigitChar(chars[i + 2])) return false;
+
+  return true;
+}
+
+function drawTwoDigitHorizontal(ctx, chars, i, x, y, fontSize) {
+  const numText = toHalfWidthNumberText(chars[i] + chars[i + 1]);
+
+  ctx.save();
+
+  ctx.font = "700 " + (fontSize * 0.72) + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // 1文字マスの中央に横向き2桁を置く
+  ctx.fillText(
+    numText,
+    x,
+    y + fontSize * 0.48
+  );
+
+  ctx.restore();
+}
+
+function normalizeVerticalChar(ch) {
+  const map = {
+    "ー": "｜",
+    "－": "｜",
+    "―": "｜",
+    "ｰ": "｜",
+    "〜": "｜",
+    "～": "｜"
+  };
+  return map[ch] || ch;
+}
+
+
+function getVerticalPunctuation(ch) {
+  const map = {
+    "。": "︒",
+    "、": "︑",
+    "，": "︐",
+    "．": "︒",
+    ".": "︒",
+    ",": "︑"
+  };
+  return map[ch] || "";
+}
+
+function drawVerticalPunctuation(ctx, ch, x, y, fontSize) {
+  const mark = getVerticalPunctuation(ch);
+  if (!mark) return false;
+
+  ctx.save();
+  ctx.font = '700 ' + fontSize + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  // 縦書きの句読点は、1文字マスの右上に置く
+  ctx.fillText(
+    mark,
+    x + fontSize * 0.28,
+    y - fontSize * 0.34
+  );
+
+  ctx.restore();
+  return true;
+}
+
+
+
+
+
+function drawArticleCanvas() {
+  const articleEl = document.getElementById("outArticle");
+  const canvas = document.getElementById("articleCanvas");
+  if (!articleEl || !canvas) return;
+
+  const text = articleEl.dataset.rawText || "記事本文が入ります。";
+
+  const cssW = articleEl.clientWidth || 460;
+  const cssH = articleEl.clientHeight || 230;
+  const ratio = Math.max(window.articleExportRatio || 0, window.devicePixelRatio || 1, 8);
+
+  canvas.width = Math.floor(cssW * ratio);
+  canvas.height = Math.floor(cssH * ratio);
+  canvas.style.width = cssW + "px";
+  canvas.style.height = cssH + "px";
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  const chars = Array.from(
+    String(text || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+  ).map(ch => {
+    const map = {
+      "ー": "｜",
+      "－": "｜",
+      "―": "｜",
+      "ｰ": "｜",
+      "〜": "｜",
+      "～": "｜",
+      "【": "︻",
+      "】": "︼",
+      "「": "﹁",
+      "」": "﹂",
+      "（": "︵",
+      "）": "︶"
+    };
+    return map[ch] || ch;
+  });
+
+  const visibleChars = chars.filter(ch => ch !== "\n" && ch !== " " && ch !== "　" && ch !== "\t");
+  const visibleLen = visibleChars.length;
+
+  const isDigit = ch => /^[0-9０-９]$/.test(ch || "");
+  const isPunctuation = ch => /[、。，．,.]/.test(ch || "");
+  const toHalf = str => String(str || "").replace(/[０-９]/g, s =>
+    String.fromCharCode(s.charCodeAt(0) - 65248)
+  );
+
+  function countNeededCells(sourceChars) {
+    let cells = 0;
+    let paragraphStart = true;
+
+    for (let i = 0; i < sourceChars.length; i++) {
+      const ch = sourceChars[i];
+
+      if (ch === "\n") {
+        paragraphStart = true;
+        continue;
+      }
+
+      if (ch === " " || ch === "　" || ch === "\t") continue;
+
+      if (paragraphStart) {
+        cells += 1;
+        paragraphStart = false;
+      }
+
+      const prev = sourceChars[i - 1];
+      const next = sourceChars[i + 1];
+      const afterNext = sourceChars[i + 2];
+
+      if (isDigit(ch) && isDigit(next) && !isDigit(prev) && !isDigit(afterNext)) {
+        cells += 1;
+        i += 1;
+      } else {
+        cells += 1;
+      }
+    }
+
+    return cells;
+  }
+
+  const neededCells = countNeededCells(chars);
+
+  const padX = 10;
+  const padY = 10;
+
+  const candidates = [
+    { size: 32, lineGapRate: 0.30, colGapRate: 0.44 },
+    { size: 30, lineGapRate: 0.27, colGapRate: 0.40 },
+    { size: 28, lineGapRate: 0.23, colGapRate: 0.36 },
+    { size: 26, lineGapRate: 0.18, colGapRate: 0.30 },
+    { size: 24, lineGapRate: 0.13, colGapRate: 0.24 },
+    { size: 22, lineGapRate: 0.08, colGapRate: 0.18 },
+    { size: 20, lineGapRate: 0.04, colGapRate: 0.12 },
+    { size: 18, lineGapRate: 0.00, colGapRate: 0.08 },
+    { size: 16, lineGapRate: 0.00, colGapRate: 0.04 },
+    { size: 14, lineGapRate: 0.00, colGapRate: 0.00 }
+  ];
+
+  function metrics(c) {
+    const lineGap = Math.round(c.size * c.lineGapRate);
+    const colGap = Math.round(c.size * c.colGapRate);
+    const lineHeight = c.size + lineGap;
+    const colWidth = c.size + colGap;
+    const rows = Math.max(1, Math.floor((cssH - padY * 2) / lineHeight));
+    const cols = Math.max(1, Math.floor((cssW - padX * 2) / colWidth));
+    return { ...c, lineGap, colGap, lineHeight, colWidth, rows, cols, capacity: rows * cols };
+  }
+
+  let selected = metrics(candidates[candidates.length - 1]);
+
+  for (const c of candidates) {
+    const m = metrics(c);
+    if (neededCells <= m.capacity) {
+      selected = m;
+      break;
+    }
+  }
+
+  const fontSize = selected.size;
+
+  ctx.fillStyle = "#111";
+  ctx.font = "700 " + fontSize + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  let col = 0;
+  let row = 0;
+  let paragraphStart = true;
+
+  const startX = cssW - padX - fontSize / 2;
+  const startY = padY;
+
+  function hasRoom() {
+    return col < selected.cols;
+  }
+
+  function nextCell() {
+    row += 1;
+    if (row >= selected.rows) {
+      row = 0;
+      col += 1;
+    }
+  }
+
+  function drawOneCell(ch) {
+    if (!hasRoom()) return false;
+
+    const x = startX - col * selected.colWidth;
+    const y = startY + row * selected.lineHeight;
+
+    if (x < padX) return false;
+
+    if (isPunctuation(ch)) {
+      // 縦書き新聞風：句読点は1マス内の右上。
+      // xは列中央なので、右へ寄せるためにプラス補正。
+      // yはマス上端なので、さらに少し上へ寄せる。
+      ctx.save();
+      ctx.font = "700 " + Math.round(fontSize * 0.72) + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(
+        ch,
+        x + fontSize * 0.46,
+        y - fontSize * 0.32
+      );
+      ctx.restore();
+    } else {
+      ctx.fillText(ch, x, y);
+    }
+
+    nextCell();
+    return true;
+  }
+
+  let truncated = false;
+
+  for (let i = 0; i < chars.length; i++) {
+    let ch = chars[i];
+
+    if (ch === "\n") {
+      if (row !== 0) {
+        row = 0;
+        col += 1;
+      }
+      paragraphStart = true;
+      if (!hasRoom()) {
+        truncated = true;
+        break;
+      }
+      continue;
+    }
+
+    if (ch === " " || ch === "　" || ch === "\t") continue;
+
+    if (paragraphStart) {
+      if (!drawOneCell("　")) {
+        truncated = true;
+        break;
+      }
+      paragraphStart = false;
+    }
+
+    const prev = chars[i - 1];
+    const next = chars[i + 1];
+    const afterNext = chars[i + 2];
+
+    if (isDigit(ch) && isDigit(next) && !isDigit(prev) && !isDigit(afterNext)) {
+      if (!hasRoom()) {
+        truncated = true;
+        break;
+      }
+
+      const x = startX - col * selected.colWidth;
+      const y = startY + row * selected.lineHeight;
+
+      ctx.save();
+      ctx.font = "700 " + Math.round(fontSize * 0.70) + 'px "Hiragino Mincho ProN", "Yu Mincho", serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(toHalf(ch + next), x, y + fontSize * 0.54);
+      ctx.restore();
+
+      i += 1;
+      nextCell();
+      continue;
+    }
+
+    if (!drawOneCell(ch)) {
+      truncated = true;
+      break;
+    }
+  }
+
+  const countEl = document.getElementById("articleCount");
+  if (countEl) {
+    if (truncated || neededCells > selected.capacity) {
+      countEl.innerHTML = '<span class="strongWarn">現在 ' + visibleLen + '文字：長すぎるため全文が入りきりません。少し短くしてください。</span>';
+    } else if (visibleLen <= 150) {
+      countEl.textContent = "現在 " + visibleLen + "文字：読みやすい大きさで表示しています。";
+    } else if (visibleLen <= 240) {
+      countEl.textContent = "現在 " + visibleLen + "文字：文字サイズ・間隔・句読点位置を新聞風に自動調整しています。";
+    } else if (visibleLen <= 300) {
+      countEl.innerHTML = '<span class="warn">現在 ' + visibleLen + '文字：長めなので、文字サイズと間隔を詰めています。</span>';
+    } else {
+      countEl.innerHTML = '<span class="strongWarn">現在 ' + visibleLen + '文字：かなり長いため読みにくくなります。少し短くしてください。</span>';
+    }
+  }
+
+  if (typeof updateArticleLengthNotice === "function") {
+    updateArticleLengthNotice(text);
+  }
+}
+
+
+
+
+function fitArticleText() {
+  drawArticleCanvas();
+}
+
+function updateTextCounts() {
+  const sublogo = document.getElementById("editSublogo").value.trim();
+  const headline = document.getElementById("editHeadline").value.trim();
+  const article = document.getElementById("editArticle").value.trim();
+  const sublogoPlainLen = sublogo.replace(/\s/g, "").length;
+  const hasManualBreak = sublogo.includes("\n");
+
+  const sublogoCount = document.getElementById("sublogoCount");
+  if (sublogoPlainLen > 14) {
+    sublogoCount.innerHTML = '<span class="warn">現在 ' + sublogoPlainLen + '文字：長めです。自動縮小します。Enterで区切りを調整できます。</span>';
+  } else if (hasManualBreak) {
+    sublogoCount.innerHTML = '現在 ' + sublogoPlainLen + '文字：手動改行が反映されています。';
+  } else if (sublogoPlainLen > 8) {
+    sublogoCount.innerHTML = '現在 ' + sublogoPlainLen + '文字：自動改行・自動縮小で表示します。';
+  } else {
+    sublogoCount.innerHTML = '現在 ' + sublogoPlainLen + '文字：ちょうどよい長さです。';
+  }
+
+  const headlineCount = document.getElementById("headlineCount");
+  if (headline.length > 22) headlineCount.innerHTML = '<span class="warn">現在 ' + headline.length + '文字：少し長めです。2行になりやすいので短くすると見やすいです。</span>';
+  else if (headline.length < 8) headlineCount.innerHTML = '現在 ' + headline.length + '文字：もう少し言葉を足すと新聞らしくなります。';
+  else headlineCount.innerHTML = '現在 ' + headline.length + '文字：ちょうどよい長さです。';
+
+  const articleCount = document.getElementById("articleCount");
+  if (article.length < 60) articleCount.innerHTML = '<span class="warn">現在 ' + article.length + '文字：少し短めです。「いつ・どこで・だれが・どう感じた」を足すと紙面が埋まります。</span>';
+  else if (article.length > 190) articleCount.innerHTML = '<span class="warn">現在 ' + article.length + '文字：長めです。自動縮小でできる限り全文を収めます。</span>';
+  else articleCount.innerHTML = '現在 ' + article.length + '文字：新聞紙面に入りやすい長さです。';
+}
+
+
+function makeHeadlineShorter() {
+  const input = document.getElementById("editHeadline");
+  if (!input) return;
+
+  let original = input.value.trim();
+  if (!original) return;
+
+  headlineShortLevel += 1;
+
+  let text = original
+    .replace(/しました/g, "")
+    .replace(/できました/g, "成功")
+    .replace(/はじめての/g, "初")
+    .replace(/初めての/g, "初")
+    .replace(/家族みんなで/g, "家族で")
+    .replace(/友だちと/g, "友と")
+    .replace(/ともだちと/g, "友と")
+    .replace(/修学旅行で/g, "")
+    .replace(/世界遺産の/g, "")
+    .replace(/間近で/g, "")
+    .replace(/とても/g, "")
+    .replace(/すごく/g, "")
+    .replace(/いっぱい/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const importantWords = extractHeadlineWords(text);
+
+  if (headlineShortLevel === 1) {
+    // 1回目：自然に短くする
+    text = text
+      .replace(/広島を訪れ/g, "広島へ")
+      .replace(/宮島へ行きました/g, "宮島へ")
+      .replace(/忘れられない/g, "心に残る")
+      .replace(/大きな歓声/g, "歓声")
+      .trim();
+
+    if (text.length > 16) {
+      text = smartCutHeadline(text, 16);
+    }
+
+  } else if (headlineShortLevel === 2) {
+    // 2回目：助詞や説明語を削る
+    text = text
+      .replace(/[、。！？!?]/g, "")
+      .replace(/に響く/g, "")
+      .replace(/と/g, " ")
+      .replace(/の/g, "")
+      .replace(/で/g, "")
+      .replace(/へ/g, "")
+      .replace(/を/g, "")
+      .replace(/が/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (importantWords.length >= 2) {
+      text = importantWords.slice(0, 2).join(" ");
+    }
+
+    if (text.length > 10) {
+      text = smartCutHeadline(text, 10);
+    }
+
+  } else if (headlineShortLevel === 3) {
+    // 3回目：重要語だけにする
+    if (importantWords.length >= 2) {
+      text = importantWords.slice(0, 2).join("");
+    } else if (importantWords.length === 1) {
+      text = importantWords[0];
+    }
+
+    if (text.length > 7) {
+      text = smartCutHeadline(text, 7);
+    }
+
+  } else {
+    // 4回目以降：超短縮。押しすぎても空にしない
+    const preferred = pickBestShortHeadline(importantWords, original);
+    text = preferred || "心に残る一日";
+    headlineShortLevel = 4;
+  }
+
+  if (!text || text.length < 2) {
+    text = "心に残る一日";
+  }
+
+  input.value = text;
+  updatePreviewText();
+
+  if (typeof flashPaperPart === "function") {
+    flashPaperPart("headline");
+  }
+}
+
+function extractHeadlineWords(text) {
+  const priority = [
+    "宮島", "広島", "大鳥居", "修学旅行", "友", "笑顔", "歓声",
+    "思い出", "旅", "一日", "成長", "ハイハイ", "家族", "卒業",
+    "入学", "七五三", "運動会", "文化", "歴史"
+  ];
+
+  const words = [];
+
+  priority.forEach(word => {
+    if (text.includes(word) && !words.includes(word)) {
+      words.push(word);
+    }
+  });
+
+  if (words.length === 0) {
+    const cleaned = text
+      .replace(/[、。！？!?]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ")
+      .filter(w => w.length > 0);
+
+    cleaned.forEach(w => {
+      if (!words.includes(w)) words.push(w);
+    });
+  }
+
+  return words;
+}
+
+function smartCutHeadline(text, maxLen) {
+  if (text.length <= maxLen) return text;
+
+  const separators = [" ", "　", "、", "。"];
+  for (const sep of separators) {
+    if (text.includes(sep)) {
+      const parts = text.split(sep).filter(Boolean);
+      let result = "";
+      for (const part of parts) {
+        if ((result + part).length <= maxLen) {
+          result += part;
+        }
+      }
+      if (result.length >= 2) return result;
+    }
+  }
+
+  return text.slice(0, maxLen);
+}
+
+function pickBestShortHeadline(words, original) {
+  if (words.includes("宮島") && words.includes("笑顔")) return "宮島笑顔";
+  if (words.includes("宮島") && words.includes("歓声")) return "宮島に歓声";
+  if (words.includes("宮島") && words.includes("友")) return "友と宮島";
+  if (words.includes("広島") && words.includes("宮島")) return "広島宮島";
+  if (words.includes("大鳥居")) return "大鳥居に感動";
+  if (words.includes("修学旅行")) return "修学旅行速報";
+  if (words.includes("ハイハイ")) return "初ハイハイ";
+  if (words.includes("家族")) return "家族の記念日";
+  if (words.includes("笑顔")) return "笑顔の一日";
+  if (words.includes("思い出")) return "思い出の一日";
+
+  if (original.length <= 7) return original;
+  return original.slice(0, 7);
+}
+
+
+
+function addArticleHint() {
+  const area = document.getElementById("editArticle");
+  if (!area) return;
+
+  const hint = "\n\n【取材メモ】　印象に残ったプレー、仲間にかけた声、試合後に感じたことを一つ足すと、自分だけの記事になります。";
+
+  area.value = area.value.trimEnd() + hint;
+  updatePreviewText();
+}
+
+
+
+function reselectPhoto() {
+  const input = document.getElementById("photoInput");
+  if (!input) return;
+
+  // 同じ写真を選び直してもchangeが発火するようにする
+  input.value = "";
+  input.click();
+}
+
+function removePhoto() {
+  photoData = "";
+
+  if (typeof photoObjectUrl !== "undefined" && photoObjectUrl) {
+    URL.revokeObjectURL(photoObjectUrl);
+    photoObjectUrl = "";
+  }
+
+  const photo = document.getElementById("previewPhoto");
+  if (photo) {
+    photo.removeAttribute("src");
+  }
+
+  const input = document.getElementById("photoInput");
+  if (input) {
+    input.value = "";
+  }
+
+  const guide = document.getElementById("photoGuide");
+  if (guide) {
+    guide.style.display = "block";
+  }
+
+  const status = document.getElementById("photoStatus");
+  if (status) {
+    status.innerText = "写真を削除しました。もう一度選んでください。";
+  }
+
+  const editStatus = document.getElementById("editPhotoStatus");
+  if (editStatus) {
+    editStatus.innerText = "写真を削除しました。";
+  }
+
+  resetPhotoPosition();
+}
+
+function resetPhotoPosition() {
+  photoState = { x: 0, y: 0, scale: 1, rotate: 0 };
+  applyPhotoTransform();
+}
+function nudgePhoto(dx, dy) { photoState.x += dx; photoState.y += dy; applyPhotoTransform(); }
+function changeScale(rate) { photoState.scale = Math.max(0.3, Math.min(5, photoState.scale * rate)); applyPhotoTransform(); }
+function rotatePhoto(deg) { photoState.rotate += deg; applyPhotoTransform(); }
+
+function getDistance(p1, p2) { return Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY); }
+function getAngle(p1, p2) { return Math.atan2(p2.clientY - p1.clientY, p2.clientX - p1.clientX) * 180 / Math.PI; }
+function getCenter(p1, p2) { return { x: (p1.clientX + p2.clientX) / 2, y: (p1.clientY + p2.clientY) / 2 }; }
+
+photoFrame.addEventListener("pointerdown", function(e) {
+  photoFrame.focus();
+  photoFrame.setPointerCapture(e.pointerId);
+  activePointers.set(e.pointerId, e);
+  if (activePointers.size === 1) {
+    dragStart = { startX: e.clientX, startY: e.clientY, photoX: photoState.x, photoY: photoState.y };
+    pinchStart = null;
+  }
+  if (activePointers.size === 2) {
+    const pts = Array.from(activePointers.values());
+    const center = getCenter(pts[0], pts[1]);
+    pinchStart = {
+      distance: getDistance(pts[0], pts[1]),
+      angle: getAngle(pts[0], pts[1]),
+      centerX: center.x,
+      centerY: center.y,
+      photoX: photoState.x,
+      photoY: photoState.y,
+      scale: photoState.scale,
+      rotate: photoState.rotate
+    };
+  }
+});
+
+photoFrame.addEventListener("pointermove", function(e) {
+  if (!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, e);
+  if (activePointers.size === 1 && dragStart) {
+    photoState.x = dragStart.photoX + (e.clientX - dragStart.startX);
+    photoState.y = dragStart.photoY + (e.clientY - dragStart.startY);
+    applyPhotoTransform();
+  }
+  if (activePointers.size === 2 && pinchStart) {
+    const pts = Array.from(activePointers.values());
+    const center = getCenter(pts[0], pts[1]);
+    const newDistance = getDistance(pts[0], pts[1]);
+    const newAngle = getAngle(pts[0], pts[1]);
+    photoState.scale = Math.max(0.3, Math.min(5, pinchStart.scale * (newDistance / pinchStart.distance)));
+    photoState.rotate = pinchStart.rotate + (newAngle - pinchStart.angle);
+    photoState.x = pinchStart.photoX + (center.x - pinchStart.centerX);
+    photoState.y = pinchStart.photoY + (center.y - pinchStart.centerY);
+    applyPhotoTransform();
+  }
+});
+
+function endPointer(e) {
+  activePointers.delete(e.pointerId);
+  if (activePointers.size === 1) {
+    const p = Array.from(activePointers.values())[0];
+    dragStart = { startX: p.clientX, startY: p.clientY, photoX: photoState.x, photoY: photoState.y };
+    pinchStart = null;
+  } else {
+    dragStart = null;
+    pinchStart = null;
+  }
+}
+photoFrame.addEventListener("pointerup", endPointer);
+photoFrame.addEventListener("pointercancel", endPointer);
+
+photoFrame.addEventListener("wheel", function(e) {
+  e.preventDefault();
+  changeScale(e.deltaY < 0 ? 1.05 : 0.95);
+}, { passive: false });
+
+photoFrame.addEventListener("keydown", function(e) {
+  const move = e.shiftKey ? 10 : 3;
+  const scaleStep = e.shiftKey ? 1.08 : 1.03;
+  const rotateStep = e.shiftKey ? 5 : 2;
+  if (e.key === "ArrowUp") { e.preventDefault(); nudgePhoto(0, -move); }
+  else if (e.key === "ArrowDown") { e.preventDefault(); nudgePhoto(0, move); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); nudgePhoto(-move, 0); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); nudgePhoto(move, 0); }
+  else if (e.key === "+" || e.key === "=") { e.preventDefault(); changeScale(scaleStep); }
+  else if (e.key === "-" || e.key === "_") { e.preventDefault(); changeScale(1 / scaleStep); }
+  else if (e.key.toLowerCase() === "q") { e.preventDefault(); rotatePhoto(-rotateStep); }
+  else if (e.key.toLowerCase() === "e") { e.preventDefault(); rotatePhoto(rotateStep); }
+  else if (e.key.toLowerCase() === "r") { e.preventDefault(); resetPhotoPosition(); }
+});
+
+function hideGuide() {
+  const guide = document.getElementById("photoGuide");
+  if (guide) guide.style.display = "none";
+}
+function showGuide() {
+  const guide = document.getElementById("photoGuide");
+  if (guide) guide.style.display = "block";
+}
+
+
+function prepareHighResArticleForExport() {
+  // 記事欄だけ、保存直前に超高解像度で再描画する
+  window.articleExportRatio = 18;
+  if (typeof drawArticleCanvas === "function") {
+    drawArticleCanvas();
+  }
+}
+
+function restorePreviewArticleResolution() {
+  // 通常表示用に戻す
+  window.articleExportRatio = 0;
+  if (typeof drawArticleCanvas === "function") {
+    drawArticleCanvas();
+  }
+}
+
+
+function saveAsImage() {
+  fitArticleText();
+  prepareHighResArticleForExport();
+  hideGuide();
+  html2canvas(document.getElementById("newspaper"), { scale: 7, useCORS: true, backgroundColor: "#ffffff" })
+  .then(canvas => {
+    showGuide();
+    restorePreviewArticleResolution();
+    const link = document.createElement("a");
+    link.download = "chugoku-my-kinen-shinbun.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }).catch(() => {
+    showGuide();
+    restorePreviewArticleResolution();
+    alert("画像保存に失敗しました。もう一度お試しください。");
+  });
+}
+
+
+function saveAsPDF() {
+  prepareHighResArticleForExport();
+  fitArticleText();
+  prepareHighResArticleForExport();
+  hideGuide();
+
+  const target = document.getElementById("newspaper");
+
+  html2canvas(target, {
+    scale: 7,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  }).then(canvas => {
+    showGuide();
+    restorePreviewArticleResolution();
+
+    const { jsPDF } = window.jspdf;
+
+    // A4縦サイズ
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+
+    // 印刷時に少し余白を残す
+    const margin = 8;
+    const usableWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+
+    // canvasの縦横比を保ったまま、A4内に最大表示
+    const canvasRatio = canvas.width / canvas.height;
+    const usableRatio = usableWidth / usableHeight;
+
+    let pdfWidth;
+    let pdfHeight;
+
+    if (canvasRatio > usableRatio) {
+      pdfWidth = usableWidth;
+      pdfHeight = usableWidth / canvasRatio;
+    } else {
+      pdfHeight = usableHeight;
+      pdfWidth = usableHeight * canvasRatio;
+    }
+
+    const x = (pageWidth - pdfWidth) / 2;
+    const y = (pageHeight - pdfHeight) / 2;
+
+    // JPEGの方がPDF容量が軽くなりやすい
+    const imgData = canvas.toDataURL("image/png");
+
+    pdf.addImage(imgData, "PNG", x, y, pdfWidth, pdfHeight);
+
+    const fileName = "chugoku-my-shinbun-a4.pdf";
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      const blob = pdf.output("blob");
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setTimeout(() => {
+        window.open(url, "_blank");
+      }, 500);
+    } else {
+      pdf.save(fileName);
+    }
+  }).catch(() => {
+    showGuide();
+    restorePreviewArticleResolution();
+    alert("PDF保存に失敗しました。もう一度お試しください。");
+  });
+}
+
+
+function resetForm() {
+  hideWorkspace();
+  clearFocusFlash();
+  const previewNotice = document.getElementById("previewEditNotice");
+  if (previewNotice) previewNotice.style.display = "none";
+  nextStep(1);
+}
+
+applyPhotoTransform();
+</script>
+
+<script>
+/* ===== STEP2：見出しデザイン制御・安全版 ===== */
+window.selectedHeadlineBgColor = window.selectedHeadlineBgColor || "#0f5e9c";
+window.selectedHeadlineFontClass = window.selectedHeadlineFontClass || "fontHiraginoGothic";
+
+
+function getHeadlineLetterSpacing(fontClass) {
+  const map = {
+    fontHiraginoGothic: "0.04em",
+    fontHiraginoMincho: "0.08em",
+    fontZenMaru: "0.12em",
+    fontKaisei: "0.10em",
+    fontDot: "0.18em",
+    fontKiwi: "0.14em"
+  };
+  return map[fontClass] || "0.06em";
+}
+
+
+function applyHeadlineDesignSafe() {
+  const headline = document.getElementById("outHeadline");
+  if (!headline) return;
+
+  const color = window.selectedHeadlineBgColor || "#0f5e9c";
+  const fontClass = window.selectedHeadlineFontClass || "fontHiraginoGothic";
+
+  // CSS側の !important に負けないよう、変数とbackground-colorの両方に反映
+  document.documentElement.style.setProperty("--headline-bg-color", color);
+  headline.style.setProperty("--headline-bg-color", color);
+  headline.style.setProperty("background-color", color, "important");
+
+  headline.classList.remove("fontHiraginoGothic","fontHiraginoMincho","fontZenMaru","fontKaisei","fontDot","fontKiwi");
+  headline.classList.add(fontClass);
+
+  if (typeof getHeadlineLetterSpacing === "function") {
+    headline.style.letterSpacing = getHeadlineLetterSpacing(fontClass);
+  }
+}
+
+
+
+function setHeadlineBgColor(color) {
+  window.selectedHeadlineBgColor = color || "#0f5e9c";
+
+  const p1 = document.getElementById("headlineColorPicker");
+  const p2 = document.getElementById("editHeadlineColorPicker");
+
+  if (p1) p1.value = window.selectedHeadlineBgColor;
+  if (p2) p2.value = window.selectedHeadlineBgColor;
+
+  applyHeadlineDesignSafe();
+}
+
+function setHeadlineTextColor(color) {
+  window.selectedHeadlineTextColor = color || "#ffffff";
+
+  document.documentElement.style.setProperty(
+    '--headline-text-color',
+    window.selectedHeadlineTextColor
+  );
+  const headline = document.getElementById("outHeadline");
+  if (headline) {
+    headline.style.setProperty("--headline-text-color", window.selectedHeadlineTextColor);
+    headline.style.setProperty("color", window.selectedHeadlineTextColor, "important");
+  }
+
+  const p1 = document.getElementById("headlineTextColorPicker");
+  const p2 = document.getElementById("editHeadlineTextColorPicker");
+
+  if (p1) p1.value = window.selectedHeadlineTextColor;
+  if (p2) p2.value = window.selectedHeadlineTextColor;
+}
+
+/* ↓ここに追加 */
+
+function convertVerticalChars(text) {
+  return text
+    .replace(/【/g, "︻")
+    .replace(/】/g, "︼")
+    .replace(/「/g, "﹁")
+    .replace(/」/g, "﹂")
+    .replace(/（/g, "︵")
+    .replace(/）/g, "︶");
+}
+
+
+/* ↑ここまで追加 */
+
+
+function setHeadlineFontClass(fontClass) {
+  window.selectedHeadlineFontClass = fontClass || "fontHiraginoGothic";
+
+  document.querySelectorAll('input[name="headlineFontStart"]').forEach(el => {
+    el.checked = el.value === window.selectedHeadlineFontClass;
+  });
+
+  document.querySelectorAll('input[name="headlineFontEdit"]').forEach(el => {
+    el.checked = el.value === window.selectedHeadlineFontClass;
+  });
+
+  if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
+});
+</script>
+
+
+<script>
+/* ===== STEP2-2：フォント選択肢の見た目更新 ===== */
+function refreshFontChoiceChecked() {
+  document.querySelectorAll(".fontChoice").forEach(label => {
+    const input = label.querySelector("input");
+    if (!input) return;
+    label.classList.toggle("checked", input.checked);
+  });
+}
+
+document.addEventListener("change", function(e) {
+  if (e.target && (e.target.name === "headlineFontStart" || e.target.name === "headlineFontEdit")) {
+    refreshFontChoiceChecked();
+  }
+});
+
+document.addEventListener("DOMContentLoaded", refreshFontChoiceChecked);
+
+/* ===== スマホ体験改善：拡大確認・編集復帰・記事入力補助 ===== */
+function openPreviewZoom() {
+  const modal = document.getElementById("previewZoomModal");
+  const cloneBox = document.getElementById("previewZoomClone");
+  const paper = document.getElementById("newspaper");
+  if (!modal || !cloneBox || !paper) return;
+
+  cloneBox.innerHTML = "";
+  const clone = paper.cloneNode(true);
+  clone.removeAttribute("id");
+  clone.style.transform = "none";
+  clone.style.margin = "0 auto 24px";
+  clone.style.boxShadow = "0 4px 18px rgba(0,0,0,0.35)";
+  cloneBox.appendChild(clone);
+
+  const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+  const scale = Math.max(0.78, Math.min(1.12, (viewportWidth - 28) / 595));
+  cloneBox.style.transform = "scale(" + scale + ")";
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closePreviewZoom() {
+  const modal = document.getElementById("previewZoomModal");
+  const cloneBox = document.getElementById("previewZoomClone");
+  if (!modal || !cloneBox) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  cloneBox.innerHTML = "";
+  document.body.style.overflow = "";
+}
+
+function scrollToEditor() {
+  const editor = document.getElementById("editorColumn");
+  if (editor) editor.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function insertQuickArticle(type) {
+  const article = document.getElementById("editArticle") || document.getElementById("articleInput");
+  if (!article) return;
+
+  const samples = {
+    hit: "試合では、力いっぱいバットを振り、最後まで全力で走る姿が印象に残りました。",
+    team: "ベンチからも大きな声援が送られ、仲間を信じて声をかけ合う場面がたくさんありました。",
+    feeling: "勝ち負けだけでなく、あきらめずに挑戦する大切さを感じる大会になりました。"
+  };
+
+  const add = samples[type] || "";
+  const current = article.value.trim();
+  article.value = current ? current + "\n" + add : add;
+  article.dispatchEvent(new Event("input", { bubbles: true }));
+  if (typeof updatePreviewText === "function" && article.id === "editArticle") updatePreviewText();
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") closePreviewZoom();
+});
+
+</script>
+
+
+<div class="previewZoomModal" id="previewZoomModal" aria-hidden="true">
+  <div class="previewZoomHeader">
+    <div>新聞を大きく確認</div>
+    <button type="button" onclick="closePreviewZoom()">閉じる</button>
+  </div>
+  <div class="previewZoomScroll" id="previewZoomScroll">
+    <div class="previewZoomClone" id="previewZoomClone"></div>
+  </div>
+</div>
+
+
+<script>
+/* ===== 無料イベント：1部無料・後日販売所お届け Firebase 接続版 ===== */
+const FREE_DELIVERY_EVENT = {
+  eventId: "higashihiroshima-geiyokai-soccer-2026",
+  eventName: "第6回中国新聞東広島芸陽会杯サッカー大会 My新聞づくり",
+  priceType: "free_first_copy",
+  deliveryMethod: "newspaper_sales_office",
+  status: "WAIT"
+};
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDICGLLgoopc-Jrsud5JLTnYXrpyTm730E",
+  authDomain: "chugoku-mynewspaper.firebaseapp.com",
+  projectId: "chugoku-mynewspaper",
+  storageBucket: "chugoku-mynewspaper.firebasestorage.app",
+  messagingSenderId: "673056332815",
+  appId: "1:673056332815:web:83ec39f8673e015d7d977a"
+};
+
+function isFirebaseConfigured() {
+  return firebaseConfig && firebaseConfig.apiKey && !String(firebaseConfig.apiKey).startsWith("YOUR_");
+}
+
+function ensureFirebase() {
+  if (!isFirebaseConfigured()) return null;
+  if (!window.firebase) throw new Error("Firebase SDKを読み込めませんでした。");
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  return { db: firebase.firestore(), storage: firebase.storage() };
+}
+
+function scrollToDeliveryForm() {
+  const box = document.getElementById("deliveryFormBox");
+  if (box) box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function normalizePhoneForOrder(phone) {
+  return String(phone || "").replace(/[ー－−―‐\s-]/g, "");
+}
+
+function makeReceiptNo() {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  const rand = Math.floor(Math.random() * 900 + 100);
+  return `KS${yy}${mm}${dd}-${hh}${mi}${ss}-${rand}`;
+}
+
+function getInputValue(id) {
+  const el = document.getElementById(id);
+  return el ? String(el.value || "").trim() : "";
+}
+
+function getCheckedRadioData(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return {
+    value: el ? el.value : "",
+    label: el ? (el.dataset.label || el.value) : ""
+  };
+}
+
+function getDeliveryFormData() {
+  const name = getInputValue("customerName");
+  const kana = getInputValue("customerKana");
+  const phone = getInputValue("customerPhone");
+  const address = getInputValue("customerAddress");
+  const team = getInputValue("customerTeam");
+  const grade = getInputValue("customerGrade");
+  const quantity = 1;
+  const memo = getInputValue("customerMemo");
+  const subscription = getCheckedRadioData("subscriptionStatus");
+  const interest = getCheckedRadioData("interestStatus");
+  if (!name || !kana || !phone || !address) {
+    alert("お名前・ふりがな・電話番号・お届け先住所を入力してください。");
+    return null;
+  }
+  return {
+    name, kana, phone, normalizedPhone: normalizePhoneForOrder(phone), address, team, grade, quantity, memo,
+    subscriptionStatus: subscription.value,
+    subscriptionStatusLabel: subscription.label,
+    interestStatus: interest.value,
+    interestStatusLabel: interest.label
+  };
+}
+
+function getPaperMeta() {
+  return {
+    sublogo: getInputValue("editSublogo"),
+    headline: getInputValue("editHeadline"),
+    article: getInputValue("editArticle"),
+    date: getInputValue("editDate"),
+    reporter: getInputValue("editReporter")
+  };
+}
+
+async function createNewspaperPngBlob() {
+  if (typeof prepareHighResArticleForExport === "function") prepareHighResArticleForExport();
+  if (typeof fitArticleText === "function") fitArticleText();
+  if (typeof hideGuide === "function") hideGuide();
+  const target = document.getElementById("newspaper");
+  const canvas = await html2canvas(target, { scale: 7, useCORS: true, backgroundColor: "#ffffff" });
+  if (typeof showGuide === "function") showGuide();
+  if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")), "image/png", 1.0);
+  });
+}
+
+function buildDeliveryLabel(order) {
+  return [
+    `受付番号：${order.receiptNo}`,
+    `${order.address}`,
+    `${order.name} 様`,
+    `TEL：${order.phone}`,
+    `チーム：${order.team || "未入力"}`,
+    `学年：${order.grade || "未入力"}　希望枚数：${order.quantity || 1}`,
+    `購読状況：${order.subscriptionStatusLabel || "未回答"}`,
+    `興味：${order.interestStatusLabel || "未回答"}`,
+    `ステータス：${order.status}`
+  ].join("\n");
+}
+
+async function submitFreeDeliveryOrder() {
+  const status = document.getElementById("deliveryStatus");
+  const complete = document.getElementById("deliveryComplete");
+  const form = getDeliveryFormData();
+  if (!form) return;
+
+  const receiptNo = makeReceiptNo();
+  status.style.display = "block";
+  status.textContent = "新聞画像（PNG）を作成しています。少しお待ちください。";
+  complete.style.display = "none";
+
+  try {
+    const pngBlob = await createNewspaperPngBlob();
+    const paper = getPaperMeta();
+    const fb = ensureFirebase();
+    if (!fb) throw new Error("Firebase設定が見つかりません。");
+
+    status.textContent = "申込データを送信しています。";
+    const storagePath = `newspapers/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.png`;
+    await fb.storage.ref(storagePath).put(pngBlob, { contentType: "image/png" });
+    const imageUrl = await fb.storage.ref(storagePath).getDownloadURL();
+
+    const order = {
+      receiptNo,
+      eventId: FREE_DELIVERY_EVENT.eventId,
+      eventName: FREE_DELIVERY_EVENT.eventName,
+      deliveryMethod: FREE_DELIVERY_EVENT.deliveryMethod,
+      priceType: FREE_DELIVERY_EVENT.priceType,
+      createdAtLocal: new Date().toISOString(),
+      name: form.name,
+      kana: form.kana,
+      phone: form.phone,
+      normalizedPhone: form.normalizedPhone,
+      address: form.address,
+      team: form.team,
+      grade: form.grade,
+      quantity: form.quantity,
+      memo: form.memo,
+      subscriptionStatus: form.subscriptionStatus,
+      subscriptionStatusLabel: form.subscriptionStatusLabel,
+      interestStatus: form.interestStatus,
+      interestStatusLabel: form.interestStatusLabel,
+      sublogo: paper.sublogo,
+      headline: paper.headline,
+      article: paper.article,
+      paperDate: paper.date,
+      reporter: paper.reporter,
+      imageUrl,
+      storagePath,
+      labelText: "",
+      status: FREE_DELIVERY_EVENT.status,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      source: "web-html"
+    };
+    order.labelText = buildDeliveryLabel(order);
+
+    await fb.db.collection("freeDeliveryOrders").doc(receiptNo).set(order);
+
+    status.style.display = "none";
+    complete.style.display = "block";
+    complete.innerHTML = `
+      <div>お申し込みを受け付けました。</div>
+      <div>受付番号</div>
+      <strong>${receiptNo}</strong>
+      <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
+    `;
+  } catch (err) {
+    if (typeof showGuide === "function") showGuide();
+    if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
+    status.style.display = "block";
+    status.textContent = "送信に失敗しました。Firebase設定・通信状況・セキュリティルールを確認して、もう一度お試しください。";
+    console.error(err);
+  }
+}
+</script>
+
+
+<script>
+/* ===== 受付期間チェック：2026年9月1日以降は受付終了表示 ===== */
+const RECEPTION_CLOSE_AT_JST = new Date("2026-09-01T00:00:00+09:00");
+
+function isReceptionClosedNow() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("forceOpen") === "1") return false;      // 動作確認用
+  if (params.get("previewClosed") === "1") return true;   // 表示確認用
+  return new Date() >= RECEPTION_CLOSE_AT_JST;
+}
+
+function showReceptionClosedIfNeeded() {
+  if (!isReceptionClosedNow()) return false;
+
+  document.body.classList.add("receptionClosed");
+
+  document.querySelectorAll("input, textarea, select, button").forEach(el => {
+    el.disabled = true;
+  });
+
+  const closedBox = document.getElementById("receptionClosedBox");
+  if (closedBox) {
+    closedBox.style.display = "block";
+    closedBox.scrollIntoView({ behavior: "auto", block: "start" });
+  }
+  return true;
+}
+
+document.addEventListener("DOMContentLoaded", showReceptionClosedIfNeeded);
+
+const originalSubmitFreeDeliveryOrder = window.submitFreeDeliveryOrder;
+window.submitFreeDeliveryOrder = async function() {
+  if (showReceptionClosedIfNeeded()) {
+    alert("本イベントの受付は終了しました。たくさんのお申し込み、ありがとうございました。");
+    return;
+  }
+  if (typeof originalSubmitFreeDeliveryOrder === "function") {
+    return originalSubmitFreeDeliveryOrder.apply(this, arguments);
+  }
+};
+</script>
+
+</body>
+</html>
