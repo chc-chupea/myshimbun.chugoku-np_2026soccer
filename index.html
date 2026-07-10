@@ -3682,16 +3682,44 @@ function normalizePhoneForOrder(phone) {
   return String(phone || "").replace(/[ー－−―‐\s-]/g, "");
 }
 
-function makeReceiptNo() {
-  const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
-  const ss = String(d.getSeconds()).padStart(2, "0");
-  const rand = Math.floor(Math.random() * 900 + 100);
-  return `KS${yy}${mm}${dd}-${hh}${mi}${ss}-${rand}`;
+function getJstDayKey() {
+  const parts = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+
+  const values = {};
+  parts.forEach(part => {
+    if (part.type !== "literal") values[part.type] = part.value;
+  });
+  return `${values.year}${values.month}${values.day}`;
+}
+
+async function issueDailyReceiptNo(db) {
+  const dayKey = getJstDayKey();
+  const counterId = `${FREE_DELIVERY_EVENT.eventId}_${dayKey}`;
+  const counterRef = db.collection("freeDeliveryCounters").doc(counterId);
+  let sequenceNo = 0;
+
+  await db.runTransaction(async transaction => {
+    const snapshot = await transaction.get(counterRef);
+    const currentNo = snapshot.exists
+      ? Number(snapshot.data().lastNo || 0)
+      : 0;
+
+    sequenceNo = currentNo + 1;
+
+    transaction.set(counterRef, {
+      eventId: FREE_DELIVERY_EVENT.eventId,
+      dayKey,
+      lastNo: sequenceNo,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  });
+
+  return `${dayKey}-${String(sequenceNo).padStart(4, "0")}`;
 }
 
 function getInputValue(id) {
@@ -3775,16 +3803,19 @@ async function submitFreeDeliveryOrder() {
   const form = getDeliveryFormData();
   if (!form) return;
 
-  const receiptNo = makeReceiptNo();
   status.style.display = "block";
-  status.textContent = "新聞画像（PNG）を作成しています。少しお待ちください。";
+  status.textContent = "受付番号を発行しています。少しお待ちください。";
   complete.style.display = "none";
 
   try {
-    const pngBlob = await createNewspaperPngBlob();
-    const paper = getPaperMeta();
     const fb = ensureFirebase();
     if (!fb) throw new Error("Firebase設定が見つかりません。");
+
+    const receiptNo = await issueDailyReceiptNo(fb.db);
+
+    status.textContent = "新聞画像（PNG）を作成しています。少しお待ちください。";
+    const pngBlob = await createNewspaperPngBlob();
+    const paper = getPaperMeta();
 
     status.textContent = "申込データを送信しています。";
     const storagePath = `newspapers/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.png`;
