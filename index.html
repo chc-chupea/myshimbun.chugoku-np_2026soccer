@@ -1892,6 +1892,12 @@ body.wizardMode .step {
   }
 }
 
+
+/* ===== シンプル導線：ライブ入力 → 仕上げ編集 → 申込 ===== */
+.previewToolBar {
+  display: none !important;
+}
+
 </style>
 
 
@@ -2021,14 +2027,14 @@ body.wizardMode .step {
 <h2>⑥ 記者名を書こう</h2>
 <p>作った人の名前やニックネームを入れてください。</p>
 <input id="reporterInput" placeholder="例：記者 （氏名）"/>
-<button class="nextBtn" onclick="makeNewspaper()">新聞プレビューを見る</button>
+<button class="nextBtn" onclick="makeNewspaper()">次へ（仕上げ編集）</button>
 <button class="backBtn" onclick="nextStep(5)">戻る</button>
 
 </section><div id="workspace">
 <div id="editorColumn"><div class="editPanel" id="editPanel">
 <h2>編集する</h2>
 <div class="miniHelp">
-    必要な項目だけ開いて編集できます。記事欄は読みやすく大きめにし、文字量に応じて自動調整します。
+    仕上がりを見ながら、必要な項目だけ開いて微調整できます。完了したら下の申込ボタンへ進んでください。
   </div>
 <details class="editSection" open="">
 <summary>サブ題字</summary>
@@ -2194,10 +2200,6 @@ body.wizardMode .step {
 </div>
 </div></div>
 <div id="previewColumn">
-<div class="previewToolBar">
-  <button type="button" onclick="openPreviewZoom()">新聞を大きく見る</button>
-  <button type="button" onclick="scrollToEditor()">編集に戻る</button>
-</div>
 <div id="newspaperWrap">
 <div id="newspaper">
 <div class="topline">
