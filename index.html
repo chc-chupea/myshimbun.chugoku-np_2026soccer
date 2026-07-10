@@ -1590,15 +1590,21 @@ button {
   }
 
   #previewColumn {
-    position: relative !important;
-    top: auto !important;
-    padding-top: 2px !important;
-    box-shadow: none !important;
-    background: transparent !important;
+    order: 1;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    padding: 4px 0 6px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.16) !important;
+    background: linear-gradient(180deg, #eef7ff 0%, #f7fbff 100%) !important;
+  }
+
+  #editorColumn {
+    order: 2;
   }
 
   #previewColumn #newspaperWrap {
-    max-height: none !important;
+    max-height: 40vh !important;
     overflow: auto !important;
     padding-top: 4px !important;
   }
@@ -2634,7 +2640,18 @@ function makeNewspaper() {
   const previewNotice = document.getElementById("previewEditNotice");
   if (previewNotice) previewNotice.style.display = "block";
   setTimeout(() => photoFrame.focus(), 300);
-  window.scrollTo({ top: document.getElementById("workspace").offsetTop, behavior: "smooth" });
+
+  requestAnimationFrame(() => {
+    const previewColumn = document.getElementById("previewColumn");
+    const workspace = document.getElementById("workspace");
+    const target = previewColumn || workspace;
+    if (target) {
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  });
 }
 
 
@@ -3832,8 +3849,16 @@ function closePreviewZoom() {
 }
 
 function scrollToEditor() {
+  const preview = document.getElementById("previewColumn");
   const editor = document.getElementById("editorColumn");
-  if (editor) editor.scrollIntoView({ behavior: "smooth", block: "start" });
+  const target = window.innerWidth <= 900 ? (preview || editor) : editor;
+
+  if (target) {
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
 }
 
 function insertQuickArticle(type) {
