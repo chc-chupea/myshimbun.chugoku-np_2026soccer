@@ -1898,6 +1898,50 @@ body.wizardMode .step {
   display: none !important;
 }
 
+
+/* Hero without sample image */
+.heroTitleSimple{
+  max-width:900px;
+  margin:18px auto 16px;
+  padding:18px 22px;
+  text-align:center;
+  border-radius:14px;
+}
+.heroTitleSimple .eventTitleText{
+  width:100%;
+}
+@media (max-width:900px){
+  .heroTitleSimple{
+    padding:16px 14px;
+    margin:10px auto 12px;
+  }
+}
+
+
+/* ===== トップ帯：元のブルーグラデーションへ戻す ===== */
+.blueHeroBand {
+  background: linear-gradient(90deg, #0057b8 0%, #6fd3ff 100%) !important;
+  box-shadow: 0 4px 14px rgba(15,94,156,0.18) !important;
+}
+
+.blueHeroBand .eventTitleName,
+.blueHeroBand .eventTitleMain,
+.blueHeroBand .eventTitleSub {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.22);
+}
+
+.blueHeroBand .eventTitleSub {
+  margin-top: 6px;
+  font-size: 15px !important;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.funLead {
+  display: none !important;
+}
+
 </style>
 
 
@@ -1910,18 +1954,15 @@ body.wizardMode .step {
 <h1>中国新聞 My新聞づくり</h1>
 
 
-<div class="eventTitle heroTitleWithSample">
-  <img
-    src="sample.png"
-    alt="東広島芸陽会杯サッカー大会の完成サンプル"
-    class="eventSampleImage"
-  />
-
-  <div class="eventTitleText">
+<div class="eventTitle heroTitleSimple blueHeroBand">
+<div class="eventTitleText">
     <div class="eventTitleName">2026年8月23日（日）開催</div>
     <div class="eventTitleMain">第6回中国新聞東広島芸陽会杯<br/>サッカー大会を新聞記事にしよう！</div>
-    <div class="eventTitleSub">見たこと・感じたこと、仲間のがんばりを記事に書こう</div>
-    <div class="funLead mobileOnly">スマホで写真を選んで、見出しをつけたら、世界に1枚の大会新聞が完成！</div>
+    <div class="eventTitleSub">
+      見たこと・感じたこと、仲間の頑張りを記事に書こう<br/>
+      スマホで写真を選んで、見出しをつけたら、世界に1枚の大会新聞が完成！
+    </div>
+    
   </div>
 </div>
 
@@ -2345,7 +2386,7 @@ function movePreviewToWorkspace() {
 
 function syncStartFieldsToEditor(redrawArticle = true) {
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
-  const headline = document.getElementById("headlineInput").value.trim() || "仲間とつないだ 夏の一勝";
+  const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
   const article = document.getElementById("articleInput").value.trim() ||
     "第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。";
   const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
@@ -2623,7 +2664,7 @@ function setupEditFocusHighlights() {
 
 function makeNewspaper() {
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
-  const headline = document.getElementById("headlineInput").value.trim() || "仲間とつないだ 夏の一勝";
+  const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
   const article = document.getElementById("articleInput").value.trim() ||
     "第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。";
   const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
