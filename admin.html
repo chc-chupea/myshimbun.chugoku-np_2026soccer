@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>第6回中国新聞東広島芸陽会杯サッカー大会 My新聞 管理・ラベル</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef4f8;color:#111;font-family:"Hiragino Sans","Yu Gothic",sans-serif}header{background:linear-gradient(90deg,#0057b8,#6fd3ff);color:#fff;padding:18px 16px}header h1{margin:0;font-size:22px}.wrap{max-width:1280px;margin:18px auto;padding:0 12px}.panel{background:#fff;border-radius:12px;box-shadow:0 3px 12px rgba(0,0,0,.13);padding:14px;margin-bottom:14px}.toolbar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}button,input,select{font-size:15px;padding:10px;border-radius:8px;border:1px solid #bbb}button{border:none;background:#0057b8;color:#fff;font-weight:700;cursor:pointer}.subBtn{background:#607d8b}.dangerBtn{background:#b00020}.summary{font-weight:700;line-height:1.7}.filterNote{font-size:12px;color:#555;line-height:1.6}.tableWrap{overflow:auto}table{width:100%;border-collapse:collapse;background:#fff;min-width:1280px}th,td{border-bottom:1px solid #ddd;padding:8px;font-size:13px;vertical-align:top}th{background:#f4f8fb;text-align:left;white-space:nowrap}.thumb{width:90px;border:1px solid #ccc}.status{font-weight:800}.WAIT{color:#b35a00}.PRINTING{color:#0057b8}.DELIVERED{color:#098b3e}.leadTag{display:inline-block;background:#fff3cd;color:#8a5700;border:1px solid #f0cf7a;border-radius:999px;padding:2px 7px;font-size:11px;font-weight:800;margin-top:4px}.hotLead{background:#ffe4e4;color:#b00020;border-color:#f1a0a0}.labelSheet{display:none}.labelGrid{display:grid;grid-template-columns:1fr 1fr;gap:8mm}.labelCard{height:63mm;border:1px solid #111;padding:5mm;page-break-inside:avoid;font-family:"Hiragino Sans","Yu Gothic",sans-serif}.labelReceipt{font-size:11px;font-weight:800;border-bottom:1px solid #111;padding-bottom:2mm;margin-bottom:3mm}.labelAddress{font-size:15px;line-height:1.45;white-space:pre-wrap}.labelName{font-size:19px;font-weight:900;margin:3mm 0}.labelMeta{font-size:11px;line-height:1.5;border-top:1px dashed #777;padding-top:2mm}@media print{body{background:#fff}header,.wrap{display:none}.labelSheet{display:block;padding:8mm}.labelGrid{display:grid}.labelCard{break-inside:avoid} @page{size:A4 portrait;margin:8mm}}
+@media(max-width:900px){.toolbar{grid-template-columns:1fr 1fr}.wrap{padding:0 8px}header h1{font-size:18px}}
+</style>
+</head>
+<body>
+<header><h1>第6回中国新聞東広島芸陽会杯サッカー大会 My新聞 管理・ラベル</h1></header>
+<div class="wrap">
+  <div class="panel summary" id="summary">読み込み前</div>
+  <div class="panel toolbar">
+    <button onclick="loadOrders()">最新データ読込</button>
+    <select id="statusFilter" onchange="renderOrders()">
+      <option value="">全ステータス</option>
+      <option value="WAIT">受付</option>
+      <option value="PRINTING">印刷中</option>
+      <option value="DELIVERED">配達済</option>
+    </select>
+    <select id="surveyFilter" onchange="renderOrders()">
+      <option value="all">全件</option>
+      <option value="sub:chugoku">中国新聞購読中</option>
+      <option value="sub:digital">中国新聞デジタル</option>
+      <option value="sub:other">他紙購読</option>
+      <option value="sub:none">未購読</option>
+      <option value="interest:trial">「読んでみたい」だけ表示</option>
+      <option value="interest:catalog">「資料だけ欲しい」だけ表示</option>
+    </select>
+    <input id="searchBox" oninput="renderOrders()" placeholder="氏名・電話・住所・受付番号で検索" />
+    <button class="subBtn" onclick="downloadCSV()">CSV出力</button>
+    <button onclick="printLabels()">表示中のラベル印刷</button>
+    <button class="subBtn" onclick="clearFilters()">絞り込み解除</button>
+  </div>
+  <div class="panel filterNote">営業フォローは「読んでみたい」「資料だけ欲しい」で絞り込んでCSV出力できます。</div>
+  <div class="panel tableWrap">
+    <table>
+      <thead><tr><th>受付番号</th><th>注文日時</th><th>氏名</th><th>電話</th><th>住所</th><th>所属チーム・学年</th><th>希望枚数</th><th>購読状況</th><th>興味</th><th>見出し・記事</th><th>画像</th><th>ステータス</th><th>操作</th></tr></thead>
+      <tbody id="orderRows"><tr><td colspan="13">「最新データ読込」を押してください。</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<div class="labelSheet"><div class="labelGrid" id="labelGrid"></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDICGLLgoopc-Jrsud5JLTnYXrpyTm730E",
+  authDomain: "chugoku-mynewspaper.firebaseapp.com",
+  projectId: "chugoku-mynewspaper",
+  storageBucket: "chugoku-mynewspaper.firebasestorage.app",
+  messagingSenderId: "673056332815",
+  appId: "1:673056332815:web:83ec39f8673e015d7d977a"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+let orders=[];let visibleOrders=[];
+const SUB_LABEL={chugoku:'中国新聞を購読中',digital:'中国新聞デジタルを購読中',other:'中国新聞以外の新聞を購読中',none:'新聞は購読していない'};
+const INT_LABEL={trial:'中国新聞を読んでみたい',catalog:'資料だけ欲しい',none:'今は希望しない'};
+function fmtDate(v){if(!v)return""; if(v.toDate)return v.toDate().toLocaleString('ja-JP'); try{return new Date(v).toLocaleString('ja-JP')}catch(e){return String(v)}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function subLabel(o){return o.subscriptionStatusLabel || SUB_LABEL[o.subscriptionStatus] || '未回答'}
+function intLabel(o){return o.interestStatusLabel || INT_LABEL[o.interestStatus] || '未回答'}
+function leadTag(o){if(o.interestStatus==='trial')return '<span class="leadTag hotLead">読んでみたい</span>'; if(o.interestStatus==='catalog')return '<span class="leadTag">資料希望</span>'; return ''}
+async function loadOrders(){document.getElementById('summary').textContent='読み込み中です。';const snap=await db.collection('freeDeliveryOrders').where('eventId','==','higashihiroshima-geiyokai-soccer-2026').get();orders=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAtLocal||'').localeCompare(String(a.createdAtLocal||'')));renderOrders()}
+function clearFilters(){document.getElementById('statusFilter').value='';document.getElementById('surveyFilter').value='all';document.getElementById('searchBox').value='';renderOrders()}
+function matchesSurvey(o,filter){if(!filter||filter==='all')return true;const [kind,value]=filter.split(':');if(kind==='sub')return o.subscriptionStatus===value;if(kind==='interest')return o.interestStatus===value;return true}
+function renderOrders(){const status=document.getElementById('statusFilter').value;const survey=document.getElementById('surveyFilter').value;const q=document.getElementById('searchBox').value.trim().toLowerCase();visibleOrders=orders.filter(o=>(!status||o.status===status)&&matchesSurvey(o,survey)&&(!q||[o.receiptNo,o.name,o.kana,o.phone,o.address,o.team,o.grade,subLabel(o),intLabel(o)].some(v=>String(v||'').toLowerCase().includes(q))));const rows=document.getElementById('orderRows');const trial=orders.filter(o=>o.interestStatus==='trial').length;const catalog=orders.filter(o=>o.interestStatus==='catalog').length;document.getElementById('summary').textContent=`全${orders.length}件／表示${visibleOrders.length}件　受付:${orders.filter(o=>o.status==='WAIT').length}　印刷中:${orders.filter(o=>o.status==='PRINTING').length}　配達済:${orders.filter(o=>o.status==='DELIVERED').length}　読んでみたい:${trial}　資料希望:${catalog}`;if(!visibleOrders.length){rows.innerHTML='<tr><td colspan="13">該当データがありません。</td></tr>';return}rows.innerHTML=visibleOrders.map(o=>`<tr><td><strong>${esc(o.receiptNo)}</strong></td><td>${esc(fmtDate(o.createdAt||o.createdAtLocal))}</td><td>${esc(o.name)}<br><small>${esc(o.kana)}</small></td><td>${esc(o.phone)}</td><td>${esc(o.address)}</td><td>${esc(o.team||'')}<br>${esc(o.grade||'')}</td><td>${esc(o.quantity||1)}</td><td>${esc(subLabel(o))}</td><td>${esc(intLabel(o))}<br>${leadTag(o)}</td><td><strong>${esc(o.headline||'')}</strong><br><small>${esc((o.article||'').slice(0,70))}</small></td><td>${o.imageUrl?`<a href="${esc(o.imageUrl)}" target="_blank"><img class="thumb" src="${esc(o.imageUrl)}"></a>`:''}</td><td class="status ${esc(o.status)}">${esc(o.status)}</td><td><button onclick="updateStatus('${esc(o.receiptNo)}','PRINTING')">印刷中</button><br><button onclick="updateStatus('${esc(o.receiptNo)}','DELIVERED')">配達済</button><br><button class="subBtn" onclick="printOneLabel('${esc(o.receiptNo)}')">ラベル</button></td></tr>`).join('')}
+async function updateStatus(id,status){await db.collection('freeDeliveryOrders').doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});const o=orders.find(x=>x.receiptNo===id);if(o)o.status=status;renderOrders()}
+function labelHtml(o){return `<div class="labelCard"><div class="labelReceipt">受付番号：${esc(o.receiptNo)}　希望枚数：${esc(o.quantity||1)}</div><div class="labelAddress">${esc(o.address)}</div><div class="labelName">${esc(o.name)} 様</div><div class="labelMeta">TEL：${esc(o.phone)}<br>所属チーム：${esc(o.team||'未入力')}　学年：${esc(o.grade||'未入力')}<br>購読状況：${esc(subLabel(o))}<br>興味：${esc(intLabel(o))}<br>第6回中国新聞東広島芸陽会杯サッカー大会 My新聞</div></div>`}
+function printLabels(){document.getElementById('labelGrid').innerHTML=visibleOrders.map(labelHtml).join('');window.print()}
+function printOneLabel(id){const o=orders.find(x=>x.receiptNo===id);if(!o)return;document.getElementById('labelGrid').innerHTML=labelHtml(o);window.print()}
+function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
+function downloadCSV(){const cols=['受付番号','注文日時','氏名','ふりがな','電話番号','住所','所属チーム','学年','希望枚数','購読状況','興味','見出し','記事','画像URL','ステータス'];const lines=[cols.join(',')];visibleOrders.forEach(o=>{lines.push([o.receiptNo,fmtDate(o.createdAt||o.createdAtLocal),o.name,o.kana,o.phone,o.address,o.team,o.grade,o.quantity||1,subLabel(o),intLabel(o),o.headline,o.article,o.imageUrl,o.status].map(csvCell).join(','))});const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='higashihiroshima_geiyokai_soccer_mynewspaper_orders.csv';a.click()}
+loadOrders().catch(e=>{document.getElementById('summary').textContent='読み込みに失敗しました。Firestoreルールを確認してください。';console.error(e)})
+</script>
+</body>
+</html>
