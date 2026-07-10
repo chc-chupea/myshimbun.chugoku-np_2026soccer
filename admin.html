@@ -35,7 +35,7 @@
     <button onclick="printLabels()">表示中のラベル印刷</button>
     <button class="subBtn" onclick="clearFilters()">絞り込み解除</button>
   </div>
-  <div class="panel filterNote">営業フォローは「読んでみたい」「資料だけ欲しい」で絞り込んでCSV出力できます。</div>
+  <div class="panel filterNote">営業フォローは「読んでみたい」「資料だけ欲しい」で絞り込んでCSV出力できます。PNG保存がブラウザに遮断された場合は、画像が新しいタブで開くので、右クリックして「名前を付けて画像を保存」を選んでください。</div>
   <div class="panel tableWrap">
     <table>
       <thead><tr><th>受付番号</th><th>注文日時</th><th>氏名</th><th>電話</th><th>住所</th><th>所属チーム・学年</th><th>連絡メモ</th><th>希望枚数</th><th>購読状況</th><th>興味</th><th>見出し・記事</th><th>画像</th><th>ステータス</th><th>操作</th></tr></thead>
@@ -68,7 +68,7 @@ function leadTag(o){if(o.interestStatus==='trial')return '<span class="leadTag h
 async function loadOrders(){document.getElementById('summary').textContent='読み込み中です。';const snap=await db.collection('freeDeliveryOrders').where('eventId','==','higashihiroshima-geiyokai-soccer-2026').get();orders=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAtLocal||'').localeCompare(String(a.createdAtLocal||'')));renderOrders()}
 function clearFilters(){document.getElementById('statusFilter').value='';document.getElementById('surveyFilter').value='all';document.getElementById('searchBox').value='';renderOrders()}
 function matchesSurvey(o,filter){if(!filter||filter==='all')return true;const [kind,value]=filter.split(':');if(kind==='sub')return o.subscriptionStatus===value;if(kind==='interest')return o.interestStatus===value;return true}
-function renderOrders(){const status=document.getElementById('statusFilter').value;const survey=document.getElementById('surveyFilter').value;const q=document.getElementById('searchBox').value.trim().toLowerCase();visibleOrders=orders.filter(o=>(!status||o.status===status)&&matchesSurvey(o,survey)&&(!q||[o.receiptNo,o.name,o.kana,o.phone,o.address,o.team,o.grade,o.memo,subLabel(o),intLabel(o)].some(v=>String(v||'').toLowerCase().includes(q))));const rows=document.getElementById('orderRows');const trial=orders.filter(o=>o.interestStatus==='trial').length;const catalog=orders.filter(o=>o.interestStatus==='catalog').length;document.getElementById('summary').textContent=`全${orders.length}件／表示${visibleOrders.length}件　受付:${orders.filter(o=>o.status==='WAIT').length}　印刷中:${orders.filter(o=>o.status==='PRINTING').length}　配達済:${orders.filter(o=>o.status==='DELIVERED').length}　読んでみたい:${trial}　資料希望:${catalog}`;if(!visibleOrders.length){rows.innerHTML='<tr><td colspan="14">該当データがありません。</td></tr>';return}rows.innerHTML=visibleOrders.map(o=>`<tr><td><strong>${esc(o.receiptNo)}</strong></td><td>${esc(fmtDate(o.createdAt||o.createdAtLocal))}</td><td>${esc(o.name)}<br><small>${esc(o.kana)}</small></td><td>${esc(o.phone)}</td><td>${esc(o.address)}</td><td>${esc(o.team||'')}<br>${esc(o.grade||'')}</td><td>${esc(o.memo||'')}</td><td>${esc(o.quantity||1)}</td><td>${esc(subLabel(o))}</td><td>${esc(intLabel(o))}<br>${leadTag(o)}</td><td><strong>${esc(o.headline||'')}</strong><br><small>${esc((o.article||'').slice(0,70))}</small></td><td>${o.imageUrl?`<a href="${esc(o.imageUrl)}" target="_blank"><img class="thumb" src="${esc(o.imageUrl)}"></a>`:''}</td><td class="status ${esc(o.status)}">${esc(o.status)}</td><td><button onclick="updateStatus('${esc(o.receiptNo)}','PRINTING')">印刷中</button><br><button onclick="updateStatus('${esc(o.receiptNo)}','DELIVERED')">配達済</button><br><button class="subBtn" onclick="printOneLabel('${esc(o.receiptNo)}')">ラベル</button><br>${o.imageUrl?`<button class="subBtn" onclick="downloadPng('${esc(o.imageUrl)}','${esc(o.receiptNo)}')">PNGダウンロード</button>`:''}</td></tr>`).join('')}
+function renderOrders(){const status=document.getElementById('statusFilter').value;const survey=document.getElementById('surveyFilter').value;const q=document.getElementById('searchBox').value.trim().toLowerCase();visibleOrders=orders.filter(o=>(!status||o.status===status)&&matchesSurvey(o,survey)&&(!q||[o.receiptNo,o.name,o.kana,o.phone,o.address,o.team,o.grade,o.memo,subLabel(o),intLabel(o)].some(v=>String(v||'').toLowerCase().includes(q))));const rows=document.getElementById('orderRows');const trial=orders.filter(o=>o.interestStatus==='trial').length;const catalog=orders.filter(o=>o.interestStatus==='catalog').length;document.getElementById('summary').textContent=`全${orders.length}件／表示${visibleOrders.length}件　受付:${orders.filter(o=>o.status==='WAIT').length}　印刷中:${orders.filter(o=>o.status==='PRINTING').length}　配達済:${orders.filter(o=>o.status==='DELIVERED').length}　読んでみたい:${trial}　資料希望:${catalog}`;if(!visibleOrders.length){rows.innerHTML='<tr><td colspan="14">該当データがありません。</td></tr>';return}rows.innerHTML=visibleOrders.map(o=>`<tr><td><strong>${esc(o.receiptNo)}</strong></td><td>${esc(fmtDate(o.createdAt||o.createdAtLocal))}</td><td>${esc(o.name)}<br><small>${esc(o.kana)}</small></td><td>${esc(o.phone)}</td><td>${esc(o.address)}</td><td>${esc(o.team||'')}<br>${esc(o.grade||'')}</td><td>${esc(o.memo||'')}</td><td>${esc(o.quantity||1)}</td><td>${esc(subLabel(o))}</td><td>${esc(intLabel(o))}<br>${leadTag(o)}</td><td><strong>${esc(o.headline||'')}</strong><br><small>${esc((o.article||'').slice(0,70))}</small></td><td>${o.imageUrl?`<a href="${esc(o.imageUrl)}" target="_blank"><img class="thumb" src="${esc(o.imageUrl)}"></a>`:''}</td><td class="status ${esc(o.status)}">${esc(o.status)}</td><td><button onclick="updateStatus('${esc(o.receiptNo)}','PRINTING')">印刷中</button><br><button onclick="updateStatus('${esc(o.receiptNo)}','DELIVERED')">配達済</button><br><button class="subBtn" onclick="printOneLabel('${esc(o.receiptNo)}')">ラベル</button><br>${o.imageUrl?`<button class="subBtn" onclick="downloadPng('${esc(o.imageUrl)}','${esc(o.receiptNo)}')">PNG保存</button>`:''}</td></tr>`).join('')}
 async function updateStatus(id,status){await db.collection('freeDeliveryOrders').doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});const o=orders.find(x=>x.receiptNo===id);if(o)o.status=status;renderOrders()}
 function labelHtml(o){return `<div class="labelCard"><div class="labelReceipt">受付番号：${esc(o.receiptNo)}　希望枚数：${esc(o.quantity||1)}</div><div class="labelAddress">${esc(o.address)}</div><div class="labelName">${esc(o.name)} 様</div><div class="labelMeta">TEL：${esc(o.phone)}<br>所属チーム：${esc(o.team||'未入力')}　学年：${esc(o.grade||'未入力')}<br>購読状況：${esc(subLabel(o))}<br>興味：${esc(intLabel(o))}<br>連絡メモ：${esc(o.memo||'なし')}<br>第6回中国新聞東広島芸陽会杯サッカー大会 My新聞</div></div>`}
 function printLabels(){document.getElementById('labelGrid').innerHTML=visibleOrders.map(labelHtml).join('');window.print()}
@@ -79,22 +79,43 @@ async function downloadPng(url, receiptNo){
     return;
   }
 
+  const fileName = `${receiptNo}.png`;
+
   try{
-    const response = await fetch(url, { mode: "cors" });
-    if(!response.ok) throw new Error("PNGの取得に失敗しました。");
+    // CORSが許可されている場合は、指定ファイル名で直接保存
+    const response = await fetch(url, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-store"
+    });
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = `${receiptNo}.png`;
+    a.download = fileName;
+    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(objectUrl);
+
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   }catch(error){
-    console.error(error);
-    alert("PNGをダウンロードできませんでした。Firebase StorageのCORS設定をご確認ください。");
+    console.warn("直接ダウンロードできないため、画像を新しいタブで開きます。", error);
+
+    // GitHub PagesとFirebase Storage間のCORSで遮断された場合の確実な代替動作
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if(!opened){
+      location.href = url;
+      return;
+    }
+
+    alert(
+      `画像を新しいタブで開きました。\n` +
+      `画像の上で右クリックして「名前を付けて画像を保存」を選び、\n` +
+      `${fileName} として保存してください。`
+    );
   }
 }
 
