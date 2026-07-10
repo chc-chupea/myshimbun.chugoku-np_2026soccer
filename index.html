@@ -2697,7 +2697,8 @@ function drawArticleCanvas() {
   const canvas = document.getElementById("articleCanvas");
   if (!articleEl || !canvas) return;
 
-  const text = articleEl.dataset.rawText || "記事本文が入ります。";
+  let text = articleEl.dataset.rawText || "記事本文が入ります。";
+  text = text.replace(/…/g, "︙");
 
   const cssW = articleEl.clientWidth || 460;
   const cssH = articleEl.clientHeight || 230;
