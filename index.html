@@ -1367,13 +1367,13 @@ body {
   border-left-color: #f4a33a !important;
 }
 button {
-  background: #0f5e9c !important;
+  background: #001E55 !important;
 }
 .backBtn {
   background: #6c8798 !important;
 }
 .headline {
-  background-color: var(--headline-bg-color, #0f5e9c) !important;
+  background-color: var(--headline-bg-color, #001E55) !important;
   color: var(--headline-text-color, #ffffff) !important;
 }
 .sublogo {
@@ -1863,7 +1863,7 @@ body.receptionClosed .receptionClosedBox {
 <div class="headlineDesignBox">
   <h3>見出しをデコる</h3>
   <label for="headlineColorPicker">背景色</label>
-  <input class="headlineColorPicker" id="headlineColorPicker" type="color" value="#0f5e9c" oninput="setHeadlineBgColor(this.value)" />
+  <input class="headlineColorPicker" id="headlineColorPicker" type="color" value="#001E55" oninput="setHeadlineBgColor(this.value)" />
  
 
   <label>フォント</label>
@@ -1912,7 +1912,7 @@ body.receptionClosed .receptionClosedBox {
 <section class="step" id="step4">
 <h2>④ 記事を書こう</h2>
 <p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
-<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。</div>
+<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、東広島市西条町の東広島運動公園であった。県内7市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
 <textarea id="articleInput" placeholder="記事本文を入力"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
@@ -1955,7 +1955,7 @@ body.receptionClosed .receptionClosedBox {
 <div class="headlineDesignBox">
   <h3>見出しをデコる</h3>
   <label for="editHeadlineColorPicker">背景色</label>
-  <input class="headlineColorPicker" id="editHeadlineColorPicker" type="color" value="#0f5e9c" oninput="setHeadlineBgColor(this.value)" />
+  <input class="headlineColorPicker" id="editHeadlineColorPicker" type="color" value="#001E55" oninput="setHeadlineBgColor(this.value)" />
 
 
  <label>フォント</label>
@@ -3613,9 +3613,9 @@ function insertQuickArticle(type) {
   if (!article) return;
 
   const samples = {
-    hit: "試合では、力いっぱいバットを振り、最後まで全力で走る姿が印象に残りました。",
-    team: "ベンチからも大きな声援が送られ、仲間を信じて声をかけ合う場面がたくさんありました。",
-    feeling: "勝ち負けだけでなく、あきらめずに挑戦する大切さを感じる大会になりました。"
+    hit: "試合では、鋭いドリブルや力強いシュート、最後まであきらめずにボールを追う姿が観客を魅了しました。",
+    team: "仲間と励まし合い、パスをつないでゴールを目指す姿から、チームワークの大切さを感じました。",
+    feeling: "最後まであきらめずに挑戦する選手たちの姿を見て、私も何事にも全力で取り組みたいと思いました。"
   };
 
   const add = samples[type] || "";
