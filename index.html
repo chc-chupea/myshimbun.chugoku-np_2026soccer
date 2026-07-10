@@ -33,6 +33,7 @@ h1 { text-align: center; font-size: 24px; margin: 12px 0 6px; }
   font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 .step.active { display: block; }
+.step { scroll-margin-top: 12px; }
 .step h2, .editPanel h2, .controlPanel h2 { margin: 0 0 8px; font-size: 21px; }
 .step p { font-size: 15px; line-height: 1.7; }
 .hint, .miniHelp {
@@ -2230,8 +2231,19 @@ function applyPhotoTransform() {
 
 function nextStep(num) {
   document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
-  document.getElementById("step" + num).classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const next = document.getElementById("step" + num);
+  if (!next) return;
+
+  next.classList.add("active");
+
+  // サンプル画像の位置ではなく、移動先ステップの先頭を表示する
+  requestAnimationFrame(() => {
+    next.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
 }
 
 document.getElementById("photoInput").addEventListener("change", function(e) {
