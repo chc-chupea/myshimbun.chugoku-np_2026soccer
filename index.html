@@ -3764,6 +3764,7 @@ function buildDeliveryLabel(order) {
     `学年：${order.grade || "未入力"}　希望枚数：${order.quantity || 1}`,
     `購読状況：${order.subscriptionStatusLabel || "未回答"}`,
     `興味：${order.interestStatusLabel || "未回答"}`,
+    `連絡メモ：${order.memo || "なし"}`,
     `ステータス：${order.status}`
   ].join("\n");
 }
