@@ -1804,6 +1804,63 @@ body.receptionClosed .receptionClosedBox {
   display: block;
 }
 
+
+/* ===== 入力中ライブ新聞プレビュー ===== */
+#wizardPreviewHost {
+  display: block;
+  max-width: 620px;
+  margin: 8px auto 10px;
+}
+
+body.wizardMode #wizardPreviewHost #previewColumn {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  background: rgba(238, 247, 255, 0.97);
+  padding: 6px 0;
+  box-shadow: 0 5px 14px rgba(0,0,0,0.16);
+  border-radius: 0 0 14px 14px;
+}
+
+body.wizardMode #wizardPreviewHost .previewToolBar,
+body.wizardMode #wizardPreviewHost .previewEditNotice {
+  display: none !important;
+}
+
+body.wizardMode #wizardPreviewHost #newspaperWrap {
+  display: block !important;
+  height: 228px;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+body.wizardMode #wizardPreviewHost #newspaper {
+  transform: scale(0.27) !important;
+  transform-origin: top center !important;
+  margin: 0 auto !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+}
+
+body.wizardMode .step {
+  scroll-margin-top: 244px;
+}
+
+@media (min-width: 901px) {
+  body.wizardMode #wizardPreviewHost {
+    max-width: 760px;
+  }
+  body.wizardMode #wizardPreviewHost #newspaperWrap {
+    height: 270px;
+  }
+  body.wizardMode #wizardPreviewHost #newspaper {
+    transform: scale(0.32) !important;
+  }
+  body.wizardMode .step {
+    scroll-margin-top: 286px;
+  }
+}
+
 </style>
 
 
@@ -1838,6 +1895,8 @@ body.receptionClosed .receptionClosedBox {
 </div>
 
 
+
+<div id="wizardPreviewHost"></div>
 
 <section class="step active" id="step1">
 <h2>① ベストショットを選ぼう</h2>
@@ -2229,6 +2288,82 @@ function applyPhotoTransform() {
     photoState.scale + ") rotate(" + photoState.rotate + "deg)";
 }
 
+let liveArticleTimer = null;
+
+function movePreviewToWizard() {
+  const host = document.getElementById("wizardPreviewHost");
+  const previewColumn = document.getElementById("previewColumn");
+  if (host && previewColumn && previewColumn.parentElement !== host) {
+    host.appendChild(previewColumn);
+  }
+  document.body.classList.add("wizardMode");
+  const wrap = document.getElementById("newspaperWrap");
+  if (wrap) wrap.style.display = "block";
+}
+
+function movePreviewToWorkspace() {
+  const workspace = document.getElementById("workspace");
+  const previewColumn = document.getElementById("previewColumn");
+  if (workspace && previewColumn && previewColumn.parentElement !== workspace) {
+    workspace.appendChild(previewColumn);
+  }
+  document.body.classList.remove("wizardMode");
+}
+
+function syncStartFieldsToEditor(redrawArticle = true) {
+  const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
+  const headline = document.getElementById("headlineInput").value.trim() || "仲間とつないだ 夏の一勝";
+  const article = document.getElementById("articleInput").value.trim() ||
+    "第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。";
+  const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
+  const reporter = document.getElementById("reporterInput").value.trim() || "記者 （氏名）";
+
+  document.getElementById("editSublogo").value = autoBreakSublogo(sublogo);
+  document.getElementById("editHeadline").value = headline;
+  if (redrawArticle) document.getElementById("editArticle").value = article;
+  document.getElementById("editDate").value = dateRaw;
+  document.getElementById("editReporter").value = reporter;
+
+  if (redrawArticle) {
+    updatePreviewText();
+  } else {
+    setSublogoText(sublogo);
+    document.getElementById("outHeadline").innerText = headline;
+    document.getElementById("outDate").innerText = formatSideDate(dateRaw);
+    document.getElementById("topDate").innerText = formatTopDate(dateRaw) + "　";
+    document.getElementById("outReporter").innerText = reporter;
+    applyHeadlineDesignSafe();
+  }
+}
+
+function scheduleLiveArticleUpdate() {
+  clearTimeout(liveArticleTimer);
+  liveArticleTimer = setTimeout(() => {
+    document.getElementById("editArticle").value =
+      document.getElementById("articleInput").value.trim() || "記事本文が入ります。";
+    updatePreviewText();
+  }, 160);
+}
+
+function setupLiveWizardPreview() {
+  movePreviewToWizard();
+  syncStartFieldsToEditor(true);
+
+  ["sublogoInput", "headlineInput", "dateInput", "reporterInput"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.liveBound === "1") return;
+    el.dataset.liveBound = "1";
+    el.addEventListener("input", () => syncStartFieldsToEditor(false));
+    el.addEventListener("change", () => syncStartFieldsToEditor(false));
+  });
+
+  const articleInput = document.getElementById("articleInput");
+  if (articleInput && articleInput.dataset.liveBound !== "1") {
+    articleInput.dataset.liveBound = "1";
+    articleInput.addEventListener("input", scheduleLiveArticleUpdate);
+  }
+}
+
 function nextStep(num) {
   document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
 
@@ -2492,6 +2627,7 @@ function makeNewspaper() {
   updatePreviewText();
 
   document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
+  movePreviewToWorkspace();
   showWorkspace();
   if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
   updateArticleLengthNotice(document.getElementById("editArticle") ? document.getElementById("editArticle").value : "");
@@ -3639,6 +3775,7 @@ function setHeadlineFontClass(fontClass) {
 
 document.addEventListener("DOMContentLoaded", function() {
   if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
+  setupLiveWizardPreview();
 });
 </script>
 
