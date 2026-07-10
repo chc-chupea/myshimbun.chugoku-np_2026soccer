@@ -3376,16 +3376,22 @@ function createStableNewspaperClone() {
 }
 
 async function renderStableNewspaperCanvas(scale = 7, extraElementBuilder = null) {
+  // PNG・PDF用に、新聞の外側へ白い余白を確保する
+  const exportMargin = 14;
+  const exportWidth = 595 + exportMargin * 2;
+
   const holder = document.createElement("div");
   Object.assign(holder.style, {
     position: "fixed",
     left: "-10000px",
     top: "0",
-    width: "595px",
+    width: `${exportWidth}px`,
+    padding: `${exportMargin}px`,
     background: "#ffffff",
     zIndex: "-1",
     overflow: "visible",
-    pointerEvents: "none"
+    pointerEvents: "none",
+    boxSizing: "border-box"
   });
 
   const clone = createStableNewspaperClone();
@@ -3398,11 +3404,11 @@ async function renderStableNewspaperCanvas(scale = 7, extraElementBuilder = null
 
   try {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    return await html2canvas(clone, {
+    return await html2canvas(holder, {
       scale,
       useCORS: true,
       backgroundColor: "#ffffff",
-      width: 595,
+      width: exportWidth,
       windowWidth: 1200,
       scrollX: 0,
       scrollY: 0
