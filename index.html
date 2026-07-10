@@ -3770,16 +3770,53 @@ function getPaperMeta() {
   };
 }
 
-async function createNewspaperPngBlob() {
+async function createNewspaperPngBlob(receiptNo, quantity) {
   if (typeof prepareHighResArticleForExport === "function") prepareHighResArticleForExport();
   if (typeof fitArticleText === "function") fitArticleText();
   if (typeof hideGuide === "function") hideGuide();
+
   const target = document.getElementById("newspaper");
-  const canvas = await html2canvas(target, { scale: 7, useCORS: true, backgroundColor: "#ffffff" });
+  const canvas = await html2canvas(target, {
+    scale: 7,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  });
+
   if (typeof showGuide === "function") showGuide();
   if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
+
+  // 印刷・お届け管理用ラベルをPNG右下へ焼き込む
+  const ctx = canvas.getContext("2d");
+  const scale = canvas.width / target.offsetWidth;
+  const margin = Math.round(10 * scale);
+  const boxWidth = Math.round(142 * scale);
+  const boxHeight = Math.round(42 * scale);
+  const x = canvas.width - boxWidth - margin;
+  const y = canvas.height - boxHeight - margin;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.96)";
+  ctx.fillRect(x, y, boxWidth, boxHeight);
+  ctx.strokeStyle = "#111111";
+  ctx.lineWidth = Math.max(2, Math.round(1.2 * scale));
+  ctx.strokeRect(x, y, boxWidth, boxHeight);
+
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `700 ${Math.round(12 * scale)}px "Yu Gothic", "Hiragino Sans", sans-serif`;
+  ctx.fillText(`受付番号 ${receiptNo}`, x + boxWidth / 2, y + boxHeight * 0.36);
+
+  ctx.font = `700 ${Math.round(11 * scale)}px "Yu Gothic", "Hiragino Sans", sans-serif`;
+  ctx.fillText(`印刷枚数 ${quantity || 1}部`, x + boxWidth / 2, y + boxHeight * 0.73);
+  ctx.restore();
+
   return await new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")), "image/png", 1.0);
+    canvas.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")),
+      "image/png",
+      1.0
+    );
   });
 }
 
@@ -3815,7 +3852,7 @@ async function submitFreeDeliveryOrder() {
     const receiptNo = await issueDailyReceiptNo(fb.db);
 
     status.textContent = "新聞画像（PNG）を作成しています。少しお待ちください。";
-    const pngBlob = await createNewspaperPngBlob();
+    const pngBlob = await createNewspaperPngBlob(receiptNo, form.quantity);
     const paper = getPaperMeta();
 
     status.textContent = "申込データを送信しています。";
