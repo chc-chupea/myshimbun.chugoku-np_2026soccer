@@ -1609,10 +1609,26 @@ button {
     padding-top: 4px !important;
   }
 
+  #previewColumn {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+  }
+
+  #previewColumn #newspaperWrap {
+    width: 100%;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    max-height: 40vh !important;
+    overflow: auto !important;
+    padding-top: 4px !important;
+  }
+
   #previewColumn #newspaper {
     transform: scale(0.56) !important;
     transform-origin: top center !important;
-    margin-bottom: -340px !important;
+    margin: 0 auto -340px auto !important;
   }
 
   #editorColumn {
@@ -1638,7 +1654,8 @@ button {
 @media (max-width: 420px) {
   #previewColumn #newspaper {
     transform: scale(0.52) !important;
-    margin-bottom: -370px !important;
+    transform-origin: top center !important;
+    margin: 0 auto -370px auto !important;
   }
 }
 
