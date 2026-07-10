@@ -1817,7 +1817,7 @@ body.receptionClosed .receptionClosedBox {
 
 <div class="eventTitle heroTitleWithSample">
   <img
-    src="sample-soccer.png"
+    src="sample.png"
     alt="東広島芸陽会杯サッカー大会の完成サンプル"
     class="eventSampleImage"
   />
@@ -1857,7 +1857,7 @@ body.receptionClosed .receptionClosedBox {
 <section class="step" id="step3">
 <h2>③ 大きな見出しをつけよう</h2>
 <p>写真を見た人が「読んでみたい」と思う短いタイトルにしましょう。</p>
-<div class="hint">例：仲間とつないだ 夏の一勝<br/>例：最後まで全力プレー<br/>例：白熱の東広島芸陽会杯</div>
+<div class="hint">例：仲間と掴んだ 夏の一勝<br/>例：最後まで全力プレー<br/>例：白熱の東広島芸陽会杯</div>
 <input id="headlineInput" placeholder="見出しを入力"/>
 
 <div class="headlineDesignBox">
@@ -2005,11 +2005,11 @@ body.receptionClosed .receptionClosedBox {
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 <div class="quickHintChips">
-  <button type="button" onclick="insertQuickArticle('hit')">走った・守ったことを書く</button>
-  <button type="button" onclick="insertQuickArticle('team')">仲間との声かけを書く</button>
-  <button type="button" onclick="insertQuickArticle('feeling')">感じたことを書く</button>
+  <button type="button" onclick="insertQuickArticle('hit')">記事のヒント：走った・守ったことの文章を足す</button>
+  <button type="button" onclick="insertQuickArticle('team')">記事のヒント：仲間と声かけあった文章を足す</button>
+  <button type="button" onclick="insertQuickArticle('feeling')">記事のヒント：感じたことの文章を足す</button>
 </div>
-<button onclick="addArticleHint()">記事のヒントを追加</button>
+<button onclick="addArticleHint()">記事のヒント：取材メモを追加</button>
 </details>
 <details class="editSection">
 <summary>日付・記者名</summary>
@@ -3776,48 +3776,58 @@ async function createNewspaperPngBlob(receiptNo, quantity) {
   if (typeof hideGuide === "function") hideGuide();
 
   const target = document.getElementById("newspaper");
-  const canvas = await html2canvas(target, {
-    scale: 7,
-    useCORS: true,
-    backgroundColor: "#ffffff"
+  const printCount = String(Number(quantity || 1)).padStart(2, "0");
+  const managementNo = `${receiptNo}-${printCount}`;
+
+  // html2canvasで確実に写るよう、撮影直前だけ紙面右下に管理番号を配置
+  const oldPosition = target.style.position;
+  if (!oldPosition || oldPosition === "static") {
+    target.style.position = "relative";
+  }
+
+  const label = document.createElement("div");
+  label.textContent = managementNo;
+  label.setAttribute("aria-hidden", "true");
+  Object.assign(label.style, {
+    position: "absolute",
+    right: "8px",
+    bottom: "8px",
+    zIndex: "9999",
+    padding: "4px 8px",
+    background: "#ffffff",
+    color: "#111111",
+    border: "1.5px solid #111111",
+    fontFamily: '"Yu Gothic", "Hiragino Sans", sans-serif',
+    fontSize: "12px",
+    fontWeight: "700",
+    lineHeight: "1.2",
+    letterSpacing: "0.03em",
+    whiteSpace: "nowrap",
+    boxShadow: "none",
+    borderRadius: "0"
   });
+  target.appendChild(label);
 
-  if (typeof showGuide === "function") showGuide();
-  if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
+  try {
+    const canvas = await html2canvas(target, {
+      scale: 7,
+      useCORS: true,
+      backgroundColor: "#ffffff"
+    });
 
-  // 印刷・お届け管理用ラベルをPNG右下へ焼き込む
-  const ctx = canvas.getContext("2d");
-  const scale = canvas.width / target.offsetWidth;
-  const margin = Math.round(10 * scale);
-  const boxWidth = Math.round(142 * scale);
-  const boxHeight = Math.round(42 * scale);
-  const x = canvas.width - boxWidth - margin;
-  const y = canvas.height - boxHeight - margin;
-
-  ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,0.96)";
-  ctx.fillRect(x, y, boxWidth, boxHeight);
-  ctx.strokeStyle = "#111111";
-  ctx.lineWidth = Math.max(2, Math.round(1.2 * scale));
-  ctx.strokeRect(x, y, boxWidth, boxHeight);
-
-  ctx.fillStyle = "#111111";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = `700 ${Math.round(12 * scale)}px "Yu Gothic", "Hiragino Sans", sans-serif`;
-  ctx.fillText(`受付番号 ${receiptNo}`, x + boxWidth / 2, y + boxHeight * 0.36);
-
-  ctx.font = `700 ${Math.round(11 * scale)}px "Yu Gothic", "Hiragino Sans", sans-serif`;
-  ctx.fillText(`印刷枚数 ${quantity || 1}部`, x + boxWidth / 2, y + boxHeight * 0.73);
-  ctx.restore();
-
-  return await new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")),
-      "image/png",
-      1.0
-    );
-  });
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")),
+        "image/png",
+        1.0
+      );
+    });
+  } finally {
+    label.remove();
+    target.style.position = oldPosition;
+    if (typeof showGuide === "function") showGuide();
+    if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
+  }
 }
 
 function buildDeliveryLabel(order) {
