@@ -1912,7 +1912,7 @@ body.receptionClosed .receptionClosedBox {
 <section class="step" id="step4">
 <h2>④ 記事を書こう</h2>
 <p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
-<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島市西条町の東広島運動公園であった。県内7市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
+<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、東広島市西条町の東広島運動公園であった。県内7市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
 <textarea id="articleInput" placeholder="記事本文を入力"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
@@ -2114,7 +2114,7 @@ body.receptionClosed .receptionClosedBox {
 </div>
 <div class="paper-grid">
 <main class="main">
-<div class="headline" id="outHeadline">仲間と掴んだ 夏の一勝</div>
+<div class="headline" id="outHeadline">仲間とつないだ 夏の一勝</div>
 <div aria-label="写真配置エリア" class="photoFrame" id="photoFrame" tabindex="0">
 <img alt="記念写真" id="previewPhoto"/>
 <div class="photoGuide" id="photoGuide">マウスで写真を動かせます</div>
@@ -2443,9 +2443,9 @@ function setupEditFocusHighlights() {
 
 function makeNewspaper() {
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
-  const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
+  const headline = document.getElementById("headlineInput").value.trim() || "仲間とつないだ 夏の一勝";
   const article = document.getElementById("articleInput").value.trim() ||
-    "第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島市西条町田口の東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。";
+    "第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。";
   const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
   const reporter = document.getElementById("reporterInput").value.trim() || "記者 （氏名）";
 
@@ -3328,40 +3328,113 @@ function restorePreviewArticleResolution() {
 }
 
 
-function saveAsImage() {
-  fitArticleText();
-  prepareHighResArticleForExport();
-  hideGuide();
-  html2canvas(document.getElementById("newspaper"), { scale: 7, useCORS: true, backgroundColor: "#ffffff" })
-  .then(canvas => {
-    showGuide();
-    restorePreviewArticleResolution();
+
+function copyCanvasPixels(sourceRoot, cloneRoot) {
+  const sourceCanvases = sourceRoot.querySelectorAll("canvas");
+  const cloneCanvases = cloneRoot.querySelectorAll("canvas");
+
+  sourceCanvases.forEach((sourceCanvas, index) => {
+    const cloneCanvas = cloneCanvases[index];
+    if (!cloneCanvas) return;
+
+    cloneCanvas.width = sourceCanvas.width;
+    cloneCanvas.height = sourceCanvas.height;
+    cloneCanvas.style.width = sourceCanvas.style.width || getComputedStyle(sourceCanvas).width;
+    cloneCanvas.style.height = sourceCanvas.style.height || getComputedStyle(sourceCanvas).height;
+
+    const ctx = cloneCanvas.getContext("2d");
+    ctx.clearRect(0, 0, cloneCanvas.width, cloneCanvas.height);
+    ctx.drawImage(sourceCanvas, 0, 0);
+  });
+}
+
+function createStableNewspaperClone() {
+  const source = document.getElementById("newspaper");
+  if (!source) throw new Error("新聞プレビューが見つかりません。");
+
+  const clone = source.cloneNode(true);
+  clone.removeAttribute("id");
+
+  Object.assign(clone.style, {
+    width: "595px",
+    minWidth: "595px",
+    maxWidth: "595px",
+    margin: "0",
+    transform: "none",
+    transformOrigin: "top left",
+    zoom: "1",
+    position: "relative",
+    boxSizing: "border-box"
+  });
+
+  clone.querySelectorAll(".focusFlash").forEach(el => el.classList.remove("focusFlash"));
+  const cloneGuide = clone.querySelector(".photoGuide");
+  if (cloneGuide) cloneGuide.style.display = "none";
+
+  copyCanvasPixels(source, clone);
+  return clone;
+}
+
+async function renderStableNewspaperCanvas(scale = 7, extraElementBuilder = null) {
+  const holder = document.createElement("div");
+  Object.assign(holder.style, {
+    position: "fixed",
+    left: "-10000px",
+    top: "0",
+    width: "595px",
+    background: "#ffffff",
+    zIndex: "-1",
+    overflow: "visible",
+    pointerEvents: "none"
+  });
+
+  const clone = createStableNewspaperClone();
+  holder.appendChild(clone);
+  document.body.appendChild(holder);
+
+  if (typeof extraElementBuilder === "function") {
+    extraElementBuilder(clone);
+  }
+
+  try {
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return await html2canvas(clone, {
+      scale,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      width: 595,
+      windowWidth: 1200,
+      scrollX: 0,
+      scrollY: 0
+    });
+  } finally {
+    holder.remove();
+  }
+}
+
+async function saveAsImage() {
+  try {
+    fitArticleText();
+    prepareHighResArticleForExport();
+    const canvas = await renderStableNewspaperCanvas(7);
     const link = document.createElement("a");
     link.download = "chugoku-my-kinen-shinbun.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
-  }).catch(() => {
-    showGuide();
-    restorePreviewArticleResolution();
+  } catch (error) {
+    console.error(error);
     alert("画像保存に失敗しました。もう一度お試しください。");
-  });
+  } finally {
+    restorePreviewArticleResolution();
+  }
 }
 
 
-function saveAsPDF() {
+async function saveAsPDF() {
   prepareHighResArticleForExport();
   fitArticleText();
-  prepareHighResArticleForExport();
-  hideGuide();
 
-  const target = document.getElementById("newspaper");
-
-  html2canvas(target, {
-    scale: 7,
-    useCORS: true,
-    backgroundColor: "#ffffff"
-  }).then(canvas => {
-    showGuide();
+  renderStableNewspaperCanvas(7).then(canvas => {
     restorePreviewArticleResolution();
 
     const { jsPDF } = window.jspdf;
@@ -3574,20 +3647,20 @@ document.addEventListener("DOMContentLoaded", refreshFontChoiceChecked);
 function openPreviewZoom() {
   const modal = document.getElementById("previewZoomModal");
   const cloneBox = document.getElementById("previewZoomClone");
-  const paper = document.getElementById("newspaper");
-  if (!modal || !cloneBox || !paper) return;
+  if (!modal || !cloneBox) return;
 
   cloneBox.innerHTML = "";
-  const clone = paper.cloneNode(true);
-  clone.removeAttribute("id");
-  clone.style.transform = "none";
+  const clone = createStableNewspaperClone();
   clone.style.margin = "0 auto 24px";
   clone.style.boxShadow = "0 4px 18px rgba(0,0,0,0.35)";
   cloneBox.appendChild(clone);
 
   const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-  const scale = Math.max(0.78, Math.min(1.12, (viewportWidth - 28) / 595));
+  const scale = Math.max(0.55, Math.min(1.12, (viewportWidth - 28) / 595));
+  cloneBox.style.width = "595px";
   cloneBox.style.transform = "scale(" + scale + ")";
+  cloneBox.style.transformOrigin = "top center";
+
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -3773,59 +3846,44 @@ function getPaperMeta() {
 async function createNewspaperPngBlob(receiptNo, quantity) {
   if (typeof prepareHighResArticleForExport === "function") prepareHighResArticleForExport();
   if (typeof fitArticleText === "function") fitArticleText();
-  if (typeof hideGuide === "function") hideGuide();
 
-  const target = document.getElementById("newspaper");
   const printCount = String(Number(quantity || 1)).padStart(2, "0");
   const managementNo = `${receiptNo}-${printCount}`;
 
-  // html2canvasで確実に写るよう、撮影直前だけ紙面右下に管理番号を配置
-  const oldPosition = target.style.position;
-  if (!oldPosition || oldPosition === "static") {
-    target.style.position = "relative";
-  }
-
-  const label = document.createElement("div");
-  label.textContent = managementNo;
-  label.setAttribute("aria-hidden", "true");
-  Object.assign(label.style, {
-    position: "absolute",
-    right: "4px",
-    bottom: "4px",
-    zIndex: "9999",
-    padding: "1.3px 4px",
-    background: "#ffffff",
-    color: "#111111",
-    border: "0.7px solid #111111",
-    fontFamily: '"Yu Gothic", "Hiragino Sans", sans-serif',
-    fontSize: "5.2px",
-    fontWeight: "700",
-    lineHeight: "1.2",
-    letterSpacing: "0.03em",
-    whiteSpace: "nowrap",
-    boxShadow: "none",
-    borderRadius: "0"
-  });
-  target.appendChild(label);
-
   try {
-    const canvas = await html2canvas(target, {
-      scale: 7,
-      useCORS: true,
-      backgroundColor: "#ffffff"
+    const canvas = await renderStableNewspaperCanvas(7, clone => {
+      const label = document.createElement("div");
+      label.textContent = managementNo;
+      label.setAttribute("aria-hidden", "true");
+      Object.assign(label.style, {
+        position: "absolute",
+        right: "3px",
+        bottom: "3px",
+        zIndex: "9999",
+        padding: "1px 3px",
+        background: "#ffffff",
+        color: "#111111",
+        border: "0.5px solid #111111",
+        fontFamily: '"Yu Gothic", "Hiragino Sans", sans-serif',
+        fontSize: "4px",
+        fontWeight: "700",
+        lineHeight: "1.2",
+        letterSpacing: "0.03em",
+        whiteSpace: "nowrap",
+        boxShadow: "none",
+        borderRadius: "0"
+      });
+      clone.appendChild(label);
     });
 
     return await new Promise((resolve, reject) => {
       canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")),
+        blob => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")),
         "image/png",
         1.0
       );
     });
   } finally {
-    label.remove();
-    target.style.position = oldPosition;
-    if (typeof showGuide === "function") showGuide();
     if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
   }
 }
