@@ -1617,18 +1617,21 @@ button {
 
   #previewColumn #newspaperWrap {
     width: 100%;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
+    display: block !important;
     max-height: 40vh !important;
-    overflow: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
     padding-top: 4px !important;
+    position: relative !important;
   }
 
   #previewColumn #newspaper {
-    transform: scale(0.56) !important;
+    position: relative !important;
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.56) !important;
     transform-origin: top center !important;
-    margin: 0 auto -340px auto !important;
+    margin: 0 0 -340px 0 !important;
+    flex: 0 0 595px !important;
   }
 
   #editorColumn {
@@ -1653,9 +1656,12 @@ button {
 
 @media (max-width: 420px) {
   #previewColumn #newspaper {
-    transform: scale(0.52) !important;
+    position: relative !important;
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.52) !important;
     transform-origin: top center !important;
-    margin: 0 auto -370px auto !important;
+    margin: 0 0 -370px 0 !important;
+    flex: 0 0 595px !important;
   }
 }
 
@@ -1859,9 +1865,11 @@ body.wizardMode #wizardPreviewHost #newspaperWrap {
 }
 
 body.wizardMode #wizardPreviewHost #newspaper {
-  transform: scale(0.27) !important;
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) scale(0.27) !important;
   transform-origin: top center !important;
-  margin: 0 auto !important;
+  margin: 0 !important;
   box-shadow: 0 3px 12px rgba(0,0,0,0.18);
 }
 
@@ -1877,7 +1885,7 @@ body.wizardMode .step {
     height: 270px;
   }
   body.wizardMode #wizardPreviewHost #newspaper {
-    transform: scale(0.32) !important;
+    transform: translateX(-50%) scale(0.32) !important;
   }
   body.wizardMode .step {
     scroll-margin-top: 286px;
@@ -2197,7 +2205,7 @@ body.wizardMode .step {
 </div>
 <div class="paper-grid">
 <main class="main">
-<div class="headline" id="outHeadline">仲間とつないだ 夏の一勝</div>
+<div class="headline" id="outHeadline">仲間と掴んだ 夏の一勝</div>
 <div aria-label="写真配置エリア" class="photoFrame" id="photoFrame" tabindex="0">
 <img alt="記念写真" id="previewPhoto"/>
 <div class="photoGuide" id="photoGuide">マウスで写真を動かせます</div>
