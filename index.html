@@ -1942,6 +1942,32 @@ body.wizardMode .step {
   display: none !important;
 }
 
+
+
+/* ===== iPhone 14：仕上げ編集プレビューを画面内に全体表示 ===== */
+@media (max-width: 900px) {
+  body:not(.wizardMode) #workspace #previewColumn {
+    width: 100% !important;
+    padding: 4px 0 6px !important;
+  }
+
+  body:not(.wizardMode) #workspace #previewColumn #newspaperWrap {
+    width: 100% !important;
+    height: var(--workspace-preview-height, 330px) !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  body:not(.wizardMode) #workspace #previewColumn #newspaper {
+    position: relative !important;
+    left: 50% !important;
+    transform: translateX(-50%) scale(var(--workspace-preview-scale, 0.36)) !important;
+    transform-origin: top center !important;
+    margin: 0 !important;
+  }
+}
+
 </style>
 
 
@@ -4271,6 +4297,48 @@ window.submitFreeDeliveryOrder = async function() {
   if (typeof originalSubmitFreeDeliveryOrder === "function") {
     return originalSubmitFreeDeliveryOrder.apply(this, arguments);
   }
+};
+</script>
+
+
+<script>
+/* ===== 仕上げ編集プレビュー：端末サイズに合わせて新聞全体を自動縮小 ===== */
+function fitWorkspacePreviewToPhone() {
+  if (window.innerWidth > 900 || document.body.classList.contains("wizardMode")) return;
+
+  const workspace = document.getElementById("workspace");
+  const wrap = workspace ? workspace.querySelector("#newspaperWrap") : null;
+  const paper = workspace ? workspace.querySelector("#newspaper") : null;
+  if (!workspace || !wrap || !paper || getComputedStyle(workspace).display === "none") return;
+
+  // iPhone 14（390×844px）を基準に、編集欄も見やすい高さを残す。
+  const availableWidth = Math.max(280, Math.min(window.innerWidth - 20, 620));
+  const availableHeight = Math.max(250, Math.min(window.innerHeight * 0.39, 340));
+  const naturalWidth = paper.offsetWidth || 595;
+  const naturalHeight = paper.offsetHeight || 900;
+  const scale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight, 0.58);
+  const fittedHeight = Math.ceil(naturalHeight * scale);
+
+  wrap.style.setProperty("--workspace-preview-scale", scale.toFixed(4));
+  wrap.style.setProperty("--workspace-preview-height", fittedHeight + "px");
+}
+
+window.addEventListener("resize", fitWorkspacePreviewToPhone);
+window.addEventListener("orientationchange", function() {
+  setTimeout(fitWorkspacePreviewToPhone, 120);
+});
+document.addEventListener("DOMContentLoaded", function() {
+  setTimeout(fitWorkspacePreviewToPhone, 100);
+});
+
+const originalMovePreviewToWorkspaceForFit = window.movePreviewToWorkspace;
+window.movePreviewToWorkspace = function() {
+  if (typeof originalMovePreviewToWorkspaceForFit === "function") {
+    originalMovePreviewToWorkspaceForFit.apply(this, arguments);
+  }
+  requestAnimationFrame(function() {
+    requestAnimationFrame(fitWorkspacePreviewToPhone);
+  });
 };
 </script>
 
