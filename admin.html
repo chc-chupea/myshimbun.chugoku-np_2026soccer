@@ -5,8 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>第6回中国新聞東広島芸陽会杯サッカー大会 My新聞 管理・ラベル</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#eef4f8;color:#111;font-family:"Hiragino Sans","Yu Gothic",sans-serif}header{background:linear-gradient(90deg,#0057b8,#6fd3ff);color:#fff;padding:18px 16px}header h1{margin:0;font-size:22px}.wrap{max-width:1280px;margin:18px auto;padding:0 12px}.panel{background:#fff;border-radius:12px;box-shadow:0 3px 12px rgba(0,0,0,.13);padding:14px;margin-bottom:14px}.toolbar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}button,input,select{font-size:15px;padding:10px;border-radius:8px;border:1px solid #bbb}button{border:none;background:#0057b8;color:#fff;font-weight:700;cursor:pointer}.subBtn{background:#607d8b}.dangerBtn{background:#b00020}.summary{font-weight:700;line-height:1.7}.filterNote{font-size:12px;color:#555;line-height:1.6}.tableWrap{overflow:auto}table{width:100%;border-collapse:collapse;background:#fff;min-width:1280px}th,td{border-bottom:1px solid #ddd;padding:8px;font-size:13px;vertical-align:top}th{background:#f4f8fb;text-align:left;white-space:nowrap}.thumb{width:90px;border:1px solid #ccc}.status{font-weight:800}.WAIT{color:#b35a00}.PRINTING{color:#0057b8}.DELIVERED{color:#098b3e}.leadTag{display:inline-block;background:#fff3cd;color:#8a5700;border:1px solid #f0cf7a;border-radius:999px;padding:2px 7px;font-size:11px;font-weight:800;margin-top:4px}.hotLead{background:#ffe4e4;color:#b00020;border-color:#f1a0a0}.labelSheet{display:none}.labelGrid{display:grid;grid-template-columns:1fr 1fr;gap:8mm}.labelCard{height:63mm;border:1px solid #111;padding:5mm;page-break-inside:avoid;font-family:"Hiragino Sans","Yu Gothic",sans-serif}.labelReceipt{font-size:11px;font-weight:800;border-bottom:1px solid #111;padding-bottom:2mm;margin-bottom:3mm}.labelAddress{font-size:15px;line-height:1.45;white-space:pre-wrap}.labelName{font-size:19px;font-weight:900;margin:3mm 0}.labelMeta{font-size:11px;line-height:1.5;border-top:1px dashed #777;padding-top:2mm}@media print{body{background:#fff}header,.wrap{display:none}.labelSheet{display:block;padding:8mm}.labelGrid{display:grid}.labelCard{break-inside:avoid} @page{size:A4 portrait;margin:8mm}}
+*{box-sizing:border-box}body{margin:0;background:#eef4f8;color:#111;font-family:"Hiragino Sans","Yu Gothic",sans-serif}header{background:linear-gradient(90deg,#0057b8,#6fd3ff);color:#fff;padding:18px 16px}header h1{margin:0;font-size:22px}.wrap{max-width:1800px;margin:18px auto;padding:0 12px}.panel{background:#fff;border-radius:12px;box-shadow:0 3px 12px rgba(0,0,0,.13);padding:14px;margin-bottom:14px}.toolbar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}button,input,select{font-size:15px;padding:10px;border-radius:8px;border:1px solid #bbb}button{border:none;background:#0057b8;color:#fff;font-weight:700;cursor:pointer}.subBtn{background:#607d8b}.dangerBtn{background:#b00020}.summary{font-weight:700;line-height:1.7}.filterNote{font-size:12px;color:#555;line-height:1.6}.tableWrap{overflow-x:auto;overflow-y:visible}table{width:100%;border-collapse:collapse;background:#fff;min-width:1500px;table-layout:fixed}th,td{border-bottom:1px solid #ddd;padding:8px;font-size:13px;vertical-align:top}th{background:#f4f8fb;text-align:left;white-space:nowrap}.thumb{width:90px;border:1px solid #ccc}.status{font-weight:800}.WAIT{color:#b35a00}.PRINTING{color:#0057b8}.DELIVERED{color:#098b3e}.leadTag{display:inline-block;background:#fff3cd;color:#8a5700;border:1px solid #f0cf7a;border-radius:999px;padding:2px 7px;font-size:11px;font-weight:800;margin-top:4px}.hotLead{background:#ffe4e4;color:#b00020;border-color:#f1a0a0}.labelSheet{display:none}.labelGrid{display:grid;grid-template-columns:1fr 1fr;gap:8mm}.labelCard{height:63mm;border:1px solid #111;padding:5mm;page-break-inside:avoid;font-family:"Hiragino Sans","Yu Gothic",sans-serif}.labelReceipt{font-size:11px;font-weight:800;border-bottom:1px solid #111;padding-bottom:2mm;margin-bottom:3mm}.labelAddress{font-size:15px;line-height:1.45;white-space:pre-wrap}.labelName{font-size:19px;font-weight:900;margin:3mm 0}.labelMeta{font-size:11px;line-height:1.5;border-top:1px dashed #777;padding-top:2mm}@media print{body{background:#fff}header,.wrap{display:none}.labelSheet{display:block;padding:8mm}.labelGrid{display:grid}.labelCard{break-inside:avoid} @page{size:A4 portrait;margin:8mm}}
 @media(max-width:900px){.toolbar{grid-template-columns:1fr 1fr}.wrap{padding:0 8px}header h1{font-size:18px}}
+
+/* ===== 管理リスト横幅最適化 ===== */
+th,td{word-break:break-word;}
+td{white-space:nowrap;}
+th:nth-child(5),td:nth-child(5),
+th:nth-child(7),td:nth-child(7),
+th:nth-child(9),td:nth-child(9),
+th:nth-child(10),td:nth-child(10),
+th:nth-child(11),td:nth-child(11){white-space:normal;}
+
+th:nth-child(1),td:nth-child(1){width:110px;}
+th:nth-child(2),td:nth-child(2){width:130px;}
+th:nth-child(3),td:nth-child(3){width:110px;}
+th:nth-child(4),td:nth-child(4){width:120px;}
+th:nth-child(5),td:nth-child(5){width:220px;}
+th:nth-child(6),td:nth-child(6){width:130px;}
+th:nth-child(7),td:nth-child(7){width:140px;}
+th:nth-child(8),td:nth-child(8){width:58px;text-align:center;}
+th:nth-child(9),td:nth-child(9){width:150px;}
+th:nth-child(10),td:nth-child(10){width:120px;}
+th:nth-child(11),td:nth-child(11){width:250px;}
+th:nth-child(12),td:nth-child(12){width:100px;text-align:center;}
+th:nth-child(13),td:nth-child(13){width:82px;text-align:center;}
+th:nth-child(14),td:nth-child(14){width:150px;}
+
+td:nth-child(11) small{display:block;line-height:1.5;margin-top:4px;}
+td:nth-child(14){white-space:normal;}
+td:nth-child(14) button{display:inline-block;width:auto;min-width:64px;margin:0 4px 5px 0;padding:7px 8px;font-size:12px;}
+.thumb{width:76px;}
+
+@media (min-width:1500px){
+  .wrap{max-width:none;width:calc(100vw - 24px);}
+  table{min-width:0;}
+}
+
+@media (max-width:900px){
+  table{min-width:1500px;}
+  td:nth-child(14) button{display:block;width:100%;margin:0 0 5px;}
+}
+
 </style>
 </head>
 <body>
@@ -62,13 +102,28 @@ const SUB_LABEL={chugoku:'中国新聞を購読中',digital:'中国新聞デジ�
 const INT_LABEL={trial:'中国新聞を読んでみたい',catalog:'資料だけ欲しい',none:'今は希望しない'};
 function fmtDate(v){if(!v)return""; if(v.toDate)return v.toDate().toLocaleString('ja-JP'); try{return new Date(v).toLocaleString('ja-JP')}catch(e){return String(v)}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
-function subLabel(o){return o.subscriptionStatusLabel || SUB_LABEL[o.subscriptionStatus] || '未回答'}
+function subscriptionValues(o){
+  const raw = o.subscriptionStatuses ?? o.subscriptionStatus ?? [];
+  if(Array.isArray(raw)) return raw.filter(Boolean);
+  if(typeof raw === 'string') return raw.split(',').map(v=>v.trim()).filter(Boolean);
+  return [];
+}
+function subscriptionLabels(o){
+  const saved = o.subscriptionStatusLabels;
+  if(Array.isArray(saved) && saved.length) return saved.filter(Boolean);
+  const values = subscriptionValues(o);
+  if(values.length) return values.map(v=>SUB_LABEL[v] || v);
+  if(o.subscriptionStatusLabel) return String(o.subscriptionStatusLabel).split(/[、,]/).map(v=>v.trim()).filter(Boolean);
+  return [];
+}
+function subLabel(o){const labels=subscriptionLabels(o);return labels.length?labels.join('、'):'未回答'}
+function hasSubscription(o,value){return subscriptionValues(o).includes(value)}
 function intLabel(o){return o.interestStatusLabel || INT_LABEL[o.interestStatus] || '未回答'}
 function leadTag(o){if(o.interestStatus==='trial')return '<span class="leadTag hotLead">読んでみたい</span>'; if(o.interestStatus==='catalog')return '<span class="leadTag">資料希望</span>'; return ''}
 async function loadOrders(){document.getElementById('summary').textContent='読み込み中です。';const snap=await db.collection('freeDeliveryOrders').where('eventId','==','higashihiroshima-geiyokai-soccer-2026').get();orders=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAtLocal||'').localeCompare(String(a.createdAtLocal||'')));renderOrders()}
 function clearFilters(){document.getElementById('statusFilter').value='';document.getElementById('surveyFilter').value='all';document.getElementById('searchBox').value='';renderOrders()}
-function matchesSurvey(o,filter){if(!filter||filter==='all')return true;const [kind,value]=filter.split(':');if(kind==='sub')return o.subscriptionStatus===value;if(kind==='interest')return o.interestStatus===value;return true}
-function renderOrders(){const status=document.getElementById('statusFilter').value;const survey=document.getElementById('surveyFilter').value;const q=document.getElementById('searchBox').value.trim().toLowerCase();visibleOrders=orders.filter(o=>(!status||o.status===status)&&matchesSurvey(o,survey)&&(!q||[o.receiptNo,o.name,o.kana,o.phone,o.address,o.team,o.grade,o.memo,subLabel(o),intLabel(o)].some(v=>String(v||'').toLowerCase().includes(q))));const rows=document.getElementById('orderRows');const trial=orders.filter(o=>o.interestStatus==='trial').length;const catalog=orders.filter(o=>o.interestStatus==='catalog').length;document.getElementById('summary').textContent=`全${orders.length}件／表示${visibleOrders.length}件　受付:${orders.filter(o=>o.status==='WAIT').length}　印刷中:${orders.filter(o=>o.status==='PRINTING').length}　配達済:${orders.filter(o=>o.status==='DELIVERED').length}　読んでみたい:${trial}　資料希望:${catalog}`;if(!visibleOrders.length){rows.innerHTML='<tr><td colspan="14">該当データがありません。</td></tr>';return}rows.innerHTML=visibleOrders.map(o=>`<tr><td><strong>${esc(o.receiptNo)}</strong></td><td>${esc(fmtDate(o.createdAt||o.createdAtLocal))}</td><td>${esc(o.name)}<br><small>${esc(o.kana)}</small></td><td>${esc(o.phone)}</td><td>${esc(o.address)}</td><td>${esc(o.team||'')}<br>${esc(o.grade||'')}</td><td>${esc(o.memo||'')}</td><td>${esc(o.quantity||1)}</td><td>${esc(subLabel(o))}</td><td>${esc(intLabel(o))}<br>${leadTag(o)}</td><td><strong>${esc(o.headline||'')}</strong><br><small>${esc((o.article||'').slice(0,70))}</small></td><td>${o.imageUrl?`<a href="${esc(o.imageUrl)}" target="_blank"><img class="thumb" src="${esc(o.imageUrl)}"></a>`:''}</td><td class="status ${esc(o.status)}">${esc(o.status)}</td><td><button onclick="updateStatus('${esc(o.receiptNo)}','PRINTING')">印刷中</button><br><button onclick="updateStatus('${esc(o.receiptNo)}','DELIVERED')">配達済</button><br><button class="subBtn" onclick="printOneLabel('${esc(o.receiptNo)}')">ラベル</button><br>${o.imageUrl?`<button class="subBtn" onclick="downloadPng('${esc(o.imageUrl)}','${esc(o.receiptNo)}')">PNG保存</button>`:''}</td></tr>`).join('')}
+function matchesSurvey(o,filter){if(!filter||filter==='all')return true;const [kind,value]=filter.split(':');if(kind==='sub')return hasSubscription(o,value);if(kind==='interest')return o.interestStatus===value;return true}
+function renderOrders(){const status=document.getElementById('statusFilter').value;const survey=document.getElementById('surveyFilter').value;const q=document.getElementById('searchBox').value.trim().toLowerCase();visibleOrders=orders.filter(o=>(!status||o.status===status)&&matchesSurvey(o,survey)&&(!q||[o.receiptNo,o.name,o.kana,o.phone,o.address,o.team,o.grade,o.memo,subLabel(o),intLabel(o)].some(v=>String(v||'').toLowerCase().includes(q))));const rows=document.getElementById('orderRows');const trial=orders.filter(o=>o.interestStatus==='trial').length;const catalog=orders.filter(o=>o.interestStatus==='catalog').length;const chugoku=orders.filter(o=>hasSubscription(o,'chugoku')).length;const digital=orders.filter(o=>hasSubscription(o,'digital')).length;const other=orders.filter(o=>hasSubscription(o,'other')).length;const none=orders.filter(o=>hasSubscription(o,'none')).length;document.getElementById('summary').textContent=`全${orders.length}件／表示${visibleOrders.length}件　受付:${orders.filter(o=>o.status==='WAIT').length}　印刷中:${orders.filter(o=>o.status==='PRINTING').length}　配達済:${orders.filter(o=>o.status==='DELIVERED').length}　中国新聞:${chugoku}　デジタル:${digital}　他紙:${other}　未購読:${none}　読んでみたい:${trial}　資料希望:${catalog}`;if(!visibleOrders.length){rows.innerHTML='<tr><td colspan="14">該当データがありません。</td></tr>';return}rows.innerHTML=visibleOrders.map(o=>`<tr><td><strong>${esc(o.receiptNo)}</strong></td><td>${esc(fmtDate(o.createdAt||o.createdAtLocal))}</td><td>${esc(o.name)}<br><small>${esc(o.kana)}</small></td><td>${esc(o.phone)}</td><td>${esc(o.address)}</td><td>${esc(o.team||'')}<br>${esc(o.grade||'')}</td><td>${esc(o.memo||'')}</td><td>${esc(o.quantity||1)}</td><td>${esc(subLabel(o))}</td><td>${esc(intLabel(o))}<br>${leadTag(o)}</td><td><strong>${esc(o.headline||'')}</strong><br><small>${esc((o.article||'').slice(0,70))}</small></td><td>${o.imageUrl?`<a href="${esc(o.imageUrl)}" target="_blank"><img class="thumb" src="${esc(o.imageUrl)}"></a>`:''}</td><td class="status ${esc(o.status)}">${esc(o.status)}</td><td><button onclick="updateStatus('${esc(o.receiptNo)}','PRINTING')">印刷中</button><br><button onclick="updateStatus('${esc(o.receiptNo)}','DELIVERED')">配達済</button><br><button class="subBtn" onclick="printOneLabel('${esc(o.receiptNo)}')">ラベル</button><br>${o.imageUrl?`<button class="subBtn" onclick="downloadPng('${esc(o.imageUrl)}','${esc(o.receiptNo)}')">PNG保存</button>`:''}</td></tr>`).join('')}
 async function updateStatus(id,status){await db.collection('freeDeliveryOrders').doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});const o=orders.find(x=>x.receiptNo===id);if(o)o.status=status;renderOrders()}
 function labelHtml(o){return `<div class="labelCard"><div class="labelReceipt">受付番号：${esc(o.receiptNo)}　希望枚数：${esc(o.quantity||1)}</div><div class="labelAddress">${esc(o.address)}</div><div class="labelName">${esc(o.name)} 様</div><div class="labelMeta">TEL：${esc(o.phone)}<br>所属チーム：${esc(o.team||'未入力')}　学年：${esc(o.grade||'未入力')}<br>購読状況：${esc(subLabel(o))}<br>興味：${esc(intLabel(o))}<br>連絡メモ：${esc(o.memo||'なし')}<br>第6回中国新聞東広島芸陽会杯サッカー大会 My新聞</div></div>`}
 function printLabels(){document.getElementById('labelGrid').innerHTML=visibleOrders.map(labelHtml).join('');window.print()}
