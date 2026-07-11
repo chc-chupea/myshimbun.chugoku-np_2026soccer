@@ -1773,6 +1773,17 @@ button {
 .deliveryComplete strong {
   font-size: 24px;
 }
+.deliveryComplete .pdfSaveAfterComplete {
+  margin-top: 12px;
+  background: #001E55 !important;
+  color: #ffffff;
+}
+.deliveryComplete .pdfSaveHelp {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #126b37;
+}
 @media (max-width: 640px) {
   .deliveryModeBox {
     padding: 13px;
@@ -2311,10 +2322,9 @@ body.wizardMode .step {
 <button class="backBtn" onclick="resetPhotoPosition()">写真位置をリセット</button>
 </details>
 </div><div id="saveArea">
-<p class="notice">文字や写真位置を調整したあと、お申し込みフォームへ進んでください。控えとしてPDF保存もできます。</p>
+<p class="notice">文字や写真位置を調整したあと、お申し込みフォームへ進んでください。申込完了後に、控え用PDFを保存できます。</p>
 
 <button class="deliverySubmitBtn" onclick="scrollToDeliveryForm()">中国新聞 My新聞を申し込む（1部無料・後日中国新聞販売所からお届け）</button>
-<button onclick="saveAsPDF()">控え用にA4 PDFとして保存</button>
 <button class="backBtn" onclick="resetForm()">最初から作り直す</button>
 
 <div class="deliveryModeBox" id="deliveryFormBox">
@@ -3836,11 +3846,47 @@ async function saveAsImage() {
 }
 
 
+let lastCompletedOrderForPdf = null;
+
+function addPdfManagementLabel(clone, receiptNo, quantity) {
+  const label = document.createElement("div");
+  label.setAttribute("aria-hidden", "true");
+  label.innerHTML = `受付番号：${receiptNo}<br>注文枚数：${Number(quantity || 1)}部`;
+  Object.assign(label.style, {
+    position: "absolute",
+    right: "3px",
+    bottom: "3px",
+    zIndex: "9999",
+    padding: "3px 5px",
+    background: "#ffffff",
+    color: "#111111",
+    border: "1px solid #111111",
+    fontFamily: '"Yu Gothic", "Hiragino Sans", sans-serif',
+    fontSize: "6px",
+    fontWeight: "700",
+    lineHeight: "1.35",
+    letterSpacing: "0.02em",
+    whiteSpace: "nowrap",
+    textAlign: "left",
+    boxShadow: "none",
+    borderRadius: "0"
+  });
+  clone.appendChild(label);
+}
+
 async function saveAsPDF() {
+  if (!lastCompletedOrderForPdf || !lastCompletedOrderForPdf.receiptNo) {
+    alert("先にお申し込みを完了してください。");
+    return;
+  }
+
+  const { receiptNo, quantity } = lastCompletedOrderForPdf;
   prepareHighResArticleForExport();
   fitArticleText();
 
-  renderStableNewspaperCanvas(7).then(canvas => {
+  renderStableNewspaperCanvas(7, clone => {
+    addPdfManagementLabel(clone, receiptNo, quantity);
+  }).then(canvas => {
     restorePreviewArticleResolution();
 
     const { jsPDF } = window.jspdf;
@@ -3883,7 +3929,7 @@ async function saveAsPDF() {
 
     pdf.addImage(imgData, "PNG", x, y, pdfWidth, pdfHeight);
 
-    const fileName = "chugoku-my-shinbun-a4.pdf";
+    const fileName = `${receiptNo}-chugoku-my-shinbun-a4.pdf`;
 
     // スマホでも別画面を強制的に開かず、その場で保存処理を行う。
     // PDF画面から「戻る」を押して編集内容が初期化される問題を防ぐ。
@@ -3897,6 +3943,12 @@ async function saveAsPDF() {
 
 
 function resetForm() {
+  lastCompletedOrderForPdf = null;
+  const complete = document.getElementById("deliveryComplete");
+  if (complete) {
+    complete.style.display = "none";
+    complete.innerHTML = "";
+  }
   hideWorkspace();
   clearFocusFlash();
   const previewNotice = document.getElementById("previewEditNotice");
@@ -4373,6 +4425,11 @@ async function submitFreeDeliveryOrder() {
 
     await fb.db.collection("freeDeliveryOrders").doc(receiptNo).set(order);
 
+    lastCompletedOrderForPdf = {
+      receiptNo,
+      quantity: form.quantity
+    };
+
     status.style.display = "none";
     complete.style.display = "block";
     complete.innerHTML = `
@@ -4380,6 +4437,8 @@ async function submitFreeDeliveryOrder() {
       <div>受付番号</div>
       <strong>${receiptNo}</strong>
       <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
+      <button class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">控え用にA4 PDFとして保存</button>
+      <p class="pdfSaveHelp">PDFの右下に受付番号と注文枚数が入ります。お問い合わせ時の控えとして保存してください。</p>
     `;
   } catch (err) {
     if (typeof showGuide === "function") showGuide();
