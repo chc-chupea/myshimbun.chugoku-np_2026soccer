@@ -1782,10 +1782,15 @@ button {
   font-weight: 700;
   font-size: 14px;
 }
-.surveyOptions input[type="radio"] {
-  width: auto;
-  margin: 0;
+.surveyOptions input[type="radio"],
+.surveyOptions input[type="checkbox"] {
+  width: auto !important;
+  min-width: 16px;
+  height: 16px;
+  margin: 0 !important;
   padding: 0;
+  flex: 0 0 auto;
+  align-self: center;
 }
 
 
@@ -4126,17 +4131,17 @@ function getInputValue(id) {
 
 function getCheckedRadioData(name) {
   const el = document.querySelector(`input[name="${name}"]:checked`);
-
-function getCheckedCheckboxData(name) {
-  const checked=[...document.querySelectorAll(`input[name="${name}"]:checked`)];
-  return {
-    value: checked.map(e=>e.value).join(","),
-    label: checked.map(e=>e.dataset.label||e.value).join("、")
-  };
-}
   return {
     value: el ? el.value : "",
     label: el ? (el.dataset.label || el.value) : ""
+  };
+}
+
+function getCheckedCheckboxData(name) {
+  const checked = [...document.querySelectorAll(`input[name="${name}"]:checked`)];
+  return {
+    value: checked.map(el => el.value).join(","),
+    label: checked.map(el => el.dataset.label || el.value).join("、")
   };
 }
 
