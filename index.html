@@ -355,20 +355,57 @@ button { border: none; background: #111; color: #fff; font-weight: bold; cursor:
 }
 
 .focusFlash {
-  outline: 4px solid #ff2b2b !important;
-  outline-offset: 3px;
-  animation: focusBlink 0.9s ease-in-out infinite;
   position: relative;
   z-index: 3;
+  outline: none !important;
+  animation: focusAreaGlow 0.8s ease-in-out infinite;
 }
 
-@keyframes focusBlink {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,43,43,0.25); }
-  50% { box-shadow: 0 0 0 8px rgba(255,43,43,0.18); }
+/* 6つの反映先を、どれも赤い四角でしっかり囲む */
+#photoFrame.focusFlash,
+#outSublogo.focusFlash,
+#outHeadline.focusFlash,
+#outArticle.focusFlash,
+#outDate.focusFlash,
+#outReporter.focusFlash {
+  overflow: visible;
 }
 
-#articleCanvas.focusFlash {
-  outline-offset: -2px;
+#photoFrame.focusFlash::after,
+#outSublogo.focusFlash::after,
+#outHeadline.focusFlash::after,
+#outArticle.focusFlash::after,
+#outDate.focusFlash::after,
+#outReporter.focusFlash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 5px solid #ff2020;
+  border-radius: 8px;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* 写真・記事は内容が枠からはみ出さないよう、内側に囲む */
+#photoFrame.focusFlash,
+#outArticle.focusFlash {
+  overflow: hidden;
+}
+
+/* 日付・記者名は小さいため、枠が文字に重ならないよう少し余白を確保 */
+#outDate.focusFlash,
+#outReporter.focusFlash {
+  padding: 5px 4px;
+}
+
+@keyframes focusAreaGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255,32,32,0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(255,32,32,0.22);
+  }
 }
 
 @media (min-width: 901px) {
@@ -2023,6 +2060,24 @@ body.wizardMode .step {
   }
 }
 
+
+/* ===== フォント選択エリアをコンパクト化 ===== */
+.fontChoice {
+  font-size: 17px !important;
+  line-height: 1.2 !important;
+  padding: 6px 10px !important;
+  min-height: 38px !important;
+}
+
+.fontChoice input {
+  transform: scale(0.95) !important;
+  margin-right: 8px !important;
+}
+
+.fontChoiceGrid {
+  gap: 5px !important;
+}
+
 </style>
 
 
@@ -2724,7 +2779,7 @@ function flashPaperPart(part) {
   } else if (part === "headline") {
     target = document.getElementById("outHeadline");
   } else if (part === "article") {
-    target = document.getElementById("articleCanvas") || document.getElementById("outArticle");
+    target = document.getElementById("outArticle") || document.getElementById("articleCanvas");
   } else if (part === "date") {
     target = document.getElementById("outDate");
   } else if (part === "reporter") {
