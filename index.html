@@ -2331,7 +2331,7 @@ body.wizardMode .step {
 <div class="headline" id="outHeadline">仲間と掴んだ 夏の一勝</div>
 <div aria-label="写真配置エリア" class="photoFrame" id="photoFrame" tabindex="0">
 <img alt="記念写真" id="previewPhoto"/>
-<div class="photoGuide" id="photoGuide">マウスで写真を動かせます</div>
+<div class="photoGuide" id="photoGuide">PC：マウスで写真を動かせます／スマホ：1本指で移動、2本指で拡大・縮小・回転ができます</div>
 </div>
 <div class="caption">思い出の一枚</div>
 <div class="articleBox"><div class="article" id="outArticle"><canvas id="articleCanvas"></canvas></div></div>
@@ -2584,7 +2584,7 @@ document.getElementById("photoInput").addEventListener("change", function(e) {
     }
 
     if (status) {
-      status.innerText = "写真の準備ができました！1本指で移動、2本指で拡大・縮小・回転ができます。";
+      status.innerText = "写真の準備ができました！PC：マウスで写真を動かせます／スマホ：1本指で移動、2本指で拡大・縮小・回転ができます。";
       const editStatus = document.getElementById("editPhotoStatus");
       if (editStatus) editStatus.innerText = "写真を変更しました。位置を調整できます。";
     }
