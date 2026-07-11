@@ -2033,10 +2033,9 @@ body.wizardMode .step {
 <div class="eventTitle heroTitleSimple blueHeroBand">
 <div class="eventTitleText">
     <div class="eventTitleName">2026年8月23日（日）開催</div>
-    <div class="eventTitleMain">第6回中国新聞東広島芸陽会杯<br/>サッカー大会を新聞記事にしよう！</div>
+    <div class="eventTitleMain">第6回中国新聞東広島芸陽会杯<br/>サッカー大会を新聞にしよう！</div>
     <div class="eventTitleSub">
-      見たこと・感じたこと、仲間の頑張りを記事に書こう<br/>
-      スマホで写真を選んで、見出しをつけたら、世界に1枚の大会新聞が完成！
+      見たこと・感じたこと、仲間の頑張りを記事に書こう
     </div>
     
   </div>
@@ -2126,7 +2125,7 @@ body.wizardMode .step {
 <section class="step" id="step4">
 <h2>④ 記事を書こう</h2>
 <p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
-<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、東広島市西条町の東広島運動公園であった。県内7市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
+<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
 <textarea id="articleInput" placeholder="記事本文を入力"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
@@ -2252,14 +2251,14 @@ body.wizardMode .step {
 <button class="backBtn" onclick="resetPhotoPosition()">写真位置をリセット</button>
 </details>
 </div><div id="saveArea">
-<p class="notice">文字や写真位置を調整したあと、無料イベントのお申し込みへ進んでください。控えとしてPDF保存もできます。</p>
+<p class="notice">文字や写真位置を調整したあと、お申し込みフォームへ進んでください。控えとしてPDF保存もできます。</p>
 
-<button class="deliverySubmitBtn" onclick="scrollToDeliveryForm()">無料イベントで申し込む（1部無料・後日販売所からお届け）</button>
+<button class="deliverySubmitBtn" onclick="scrollToDeliveryForm()">中国新聞 My新聞を申し込む（1部無料・後日中国新聞販売所からお届け）</button>
 <button onclick="saveAsPDF()">控え用にA4 PDFとして保存</button>
 <button class="backBtn" onclick="resetForm()">最初から作り直す</button>
 
 <div class="deliveryModeBox" id="deliveryFormBox">
-  <h3>無料イベント申込</h3>
+  <h3>中国新聞 My新聞申し込み</h3>
   <p><strong>1部無料</strong>で、完成した新聞を後日お近くの中国新聞販売所からお届けします。</p>
   <div class="deliveryNote">
     お届けは配達エリアに限らせていただきます。お申し込み後、受付番号を表示します。
@@ -2464,7 +2463,7 @@ function syncStartFieldsToEditor(redrawArticle = true) {
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
   const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
   const article = document.getElementById("articleInput").value.trim() ||
-    "第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。";
+    "第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。";
   const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
   const reporter = document.getElementById("reporterInput").value.trim() || "記者 （氏名）";
 
@@ -2742,7 +2741,7 @@ function makeNewspaper() {
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
   const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
   const article = document.getElementById("articleInput").value.trim() ||
-    "第6回中国新聞東広島芸陽会杯サッカー大会（中国新聞東広島芸陽会主催、東広島サッカー協会主管）が8月23日、広島県東広島市西条町田口の東広島運動公園であった。県内7市町から出場した計16チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。Gsc緑丘（福山市）が決勝でKELT（東広島市）を破り、初優勝を飾った。";
+    "第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。";
   const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
   const reporter = document.getElementById("reporterInput").value.trim() || "記者 （氏名）";
 
