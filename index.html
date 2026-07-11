@@ -2518,6 +2518,35 @@ function setupLiveWizardPreview() {
   }
 }
 
+const STEP_PREVIEW_TARGETS = {
+  1: "photoFrame",
+  2: "outSublogo",
+  3: "outHeadline",
+  4: "outArticle",
+  5: "outDate",
+  6: "outReporter"
+};
+
+function clearStepPreviewFocus() {
+  document.querySelectorAll("#newspaper .focusFlash").forEach(el => {
+    el.classList.remove("focusFlash");
+  });
+}
+
+function setStepPreviewFocus(stepNumber) {
+  clearStepPreviewFocus();
+
+  const targetId = STEP_PREVIEW_TARGETS[Number(stepNumber)];
+  if (!targetId || !document.body.classList.contains("wizardMode")) return;
+
+  const target = document.getElementById(targetId);
+  if (!target) return;
+
+  // 同じ場所へ戻った場合も点滅アニメーションを最初から再生する
+  void target.offsetWidth;
+  target.classList.add("focusFlash");
+}
+
 function nextStep(num) {
   document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
 
@@ -2525,6 +2554,7 @@ function nextStep(num) {
   if (!next) return;
 
   next.classList.add("active");
+  setStepPreviewFocus(num);
 
   // サンプル画像の位置ではなく、移動先ステップの先頭を表示する
   requestAnimationFrame(() => {
@@ -2743,6 +2773,8 @@ function setupEditFocusHighlights() {
 
 
 function makeNewspaper() {
+  clearStepPreviewFocus();
+
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
   const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
   const article = document.getElementById("articleInput").value.trim() ||
@@ -4402,6 +4434,10 @@ window.movePreviewToWorkspace = function() {
     requestAnimationFrame(fitWorkspacePreviewToPhone);
   });
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+  requestAnimationFrame(() => setStepPreviewFocus(1));
+});
 </script>
 
 </body>
