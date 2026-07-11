@@ -2296,7 +2296,7 @@ body.wizardMode .step {
 
     <div class="surveyBox">
       <h4>アンケート①（任意）</h4>
-      <p>現在の新聞購読状況を教えてください。</p>
+      <p>現在の新聞購読状況を教えてください。（複数選択可能）</p>
       <div class="surveyOptions">
         <label><input type="checkbox" name="subscriptionStatus" value="chugoku" data-label="中国新聞を購読中">中国新聞を購読中</label>
         <label><input type="checkbox" name="subscriptionStatus" value="digital" data-label="中国新聞デジタルを購読中">中国新聞デジタルを購読中</label>
@@ -2584,7 +2584,7 @@ document.getElementById("photoInput").addEventListener("change", function(e) {
     }
 
     if (status) {
-      status.innerText = "写真の準備が完了しました。いい感じです！";
+      status.innerText = "写真の準備ができました！1本指で移動、2本指で拡大・縮小・回転ができます。";
       const editStatus = document.getElementById("editPhotoStatus");
       if (editStatus) editStatus.innerText = "写真を変更しました。位置を調整できます。";
     }
