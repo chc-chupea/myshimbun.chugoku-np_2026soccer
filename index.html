@@ -3884,25 +3884,10 @@ async function saveAsPDF() {
     pdf.addImage(imgData, "PNG", x, y, pdfWidth, pdfHeight);
 
     const fileName = "chugoku-my-shinbun-a4.pdf";
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    if (isMobile) {
-      const blob = pdf.output("blob");
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      setTimeout(() => {
-        window.open(url, "_blank");
-      }, 500);
-    } else {
-      pdf.save(fileName);
-    }
+    // スマホでも別画面を強制的に開かず、その場で保存処理を行う。
+    // PDF画面から「戻る」を押して編集内容が初期化される問題を防ぐ。
+    pdf.save(fileName);
   }).catch(() => {
     showGuide();
     restorePreviewArticleResolution();
