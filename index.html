@@ -2354,7 +2354,7 @@ body.wizardMode .step {
 </aside>
 </div>
 </div>
-</div><p class="previewEditNotice" id="previewEditNotice">「編集する」を開いて修正すると、紙面にすぐ反映されます。</p></div>
+</div><p class="previewEditNotice" id="previewEditNotice">「編集する」を開いて修正すると、紙面に反映されます。</p></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
 let photoPressTimer = null;
@@ -3470,7 +3470,7 @@ function addArticleHint() {
   const area = document.getElementById("editArticle");
   if (!area) return;
 
-  const hint = "\n\n【取材メモ】　印象に残ったプレー、仲間にかけた声、試合後に感じたことを一つ足すと、自分だけの記事になります。";
+  const hint = "\n\n【取材メモ】　（印象に残ったプレー、仲間にかけた声、試合後に感じたことを一つ足すと、より自分だけの記事になります。）";
 
   area.value = area.value.trimEnd() + hint;
   updatePreviewText();
