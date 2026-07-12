@@ -2353,6 +2353,209 @@ body.photoEditorBodyLocked {
   }
 }
 
+
+/* ===== 記事専用：プレビューと入力を同時に大きく表示 ===== */
+.articleLivePreview {
+  display: none;
+  width: 100%;
+  padding: 7px 8px 8px;
+  background: linear-gradient(180deg, #eef7ff 0%, #ffffff 100%);
+  border-bottom: 1px solid #b9d8ec;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+.articleLivePreview.active {
+  display: block;
+}
+
+.articleLivePreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 auto 5px;
+  max-width: 620px;
+  color: #0f3f68;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 900;
+}
+
+.articleLivePreviewHeader span:last-child {
+  color: #526b7d;
+  font-weight: 700;
+  text-align: right;
+}
+
+.articleLiveCanvasWrap {
+  position: relative;
+  width: min(100%, 620px);
+  margin: 0 auto;
+  background: #fff;
+  border: 2px solid #123;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.14);
+}
+
+#articleLiveCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+  image-rendering: auto;
+}
+
+body.articleLiveMode #previewColumn #newspaperWrap {
+  display: none !important;
+}
+
+body.articleLiveMode #previewColumn {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+body.articleLiveMode #wizardPreviewHost,
+body.articleLiveMode #workspace #previewColumn {
+  margin-bottom: 6px !important;
+}
+
+body.articleLiveMode #step4 {
+  margin-top: 6px !important;
+}
+
+/* 記事入力中も説明文と例文を残す。
+   プレビューと入力欄の大きさを保つため、説明はコンパクト表示、
+   例文は固定高さのスクロール枠にする。 */
+body.articleLiveMode #step4 > p {
+  display: block !important;
+  margin: 4px 0 6px !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  color: #334a5c;
+}
+
+body.articleLiveMode #step4 > .hint {
+  display: block !important;
+  max-height: 108px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 0 8px !important;
+  padding: 8px 10px !important;
+  font-size: 12.5px !important;
+  line-height: 1.65 !important;
+  background: #fff8e8 !important;
+  border-left: 5px solid #f4a33a !important;
+  border-radius: 8px !important;
+  overscroll-behavior: contain;
+}
+
+body.articleLiveMode #step4 > .hint::before {
+  content: "書き方の例（上下にスクロールできます）";
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: -8px -10px 7px;
+  padding: 7px 10px;
+  background: #fff1cf;
+  color: #7a5200;
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 1.3;
+  border-bottom: 1px solid #f2cf85;
+}
+
+body.articleLiveMode #articleInput,
+body.articleLiveMode #editArticle {
+  height: clamp(132px, 24dvh, 220px) !important;
+  min-height: 132px !important;
+  max-height: 220px !important;
+  resize: none !important;
+  line-height: 1.65 !important;
+  font-size: 16px !important;
+  margin-top: 7px !important;
+  scroll-padding-bottom: 48px;
+}
+
+body.articleLiveMode #step4 h2 {
+  margin-bottom: 2px !important;
+  font-size: 19px !important;
+}
+
+body.articleLiveMode #step4 .nextBtn,
+body.articleLiveMode #step4 .backBtn {
+  margin-top: 7px !important;
+  min-height: 46px !important;
+}
+
+body.articleLiveMode #editArticle {
+  width: calc(100% - 16px) !important;
+  margin-left: 8px !important;
+  margin-right: 8px !important;
+}
+
+body.articleLiveMode .editSection.articleEditingSection > summary {
+  padding: 9px 12px !important;
+}
+
+body.articleLiveMode .editSection.articleEditingSection .quickHintChips,
+body.articleLiveMode .editSection.articleEditingSection .articleLengthNotice {
+  display: none !important;
+}
+
+.articleLiveLineGuide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 3px solid rgba(15, 94, 156, 0.18);
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  body.articleLiveMode #wizardPreviewHost,
+  body.articleLiveMode #workspace #previewColumn {
+    position: sticky !important;
+    position: -webkit-sticky !important;
+    top: 0 !important;
+    z-index: 120 !important;
+  }
+
+  body.articleLiveMode .articleLivePreview {
+    padding-top: max(5px, env(safe-area-inset-top));
+  }
+
+  body.articleLiveMode .step,
+  body.articleLiveMode #workspace #editPanel {
+    padding: 10px !important;
+  }
+}
+
+@media (max-height: 700px) and (max-width: 900px) {
+  body.articleLiveMode #articleInput,
+  body.articleLiveMode #editArticle {
+    height: 118px !important;
+    min-height: 118px !important;
+  }
+
+  .articleLivePreviewHeader {
+    margin-bottom: 3px;
+  }
+}
+
+
+@media (max-height: 700px) and (max-width: 900px) {
+  body.articleLiveMode #step4 > .hint {
+    max-height: 86px !important;
+  }
+
+  body.articleLiveMode #step4 > p {
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+}
+
 </style>
 
 
@@ -2852,12 +3055,17 @@ function syncStartFieldsToEditor(redrawArticle = true) {
 }
 
 function scheduleLiveArticleUpdate() {
-  clearTimeout(liveArticleTimer);
-  liveArticleTimer = setTimeout(() => {
-    document.getElementById("editArticle").value =
-      document.getElementById("articleInput").value.trim() || "記事本文が入ります。";
+  if (liveArticleTimer) cancelAnimationFrame(liveArticleTimer);
+  liveArticleTimer = requestAnimationFrame(() => {
+    const source = document.getElementById("articleInput");
+    const target = document.getElementById("editArticle");
+    if (!source || !target) return;
+    target.value = source.value || "";
     updatePreviewText();
-  }, 160);
+    if (typeof refreshArticleLivePreview === "function") {
+      refreshArticleLivePreview();
+    }
+  });
 }
 
 function setupLiveWizardPreview() {
@@ -5260,6 +5468,185 @@ window.nextStep = function(num) {
   });
 
   /* モーダル外を触っても閉じない。誤操作防止のため「決定」だけで戻る */
+})();
+</script>
+
+
+<script>
+/* ===== 記事入力中：大きな記事プレビュー＋入力欄の同時表示 ===== */
+(function setupArticleLiveSplitEditor() {
+  let previewBox = null;
+  let liveCanvas = null;
+  let redrawQueued = 0;
+
+  function ensureArticleLivePreview() {
+    const previewColumn = document.getElementById("previewColumn");
+    const newspaperWrap = document.getElementById("newspaperWrap");
+    if (!previewColumn || !newspaperWrap) return null;
+
+    previewBox = document.getElementById("articleLivePreview");
+    if (!previewBox) {
+      previewBox = document.createElement("div");
+      previewBox.id = "articleLivePreview";
+      previewBox.className = "articleLivePreview";
+      previewBox.innerHTML =
+        '<div class="articleLivePreviewHeader">' +
+          '<span>記事の仕上がり</span>' +
+          '<span id="articleLiveStatus">入力するとすぐ反映されます</span>' +
+        '</div>' +
+        '<div class="articleLiveCanvasWrap">' +
+          '<canvas id="articleLiveCanvas"></canvas>' +
+          '<div class="articleLiveLineGuide"></div>' +
+        '</div>';
+      previewColumn.insertBefore(previewBox, newspaperWrap);
+    }
+
+    liveCanvas = document.getElementById("articleLiveCanvas");
+    return previewBox;
+  }
+
+  window.refreshArticleLivePreview = function refreshArticleLivePreview() {
+    if (redrawQueued) cancelAnimationFrame(redrawQueued);
+    redrawQueued = requestAnimationFrame(function() {
+      redrawQueued = 0;
+      ensureArticleLivePreview();
+
+      const source = document.getElementById("articleCanvas");
+      const status = document.getElementById("articleLiveStatus");
+      if (!source || !liveCanvas) return;
+
+      const width = source.width || 900;
+      const height = source.height || 460;
+      if (liveCanvas.width !== width) liveCanvas.width = width;
+      if (liveCanvas.height !== height) liveCanvas.height = height;
+
+      const ctx = liveCanvas.getContext("2d");
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(source, 0, 0, width, height);
+
+      const activeInput =
+        document.activeElement && document.activeElement.id === "editArticle"
+          ? document.getElementById("editArticle")
+          : document.getElementById("articleInput");
+      const count = activeInput ? activeInput.value.length : 0;
+      const lines = activeInput && activeInput.value
+        ? activeInput.value.split(/\r\n|\r|\n/).length
+        : 1;
+
+      if (status) {
+        status.textContent = count + "文字・" + lines + "段落";
+      }
+    });
+  };
+
+  function articleSectionIsOpen() {
+    const editArticle = document.getElementById("editArticle");
+    const section = editArticle ? editArticle.closest("details") : null;
+    return !!(section && section.open);
+  }
+
+  function step4IsActive() {
+    const step4 = document.getElementById("step4");
+    return !!(step4 && step4.classList.contains("active") &&
+      document.body.classList.contains("wizardMode"));
+  }
+
+  function updateArticleLiveMode() {
+    ensureArticleLivePreview();
+    const active = step4IsActive() ||
+      articleSectionIsOpen() ||
+      (document.activeElement &&
+        (document.activeElement.id === "articleInput" ||
+         document.activeElement.id === "editArticle"));
+
+    document.body.classList.toggle("articleLiveMode", !!active);
+    if (previewBox) previewBox.classList.toggle("active", !!active);
+
+    const editArticle = document.getElementById("editArticle");
+    const editSection = editArticle ? editArticle.closest("details") : null;
+    if (editSection) {
+      editSection.classList.toggle("articleEditingSection", !!active);
+    }
+
+    if (active) {
+      window.refreshArticleLivePreview();
+    } else if (typeof schedulePhonePreviewFit === "function") {
+      schedulePhonePreviewFit();
+    }
+  }
+
+  function bindArticleInput(id) {
+    const input = document.getElementById(id);
+    if (!input || input.dataset.articleSplitBound === "1") return;
+    input.dataset.articleSplitBound = "1";
+
+    input.addEventListener("focus", function() {
+      updateArticleLiveMode();
+      setTimeout(function() {
+        input.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }, 80);
+    });
+
+    input.addEventListener("input", function() {
+      window.refreshArticleLivePreview();
+    });
+
+    input.addEventListener("change", function() {
+      window.refreshArticleLivePreview();
+    });
+
+    input.addEventListener("blur", function() {
+      setTimeout(updateArticleLiveMode, 80);
+    });
+  }
+
+  function wrapArticleCanvasRenderer() {
+    if (typeof window.drawArticleCanvas !== "function" ||
+        window.drawArticleCanvas.__articleLiveWrapped) return;
+
+    const original = window.drawArticleCanvas;
+    const wrapped = function() {
+      const result = original.apply(this, arguments);
+      window.refreshArticleLivePreview();
+      return result;
+    };
+    wrapped.__articleLiveWrapped = true;
+    window.drawArticleCanvas = wrapped;
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    ensureArticleLivePreview();
+    bindArticleInput("articleInput");
+    bindArticleInput("editArticle");
+    wrapArticleCanvasRenderer();
+
+    const stepObserver = new MutationObserver(updateArticleLiveMode);
+    document.querySelectorAll(".step").forEach(function(step) {
+      stepObserver.observe(step, { attributes: true, attributeFilter: ["class"] });
+    });
+
+    const editArticle = document.getElementById("editArticle");
+    const section = editArticle ? editArticle.closest("details") : null;
+    if (section) {
+      section.addEventListener("toggle", updateArticleLiveMode);
+    }
+
+    document.addEventListener("click", function() {
+      setTimeout(updateArticleLiveMode, 0);
+    });
+
+    window.addEventListener("resize", function() {
+      if (document.body.classList.contains("articleLiveMode")) {
+        window.refreshArticleLivePreview();
+      }
+    });
+
+    setTimeout(function() {
+      wrapArticleCanvasRenderer();
+      updateArticleLiveMode();
+      window.refreshArticleLivePreview();
+    }, 250);
+  });
 })();
 </script>
 
