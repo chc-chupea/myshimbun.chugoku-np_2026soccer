@@ -3901,6 +3901,10 @@ async function saveAsImage() {
 
 
 let lastCompletedOrderForPdf = null;
+let preparedPdfFile = null;
+let preparedPdfBlobUrl = "";
+let preparedPdfName = "";
+let preparingPdfPromise = null;
 
 function addPdfManagementLabel(clone, receiptNo, quantity) {
   const label = document.createElement("div");
@@ -3928,24 +3932,21 @@ function addPdfManagementLabel(clone, receiptNo, quantity) {
   clone.appendChild(label);
 }
 
-async function saveAsPDF() {
+async function buildCompletedPdfFile() {
   if (!lastCompletedOrderForPdf || !lastCompletedOrderForPdf.receiptNo) {
-    alert("先にお申し込みを完了してください。");
-    return;
+    throw new Error("先にお申し込みを完了してください。");
   }
 
   const { receiptNo, quantity } = lastCompletedOrderForPdf;
   prepareHighResArticleForExport();
   fitArticleText();
 
-  renderStableNewspaperCanvas(7, clone => {
-    addPdfManagementLabel(clone, receiptNo, quantity);
-  }).then(canvas => {
-    restorePreviewArticleResolution();
+  try {
+    const canvas = await renderStableNewspaperCanvas(7, clone => {
+      addPdfManagementLabel(clone, receiptNo, quantity);
+    });
 
     const { jsPDF } = window.jspdf;
-
-    // A4縦サイズ
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -3954,19 +3955,14 @@ async function saveAsPDF() {
 
     const pageWidth = 210;
     const pageHeight = 297;
-
-    // 印刷時に少し余白を残す
     const margin = 8;
     const usableWidth = pageWidth - margin * 2;
     const usableHeight = pageHeight - margin * 2;
-
-    // canvasの縦横比を保ったまま、A4内に最大表示
     const canvasRatio = canvas.width / canvas.height;
     const usableRatio = usableWidth / usableHeight;
 
     let pdfWidth;
     let pdfHeight;
-
     if (canvasRatio > usableRatio) {
       pdfWidth = usableWidth;
       pdfHeight = usableWidth / canvasRatio;
@@ -3977,27 +3973,103 @@ async function saveAsPDF() {
 
     const x = (pageWidth - pdfWidth) / 2;
     const y = (pageHeight - pdfHeight) / 2;
-
-    // JPEGの方がPDF容量が軽くなりやすい
     const imgData = canvas.toDataURL("image/png");
-
     pdf.addImage(imgData, "PNG", x, y, pdfWidth, pdfHeight);
 
     const fileName = `${receiptNo}-chugoku-my-shinbun-a4.pdf`;
-
-    // スマホでも別画面を強制的に開かず、その場で保存処理を行う。
-    // PDF画面から「戻る」を押して編集内容が初期化される問題を防ぐ。
-    pdf.save(fileName);
-  }).catch(() => {
-    showGuide();
+    const blob = pdf.output("blob");
+    return new File([blob], fileName, { type: "application/pdf" });
+  } finally {
     restorePreviewArticleResolution();
-    alert("PDF保存に失敗しました。もう一度お試しください。");
-  });
+  }
+}
+
+async function prepareCompletedPdf() {
+  const button = document.getElementById("pdfSaveAfterComplete");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "PDFを準備しています…";
+  }
+
+  preparedPdfFile = null;
+  preparedPdfName = "";
+  if (preparedPdfBlobUrl) {
+    URL.revokeObjectURL(preparedPdfBlobUrl);
+    preparedPdfBlobUrl = "";
+  }
+
+  preparingPdfPromise = buildCompletedPdfFile();
+  try {
+    preparedPdfFile = await preparingPdfPromise;
+    preparedPdfName = preparedPdfFile.name;
+    preparedPdfBlobUrl = URL.createObjectURL(preparedPdfFile);
+    if (button) {
+      button.disabled = false;
+      button.textContent = "控え用A4 PDFを保存・共有";
+    }
+  } catch (error) {
+    console.error(error);
+    if (button) {
+      button.disabled = false;
+      button.textContent = "PDFをもう一度準備する";
+    }
+  } finally {
+    preparingPdfPromise = null;
+  }
+}
+
+async function saveAsPDF() {
+  if (!lastCompletedOrderForPdf || !lastCompletedOrderForPdf.receiptNo) {
+    alert("先にお申し込みを完了してください。");
+    return;
+  }
+
+  if (!preparedPdfFile) {
+    await prepareCompletedPdf();
+  }
+  if (!preparedPdfFile) {
+    alert("PDFを準備できませんでした。もう一度お試しください。");
+    return;
+  }
+
+  try {
+    // iPhone・アプリ内ブラウザでは、通常のdownloadより共有シートが安定する。
+    // 「ファイルに保存」「AirDrop」「メール」などを選択できる。
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [preparedPdfFile] })) {
+      await navigator.share({
+        files: [preparedPdfFile],
+        title: "中国新聞 My新聞 控え用PDF",
+        text: `受付番号 ${lastCompletedOrderForPdf.receiptNo} の控え用PDFです。`
+      });
+      return;
+    }
+
+    // Web Share非対応ブラウザでは通常ダウンロードへフォールバック。
+    const link = document.createElement("a");
+    link.href = preparedPdfBlobUrl;
+    link.download = preparedPdfName;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    // 共有画面を利用者が閉じた場合はエラー表示しない。
+    if (error && error.name === "AbortError") return;
+    console.error(error);
+    alert("PDFの保存画面を開けませんでした。SafariまたはChromeで開いて、もう一度お試しください。");
+  }
 }
 
 
 function resetForm() {
   lastCompletedOrderForPdf = null;
+  preparedPdfFile = null;
+  preparedPdfName = "";
+  preparingPdfPromise = null;
+  if (preparedPdfBlobUrl) {
+    URL.revokeObjectURL(preparedPdfBlobUrl);
+    preparedPdfBlobUrl = "";
+  }
   const complete = document.getElementById("deliveryComplete");
   if (complete) {
     complete.style.display = "none";
@@ -4491,9 +4563,10 @@ async function submitFreeDeliveryOrder() {
       <div>受付番号</div>
       <strong>${receiptNo}</strong>
       <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
-      <button class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">控え用にA4 PDFとして保存</button>
-      <p class="pdfSaveHelp">PDFの右下に受付番号と注文枚数が入ります。お問い合わせ時の控えとして保存してください。</p>
+      <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()" disabled>PDFを準備しています…</button>
+      <p class="pdfSaveHelp">iPhoneでは共有画面が開きます。「ファイルに保存」を選んでください。PDFの右下に受付番号と注文枚数が入ります。</p>
     `;
+    prepareCompletedPdf();
   } catch (err) {
     if (typeof showGuide === "function") showGuide();
     if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
