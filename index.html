@@ -2194,6 +2194,165 @@ html.photoDragging body {
   overscroll-behavior: none !important;
 }
 
+
+/* ===== 写真タップ：全画面編集モード ===== */
+.photoEditorModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: rgba(0, 20, 38, 0.96);
+  padding:
+    max(10px, env(safe-area-inset-top))
+    12px
+    max(12px, env(safe-area-inset-bottom));
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.photoEditorModal.open {
+  display: flex;
+  flex-direction: column;
+}
+
+.photoEditorHeader {
+  flex: 0 0 auto;
+  color: #fff;
+  text-align: center;
+  padding: 2px 4px 10px;
+}
+
+.photoEditorHeader strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.photoEditorHeader span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.88;
+}
+
+.photoEditorMain {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photoEditorStage {
+  position: relative;
+  width: min(100%, 760px);
+  aspect-ratio: 458 / 305;
+  max-height: calc(100dvh - 190px);
+  background: #d7d7d7;
+  border: 3px solid #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.42);
+}
+
+#photoEditorImage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: auto;
+  transform-origin: center center;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+
+.photoEditorEmpty {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #143d5c;
+  background: #eef7ff;
+  text-align: center;
+  font-weight: 900;
+  line-height: 1.7;
+}
+
+.photoEditorControls {
+  flex: 0 0 auto;
+  width: min(100%, 760px);
+  margin: 10px auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.25fr;
+  gap: 8px;
+}
+
+.photoEditorControls button {
+  margin: 0 !important;
+  min-height: 48px;
+  padding: 9px 6px;
+  font-size: 14px;
+  border-radius: 10px;
+  touch-action: manipulation;
+}
+
+.photoEditorControls .photoEditorReset {
+  background: #6c8798 !important;
+}
+
+.photoEditorControls .photoEditorDone {
+  background: #0057b8 !important;
+}
+
+html.photoEditorOpen,
+html.photoEditorOpen body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+body.photoEditorBodyLocked {
+  position: fixed !important;
+  left: 0;
+  right: 0;
+}
+
+#photoFrame {
+  cursor: zoom-in;
+}
+
+@media (max-width: 420px) {
+  .photoEditorModal {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .photoEditorStage {
+    width: 100%;
+    border-width: 2px;
+  }
+
+  .photoEditorControls {
+    gap: 6px;
+  }
+
+  .photoEditorControls button {
+    font-size: 13px;
+    padding: 8px 4px;
+  }
+}
+
 </style>
 
 
@@ -2526,6 +2685,26 @@ html.photoDragging body {
 </div>
 </div><p class="previewEditNotice" id="previewEditNotice">「編集する」を開いて修正すると、紙面に反映されます。</p></div>
 </div>
+
+<div class="photoEditorModal" id="photoEditorModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="写真を大きく編集">
+  <div class="photoEditorHeader">
+    <strong>写真を大きく編集</strong>
+    <span>1本指で移動／2本指で拡大・縮小・回転</span>
+  </div>
+  <div class="photoEditorMain">
+    <div class="photoEditorStage" id="photoEditorStage">
+      <img id="photoEditorImage" alt="編集中の写真"/>
+      <div class="photoEditorEmpty" id="photoEditorEmpty">先に写真を選んでください。</div>
+    </div>
+  </div>
+  <div class="photoEditorControls">
+    <button type="button" onclick="rotatePhoto(-5)">↶ 左回転</button>
+    <button type="button" onclick="rotatePhoto(5)">右回転 ↷</button>
+    <button type="button" class="photoEditorReset" id="photoEditorResetBtn">中央に戻す</button>
+    <button type="button" class="photoEditorDone" id="photoEditorDoneBtn" style="grid-column:1 / -1;">決定して新聞全体へ戻る</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
 let photoPressTimer = null;
 let photoPressInterval = null;
@@ -2610,6 +2789,18 @@ function applyPhotoTransform() {
   photo.style.transform =
     "translate(-50%, -50%) translate(" + photoState.x + "px, " + photoState.y + "px) scale(" +
     photoState.scale + ") rotate(" + photoState.rotate + "deg)";
+
+  const editorImage = document.getElementById("photoEditorImage");
+  const editorStage = document.getElementById("photoEditorStage");
+  if (editorImage && editorStage) {
+    const baseWidth = photoFrame.offsetWidth || 458;
+    const stageWidth = editorStage.clientWidth || baseWidth;
+    const ratio = stageWidth / Math.max(1, baseWidth);
+    editorImage.style.transform =
+      "translate(-50%, -50%) translate(" + (photoState.x * ratio) + "px, " +
+      (photoState.y * ratio) + "px) scale(" + photoState.scale + ") rotate(" +
+      photoState.rotate + "deg)";
+  }
 }
 
 let liveArticleTimer = null;
@@ -4829,6 +5020,247 @@ window.nextStep = function(num) {
   schedulePhonePreviewFit();
   return result;
 };
+</script>
+
+
+<script>
+(function setupFullscreenPhotoEditor() {
+  const modal = document.getElementById("photoEditorModal");
+  const stage = document.getElementById("photoEditorStage");
+  const editorImage = document.getElementById("photoEditorImage");
+  const empty = document.getElementById("photoEditorEmpty");
+  const resetBtn = document.getElementById("photoEditorResetBtn");
+  const doneBtn = document.getElementById("photoEditorDoneBtn");
+  const sourceFrame = document.getElementById("photoFrame");
+  const sourceImage = document.getElementById("previewPhoto");
+
+  if (!modal || !stage || !editorImage || !sourceFrame || !sourceImage) return;
+
+  let savedScrollY = 0;
+  let openingPointer = null;
+  let openingMoved = false;
+  let openingMulti = false;
+  const editorPointers = new Map();
+  let editorDragStart = null;
+  let editorPinchStart = null;
+
+  function syncEditorSource() {
+    const src = sourceImage.currentSrc || sourceImage.src || "";
+    if (src) {
+      editorImage.src = src;
+      editorImage.style.display = "block";
+      empty.style.display = "none";
+    } else {
+      editorImage.removeAttribute("src");
+      editorImage.style.display = "none";
+      empty.style.display = "flex";
+    }
+    requestAnimationFrame(applyPhotoTransform);
+  }
+
+  function lockPage() {
+    savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add("photoEditorOpen");
+    document.body.classList.add("photoEditorBodyLocked");
+    document.body.style.top = "-" + savedScrollY + "px";
+  }
+
+  function unlockPage() {
+    document.documentElement.classList.remove("photoEditorOpen");
+    document.body.classList.remove("photoEditorBodyLocked");
+    document.body.style.top = "";
+    window.scrollTo(0, savedScrollY);
+  }
+
+  function openPhotoEditor() {
+    syncEditorSource();
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    lockPage();
+    requestAnimationFrame(function() {
+      applyPhotoTransform();
+      stage.focus({ preventScroll: true });
+    });
+  }
+
+  function closePhotoEditor() {
+    editorPointers.clear();
+    editorDragStart = null;
+    editorPinchStart = null;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    unlockPage();
+    applyPhotoTransform();
+  }
+
+  /* 写真枠の「タップ」だけで開く。ドラッグやピンチ後には開かない */
+  sourceFrame.addEventListener("pointerdown", function(e) {
+    if (openingPointer === null) {
+      openingPointer = e.pointerId;
+      openingMoved = false;
+      openingMulti = false;
+      sourceFrame.dataset.tapStartX = String(e.clientX);
+      sourceFrame.dataset.tapStartY = String(e.clientY);
+    } else {
+      openingMulti = true;
+    }
+  }, true);
+
+  sourceFrame.addEventListener("pointermove", function(e) {
+    if (e.pointerId !== openingPointer) return;
+    const sx = Number(sourceFrame.dataset.tapStartX || e.clientX);
+    const sy = Number(sourceFrame.dataset.tapStartY || e.clientY);
+    if (Math.hypot(e.clientX - sx, e.clientY - sy) > 8) openingMoved = true;
+  }, true);
+
+  sourceFrame.addEventListener("pointerup", function(e) {
+    if (e.pointerId !== openingPointer) return;
+    const shouldOpen = !openingMoved && !openingMulti;
+    openingPointer = null;
+    openingMoved = false;
+    openingMulti = false;
+    if (shouldOpen) {
+      setTimeout(openPhotoEditor, 0);
+    }
+  }, true);
+
+  sourceFrame.addEventListener("pointercancel", function() {
+    openingPointer = null;
+    openingMoved = false;
+    openingMulti = false;
+  }, true);
+
+  function stageRatio() {
+    const baseWidth = sourceFrame.offsetWidth || 458;
+    return stage.clientWidth / Math.max(1, baseWidth);
+  }
+
+  function editorDistance(a, b) {
+    return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+  }
+
+  function editorAngle(a, b) {
+    return Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * 180 / Math.PI;
+  }
+
+  function editorCenter(a, b) {
+    return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
+  }
+
+  stage.addEventListener("pointerdown", function(e) {
+    e.preventDefault();
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+    editorPointers.set(e.pointerId, e);
+
+    if (editorPointers.size === 1) {
+      editorDragStart = {
+        startX: e.clientX,
+        startY: e.clientY,
+        x: photoState.x,
+        y: photoState.y,
+        ratio: stageRatio()
+      };
+      editorPinchStart = null;
+    } else if (editorPointers.size === 2) {
+      const pts = Array.from(editorPointers.values());
+      const center = editorCenter(pts[0], pts[1]);
+      editorPinchStart = {
+        distance: editorDistance(pts[0], pts[1]),
+        angle: editorAngle(pts[0], pts[1]),
+        centerX: center.x,
+        centerY: center.y,
+        x: photoState.x,
+        y: photoState.y,
+        scale: photoState.scale,
+        rotate: photoState.rotate,
+        ratio: stageRatio()
+      };
+      editorDragStart = null;
+    }
+  }, { passive: false });
+
+  stage.addEventListener("pointermove", function(e) {
+    if (!editorPointers.has(e.pointerId)) return;
+    e.preventDefault();
+    editorPointers.set(e.pointerId, e);
+
+    if (editorPointers.size === 1 && editorDragStart) {
+      const ratio = editorDragStart.ratio || 1;
+      queuePhotoTransform({
+        x: editorDragStart.x + (e.clientX - editorDragStart.startX) / ratio,
+        y: editorDragStart.y + (e.clientY - editorDragStart.startY) / ratio,
+        scale: photoState.scale,
+        rotate: photoState.rotate
+      });
+    } else if (editorPointers.size === 2 && editorPinchStart) {
+      const pts = Array.from(editorPointers.values());
+      const center = editorCenter(pts[0], pts[1]);
+      const ratio = editorPinchStart.ratio || 1;
+      const distance = editorDistance(pts[0], pts[1]);
+      const angle = editorAngle(pts[0], pts[1]);
+
+      queuePhotoTransform({
+        x: editorPinchStart.x + (center.x - editorPinchStart.centerX) / ratio,
+        y: editorPinchStart.y + (center.y - editorPinchStart.centerY) / ratio,
+        scale: Math.max(0.3, Math.min(5,
+          editorPinchStart.scale * (distance / Math.max(1, editorPinchStart.distance))
+        )),
+        rotate: editorPinchStart.rotate + (angle - editorPinchStart.angle)
+      });
+    }
+  }, { passive: false });
+
+  function endEditorPointer(e) {
+    editorPointers.delete(e.pointerId);
+    try {
+      if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+
+    if (editorPointers.size === 1) {
+      const p = Array.from(editorPointers.values())[0];
+      editorDragStart = {
+        startX: p.clientX,
+        startY: p.clientY,
+        x: photoState.x,
+        y: photoState.y,
+        ratio: stageRatio()
+      };
+      editorPinchStart = null;
+    } else {
+      editorDragStart = null;
+      editorPinchStart = null;
+    }
+  }
+
+  stage.addEventListener("pointerup", endEditorPointer);
+  stage.addEventListener("pointercancel", endEditorPointer);
+  stage.addEventListener("lostpointercapture", endEditorPointer);
+
+  stage.addEventListener("touchstart", function(e) {
+    e.preventDefault();
+  }, { passive: false });
+
+  stage.addEventListener("touchmove", function(e) {
+    e.preventDefault();
+  }, { passive: false });
+
+  resetBtn.addEventListener("click", function() {
+    resetPhotoPosition();
+    applyPhotoTransform();
+  });
+
+  doneBtn.addEventListener("click", closePhotoEditor);
+
+  window.addEventListener("resize", function() {
+    if (modal.classList.contains("open")) requestAnimationFrame(applyPhotoTransform);
+  });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && modal.classList.contains("open")) closePhotoEditor();
+  });
+
+  /* モーダル外を触っても閉じない。誤操作防止のため「決定」だけで戻る */
+})();
 </script>
 
 </body>
