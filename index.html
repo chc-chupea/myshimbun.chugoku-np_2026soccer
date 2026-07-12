@@ -2089,6 +2089,60 @@ body.wizardMode .step {
   gap: 5px !important;
 }
 
+
+
+/* ===== STEP・仕上げ編集共通：新聞全体を端末内へ最大フィット ===== */
+@media (max-width: 900px) {
+  body.wizardMode #wizardPreviewHost,
+  body:not(.wizardMode) #workspace #previewColumn {
+    width: 100% !important;
+  }
+
+  body.wizardMode #wizardPreviewHost #previewColumn,
+  body:not(.wizardMode) #workspace #previewColumn {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 80 !important;
+    display: block !important;
+    padding: 4px 0 5px !important;
+    background: rgba(238, 247, 255, 0.98) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.16) !important;
+    overflow: hidden !important;
+  }
+
+  body.wizardMode #wizardPreviewHost #newspaperWrap,
+  body:not(.wizardMode) #workspace #previewColumn #newspaperWrap {
+    display: block !important;
+    width: 100% !important;
+    height: var(--phone-paper-height, 300px) !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  body.wizardMode #wizardPreviewHost #newspaper,
+  body:not(.wizardMode) #workspace #previewColumn #newspaper {
+    position: absolute !important;
+    top: 0 !important;
+    left: 50% !important;
+    width: 595px !important;
+    margin: 0 !important;
+    transform: translateX(-50%) scale(var(--phone-paper-scale, 0.34)) !important;
+    transform-origin: top center !important;
+    flex: none !important;
+  }
+
+  body.wizardMode .step {
+    scroll-margin-top: calc(var(--phone-paper-height, 300px) + 16px) !important;
+  }
+
+  body:not(.wizardMode) #workspace #editorColumn {
+    padding-top: 8px !important;
+  }
+}
+
 </style>
 
 
@@ -4495,48 +4549,92 @@ window.submitFreeDeliveryOrder = async function() {
 
 
 <script>
-/* ===== 仕上げ編集プレビュー：端末サイズに合わせて新聞全体を自動縮小 ===== */
-function fitWorkspacePreviewToPhone() {
-  if (window.innerWidth > 900 || document.body.classList.contains("wizardMode")) return;
+/* ===== STEP・仕上げ編集共通：端末サイズへ新聞全体を最大フィット ===== */
+function fitPhoneNewspaperPreview() {
+  if (window.innerWidth > 900) return;
 
-  const workspace = document.getElementById("workspace");
-  const wrap = workspace ? workspace.querySelector("#newspaperWrap") : null;
-  const paper = workspace ? workspace.querySelector("#newspaper") : null;
-  if (!workspace || !wrap || !paper || getComputedStyle(workspace).display === "none") return;
+  const wizardMode = document.body.classList.contains("wizardMode");
+  const previewColumn = document.getElementById("previewColumn");
+  const wrap = document.getElementById("newspaperWrap");
+  const paper = document.getElementById("newspaper");
+  if (!previewColumn || !wrap || !paper) return;
+  if (getComputedStyle(previewColumn).display === "none") return;
 
-  // iPhone 14（390×844px）を基準に、編集欄も見やすい高さを残す。
-  const availableWidth = Math.max(280, Math.min(window.innerWidth - 20, 620));
-  const availableHeight = Math.max(250, Math.min(window.innerHeight * 0.39, 340));
+  // transformの影響を受けない新聞本来のサイズを取得する。
   const naturalWidth = paper.offsetWidth || 595;
   const naturalHeight = paper.offsetHeight || 900;
-  const scale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight, 0.58);
+
+  // iPhone 14（390×844）では、新聞全体を見せながら入力欄も十分残す。
+  const sideGap = 12;
+  const availableWidth = Math.max(280, window.innerWidth - sideGap);
+  const heightRatio = wizardMode ? 0.395 : 0.42;
+  const heightCap = wizardMode ? 332 : 354;
+  const heightFloor = wizardMode ? 250 : 270;
+  const availableHeight = Math.max(
+    heightFloor,
+    Math.min(window.innerHeight * heightRatio, heightCap)
+  );
+
+  // 幅と高さの両方に収まる最大倍率。拡大し過ぎも防止する。
+  const scale = Math.min(
+    availableWidth / naturalWidth,
+    availableHeight / naturalHeight,
+    0.60
+  );
   const fittedHeight = Math.ceil(naturalHeight * scale);
 
-  wrap.style.setProperty("--workspace-preview-scale", scale.toFixed(4));
-  wrap.style.setProperty("--workspace-preview-height", fittedHeight + "px");
+  previewColumn.style.setProperty("--phone-paper-scale", scale.toFixed(4));
+  previewColumn.style.setProperty("--phone-paper-height", fittedHeight + "px");
+  document.documentElement.style.setProperty("--phone-paper-height", fittedHeight + "px");
 }
 
-window.addEventListener("resize", fitWorkspacePreviewToPhone);
+function schedulePhonePreviewFit() {
+  requestAnimationFrame(function() {
+    requestAnimationFrame(fitPhoneNewspaperPreview);
+  });
+}
+
+window.addEventListener("resize", schedulePhonePreviewFit);
 window.addEventListener("orientationchange", function() {
-  setTimeout(fitWorkspacePreviewToPhone, 120);
-});
-document.addEventListener("DOMContentLoaded", function() {
-  setTimeout(fitWorkspacePreviewToPhone, 100);
+  setTimeout(schedulePhonePreviewFit, 120);
 });
 
+document.addEventListener("DOMContentLoaded", function() {
+  schedulePhonePreviewFit();
+  requestAnimationFrame(function() { setStepPreviewFocus(1); });
+
+  const paper = document.getElementById("newspaper");
+  if (paper && "ResizeObserver" in window) {
+    const observer = new ResizeObserver(schedulePhonePreviewFit);
+    observer.observe(paper);
+  }
+});
+
+// STEP表示へ移動した直後にも再計算する。
+const originalMovePreviewToWizardForFit = window.movePreviewToWizard;
+window.movePreviewToWizard = function() {
+  if (typeof originalMovePreviewToWizardForFit === "function") {
+    originalMovePreviewToWizardForFit.apply(this, arguments);
+  }
+  schedulePhonePreviewFit();
+};
+
+// 仕上げ編集へ移動した直後にも同じ方式で再計算する。
 const originalMovePreviewToWorkspaceForFit = window.movePreviewToWorkspace;
 window.movePreviewToWorkspace = function() {
   if (typeof originalMovePreviewToWorkspaceForFit === "function") {
     originalMovePreviewToWorkspaceForFit.apply(this, arguments);
   }
-  requestAnimationFrame(function() {
-    requestAnimationFrame(fitWorkspacePreviewToPhone);
-  });
+  schedulePhonePreviewFit();
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  requestAnimationFrame(() => setStepPreviewFocus(1));
-});
+// STEP切替後、赤枠による寸法変化も含めて再フィットする。
+const originalNextStepForFit = window.nextStep;
+window.nextStep = function(num) {
+  const result = originalNextStepForFit.apply(this, arguments);
+  schedulePhonePreviewFit();
+  return result;
+};
 </script>
 
 </body>
