@@ -2425,46 +2425,9 @@ body.articleLiveMode #step4 {
   margin-top: 6px !important;
 }
 
-/* 記事入力中も説明文と例文を残す。
-   プレビューと入力欄の大きさを保つため、説明はコンパクト表示、
-   例文は固定高さのスクロール枠にする。 */
-body.articleLiveMode #step4 > p {
-  display: block !important;
-  margin: 4px 0 6px !important;
-  font-size: 13px !important;
-  line-height: 1.55 !important;
-  color: #334a5c;
-}
-
+body.articleLiveMode #step4 > p,
 body.articleLiveMode #step4 > .hint {
-  display: block !important;
-  max-height: 108px !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-  margin: 0 0 8px !important;
-  padding: 8px 10px !important;
-  font-size: 12.5px !important;
-  line-height: 1.65 !important;
-  background: #fff8e8 !important;
-  border-left: 5px solid #f4a33a !important;
-  border-radius: 8px !important;
-  overscroll-behavior: contain;
-}
-
-body.articleLiveMode #step4 > .hint::before {
-  content: "書き方の例（上下にスクロールできます）";
-  display: block;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  margin: -8px -10px 7px;
-  padding: 7px 10px;
-  background: #fff1cf;
-  color: #7a5200;
-  font-weight: 900;
-  font-size: 12px;
-  line-height: 1.3;
-  border-bottom: 1px solid #f2cf85;
+  display: none !important;
 }
 
 body.articleLiveMode #articleInput,
@@ -2541,18 +2504,6 @@ body.articleLiveMode .editSection.articleEditingSection .articleLengthNotice {
 
   .articleLivePreviewHeader {
     margin-bottom: 3px;
-  }
-}
-
-
-@media (max-height: 700px) and (max-width: 900px) {
-  body.articleLiveMode #step4 > .hint {
-    max-height: 86px !important;
-  }
-
-  body.articleLiveMode #step4 > p {
-    font-size: 12px !important;
-    line-height: 1.45 !important;
   }
 }
 
