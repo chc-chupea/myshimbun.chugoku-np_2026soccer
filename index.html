@@ -2425,9 +2425,46 @@ body.articleLiveMode #step4 {
   margin-top: 6px !important;
 }
 
-body.articleLiveMode #step4 > p,
+/* 記事入力中も説明文と例文を残す。
+   プレビューと入力欄の大きさを保つため、説明はコンパクト表示、
+   例文は固定高さのスクロール枠にする。 */
+body.articleLiveMode #step4 > p {
+  display: block !important;
+  margin: 4px 0 6px !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  color: #334a5c;
+}
+
 body.articleLiveMode #step4 > .hint {
-  display: none !important;
+  display: block !important;
+  max-height: 108px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 0 8px !important;
+  padding: 8px 10px !important;
+  font-size: 12.5px !important;
+  line-height: 1.65 !important;
+  background: #fff8e8 !important;
+  border-left: 5px solid #f4a33a !important;
+  border-radius: 8px !important;
+  overscroll-behavior: contain;
+}
+
+body.articleLiveMode #step4 > .hint::before {
+  content: "書き方の例（上下にスクロールできます）";
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: -8px -10px 7px;
+  padding: 7px 10px;
+  background: #fff1cf;
+  color: #7a5200;
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 1.3;
+  border-bottom: 1px solid #f2cf85;
 }
 
 body.articleLiveMode #articleInput,
@@ -2504,6 +2541,295 @@ body.articleLiveMode .editSection.articleEditingSection .articleLengthNotice {
 
   .articleLivePreviewHeader {
     margin-bottom: 3px;
+  }
+}
+
+
+@media (max-height: 700px) and (max-width: 900px) {
+  body.articleLiveMode #step4 > .hint {
+    max-height: 86px !important;
+  }
+
+  body.articleLiveMode #step4 > p {
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+}
+
+
+/* ===== 記事欄だけを約2〜2.5倍で編集する専用モード ===== */
+.articleZoomEditor {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+  background: rgba(0, 24, 45, 0.97);
+  padding:
+    max(8px, env(safe-area-inset-top))
+    10px
+    max(10px, env(safe-area-inset-bottom));
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.articleZoomEditor.open {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+.articleZoomHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #fff;
+}
+
+.articleZoomHeaderText strong {
+  display: block;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.articleZoomHeaderText span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.articleZoomClose {
+  width: auto !important;
+  min-width: 76px;
+  margin: 0 !important;
+  padding: 9px 12px !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #0f5e9c !important;
+  font-size: 13px !important;
+}
+
+.articleZoomPreviewArea {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.articleZoomCanvasFrame {
+  position: relative;
+  width: min(100%, 760px);
+  max-height: 42dvh;
+  background: #fff;
+  border: 3px solid #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.42);
+}
+
+#articleZoomCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+  image-rendering: auto;
+}
+
+.articleZoomGuide {
+  position: absolute;
+  inset: 0;
+  border: 3px solid rgba(15, 94, 156, 0.28);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.articleZoomExample {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  background: #fff8e8;
+  border-left: 5px solid #f4a33a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.articleZoomExample summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 8px 10px;
+  color: #7a5200;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.articleZoomExample summary::-webkit-details-marker {
+  display: none;
+}
+
+.articleZoomExample summary::after {
+  content: "＋";
+  float: right;
+}
+
+.articleZoomExample[open] summary::after {
+  content: "－";
+}
+
+.articleZoomExampleBody {
+  max-height: 90px;
+  overflow-y: auto;
+  padding: 0 10px 9px;
+  color: #433;
+  font-size: 12px;
+  line-height: 1.6;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.articleZoomInputArea {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.articleZoomInputLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+#articleZoomInput {
+  width: 100%;
+  height: clamp(142px, 25dvh, 220px);
+  min-height: 142px;
+  max-height: 220px;
+  margin: 0 !important;
+  padding: 11px !important;
+  border: 2px solid #7bc7f4;
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+  resize: none;
+  overscroll-behavior: contain;
+}
+
+.articleZoomFooter {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.articleZoomDone {
+  width: 100%;
+  margin: 0 !important;
+  min-height: 48px;
+  padding: 10px !important;
+  background: #0057b8 !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+}
+
+html.articleZoomOpen,
+html.articleZoomOpen body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+body.articleZoomLocked {
+  position: fixed !important;
+  left: 0;
+  right: 0;
+}
+
+/* 旧・上下分割記事プレビューは専用モード中に非表示 */
+body.articleZoomLocked #articleLivePreview {
+  display: none !important;
+}
+
+#outArticle,
+#articleCanvas {
+  cursor: zoom-in;
+}
+
+@media (min-width: 901px) {
+  .articleZoomEditor {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .articleZoomEditor.open {
+    grid-template-columns: minmax(420px, 760px) minmax(360px, 560px);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    justify-content: center;
+    column-gap: 20px;
+  }
+
+  .articleZoomHeader {
+    grid-column: 1 / -1;
+  }
+
+  .articleZoomPreviewArea {
+    grid-column: 1;
+    grid-row: 2 / 4;
+  }
+
+  .articleZoomCanvasFrame {
+    width: 100%;
+    max-height: 72dvh;
+  }
+
+  .articleZoomExample {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .articleZoomInputArea {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+  }
+
+  .articleZoomFooter {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  #articleZoomInput {
+    height: min(42dvh, 360px);
+    max-height: 360px;
+  }
+}
+
+@media (max-height: 700px) and (max-width: 900px) {
+  .articleZoomEditor.open {
+    gap: 5px;
+  }
+
+  .articleZoomHeaderText span {
+    display: none;
+  }
+
+  .articleZoomCanvasFrame {
+    max-height: 36dvh;
+  }
+
+  #articleZoomInput {
+    height: 122px;
+    min-height: 122px;
+  }
+
+  .articleZoomExampleBody {
+    max-height: 68px;
   }
 }
 
@@ -2838,6 +3164,41 @@ body.articleLiveMode .editSection.articleEditingSection .articleLengthNotice {
 </div>
 </div>
 </div><p class="previewEditNotice" id="previewEditNotice">「編集する」を開いて修正すると、紙面に反映されます。</p></div>
+</div>
+
+
+<div class="articleZoomEditor" id="articleZoomEditor" aria-hidden="true" role="dialog" aria-modal="true" aria-label="記事を拡大して編集">
+  <div class="articleZoomHeader">
+    <div class="articleZoomHeaderText">
+      <strong>記事を拡大して編集</strong>
+      <span>完成時の記事欄を大きく見ながら、改行まで確認できます。</span>
+    </div>
+    <button type="button" class="articleZoomClose" id="articleZoomCloseBtn">閉じる</button>
+  </div>
+
+  <div class="articleZoomPreviewArea">
+    <div class="articleZoomCanvasFrame">
+      <canvas id="articleZoomCanvas"></canvas>
+      <div class="articleZoomGuide"></div>
+    </div>
+  </div>
+
+  <details class="articleZoomExample" id="articleZoomExample">
+    <summary>書き方の例を見る</summary>
+    <div class="articleZoomExampleBody" id="articleZoomExampleBody"></div>
+  </details>
+
+  <div class="articleZoomInputArea">
+    <div class="articleZoomInputLabel">
+      <span>記事を書く</span>
+      <span id="articleZoomCount">0文字・1段落</span>
+    </div>
+    <textarea id="articleZoomInput" placeholder="ここに記事を書いてください"></textarea>
+  </div>
+
+  <div class="articleZoomFooter">
+    <button type="button" class="articleZoomDone" id="articleZoomDoneBtn">決定して新聞全体へ戻る</button>
+  </div>
 </div>
 
 <div class="photoEditorModal" id="photoEditorModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="写真を大きく編集">
@@ -5597,6 +5958,239 @@ window.nextStep = function(num) {
       updateArticleLiveMode();
       window.refreshArticleLivePreview();
     }, 250);
+  });
+})();
+</script>
+
+
+<script>
+/* ===== 記事欄だけを拡大して編集する専用エディタ ===== */
+(function setupArticleZoomEditor() {
+  const modal = document.getElementById("articleZoomEditor");
+  const zoomInput = document.getElementById("articleZoomInput");
+  const zoomCanvas = document.getElementById("articleZoomCanvas");
+  const count = document.getElementById("articleZoomCount");
+  const closeBtn = document.getElementById("articleZoomCloseBtn");
+  const doneBtn = document.getElementById("articleZoomDoneBtn");
+  const exampleBody = document.getElementById("articleZoomExampleBody");
+
+  if (!modal || !zoomInput || !zoomCanvas) return;
+
+  let sourceInput = null;
+  let savedScrollY = 0;
+  let redrawId = 0;
+  let autoOpenGuard = false;
+
+  function getCurrentArticleInput() {
+    const editArticle = document.getElementById("editArticle");
+    const articleInput = document.getElementById("articleInput");
+
+    if (!document.body.classList.contains("wizardMode") &&
+        editArticle) {
+      return editArticle;
+    }
+    return articleInput || editArticle;
+  }
+
+  function updateCounter() {
+    const value = zoomInput.value || "";
+    const paragraphs = value ? value.split(/\r\n|\r|\n/).length : 1;
+    count.textContent = value.length + "文字・" + paragraphs + "段落";
+  }
+
+  function copyArticleCanvas() {
+    if (redrawId) cancelAnimationFrame(redrawId);
+    redrawId = requestAnimationFrame(function() {
+      redrawId = 0;
+      const sourceCanvas = document.getElementById("articleCanvas");
+      if (!sourceCanvas) return;
+
+      const width = sourceCanvas.width || 900;
+      const height = sourceCanvas.height || 460;
+
+      if (zoomCanvas.width !== width) zoomCanvas.width = width;
+      if (zoomCanvas.height !== height) zoomCanvas.height = height;
+
+      const ctx = zoomCanvas.getContext("2d");
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(sourceCanvas, 0, 0, width, height);
+    });
+  }
+
+  function syncToOriginal() {
+    if (!sourceInput) return;
+
+    sourceInput.value = zoomInput.value;
+
+    const articleInput = document.getElementById("articleInput");
+    const editArticle = document.getElementById("editArticle");
+
+    if (sourceInput === articleInput && editArticle) {
+      editArticle.value = zoomInput.value;
+    }
+    if (sourceInput === editArticle && articleInput) {
+      articleInput.value = zoomInput.value;
+    }
+
+    if (typeof updatePreviewText === "function") {
+      updatePreviewText();
+    }
+    if (typeof scheduleLiveArticleUpdate === "function" &&
+        sourceInput === articleInput) {
+      scheduleLiveArticleUpdate();
+    }
+
+    updateCounter();
+    setTimeout(copyArticleCanvas, 0);
+  }
+
+  function fillExample() {
+    if (!exampleBody) return;
+    const step4 = document.getElementById("step4");
+    const hint = step4 ? step4.querySelector(".hint") : null;
+    exampleBody.innerHTML = hint
+      ? hint.innerHTML
+      : "いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたかを書くと新聞らしくなります。";
+  }
+
+  function lockPage() {
+    savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add("articleZoomOpen");
+    document.body.classList.add("articleZoomLocked");
+    document.body.style.top = "-" + savedScrollY + "px";
+  }
+
+  function unlockPage() {
+    document.documentElement.classList.remove("articleZoomOpen");
+    document.body.classList.remove("articleZoomLocked");
+    document.body.style.top = "";
+    window.scrollTo(0, savedScrollY);
+  }
+
+  window.openArticleZoomEditor = function openArticleZoomEditor(preferredInput) {
+    if (modal.classList.contains("open")) return;
+
+    sourceInput = preferredInput || getCurrentArticleInput();
+    if (!sourceInput) return;
+
+    fillExample();
+    zoomInput.value = sourceInput.value || "";
+    updateCounter();
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    lockPage();
+
+    if (typeof updatePreviewText === "function") updatePreviewText();
+
+    requestAnimationFrame(function() {
+      copyArticleCanvas();
+      setTimeout(copyArticleCanvas, 80);
+      zoomInput.focus({ preventScroll: true });
+      zoomInput.setSelectionRange(zoomInput.value.length, zoomInput.value.length);
+    });
+  };
+
+  window.closeArticleZoomEditor = function closeArticleZoomEditor() {
+    if (!modal.classList.contains("open")) return;
+    syncToOriginal();
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    unlockPage();
+    sourceInput = null;
+
+    if (typeof schedulePhonePreviewFit === "function") {
+      schedulePhonePreviewFit();
+    }
+  };
+
+  zoomInput.addEventListener("input", syncToOriginal);
+  zoomInput.addEventListener("change", syncToOriginal);
+
+  closeBtn.addEventListener("click", window.closeArticleZoomEditor);
+  doneBtn.addEventListener("click", window.closeArticleZoomEditor);
+
+  modal.addEventListener("touchmove", function(e) {
+    if (e.target !== zoomInput &&
+        !e.target.closest(".articleZoomExampleBody")) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && modal.classList.contains("open")) {
+      window.closeArticleZoomEditor();
+    }
+  });
+
+  function bindOpenTarget(el) {
+    if (!el || el.dataset.articleZoomBound === "1") return;
+    el.dataset.articleZoomBound = "1";
+    el.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.openArticleZoomEditor(getCurrentArticleInput());
+    });
+  }
+
+  function autoOpenForStep4() {
+    const step4 = document.getElementById("step4");
+    if (!step4 || autoOpenGuard) return;
+
+    if (document.body.classList.contains("wizardMode") &&
+        step4.classList.contains("active") &&
+        !modal.classList.contains("open")) {
+      autoOpenGuard = true;
+      setTimeout(function() {
+        window.openArticleZoomEditor(document.getElementById("articleInput"));
+        autoOpenGuard = false;
+      }, 120);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    bindOpenTarget(document.getElementById("outArticle"));
+    bindOpenTarget(document.getElementById("articleCanvas"));
+
+    const articleInput = document.getElementById("articleInput");
+    const editArticle = document.getElementById("editArticle");
+
+    [articleInput, editArticle].forEach(function(input) {
+      if (!input) return;
+      input.addEventListener("focus", function() {
+        if (!modal.classList.contains("open")) {
+          setTimeout(function() {
+            window.openArticleZoomEditor(input);
+          }, 0);
+        }
+      });
+    });
+
+    const editSection = editArticle ? editArticle.closest("details") : null;
+    if (editSection) {
+      editSection.addEventListener("toggle", function() {
+        if (editSection.open && !modal.classList.contains("open")) {
+          setTimeout(function() {
+            window.openArticleZoomEditor(editArticle);
+          }, 100);
+        }
+      });
+    }
+
+    const step4 = document.getElementById("step4");
+    if (step4) {
+      const observer = new MutationObserver(autoOpenForStep4);
+      observer.observe(step4, {
+        attributes: true,
+        attributeFilter: ["class"]
+      });
+    }
+
+    window.addEventListener("resize", function() {
+      if (modal.classList.contains("open")) copyArticleCanvas();
+    });
+
+    setTimeout(autoOpenForStep4, 250);
   });
 })();
 </script>
