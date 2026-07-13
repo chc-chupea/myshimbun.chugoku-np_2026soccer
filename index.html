@@ -3246,12 +3246,12 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <button class="backBtn" onclick="resetPhotoPosition()">写真位置をリセット</button>
 </details>
 </div><div id="saveArea">
-<p class="notice">文字や写真位置を調整したあと、お申し込みフォームへ進んでください。申込完了後に、控え用PDFを保存できます。</p>
-<button class="deliverySubmitBtn" onclick="scrollToDeliveryForm()">中国新聞 My新聞を申し込む（1部無料・後日中国新聞販売所からお届け）</button>
+<p class="notice">内容を確認して、お申し込みへ進んでください。<br>申込完了後に、控え用PDFを保存できます。</p>
+
 <button class="backBtn" onclick="resetForm()">最初から作り直す</button>
 <div class="deliveryModeBox" id="deliveryFormBox">
 <h3>中国新聞 My新聞申し込み</h3>
-<p><strong>1部無料</strong>で、完成した新聞を後日お近くの中国新聞販売所からお届けします。</p>
+<p><strong>1部無料です。</strong>完成した新聞はA3サイズでラミネートし、後日お近くの中国新聞販売所からお届けします。</p>
 <div class="deliveryNote">
     お届けは配達エリアに限らせていただきます。お申し込み後、受付番号を表示します。
   </div>
@@ -6659,6 +6659,108 @@ window.addEventListener('resize', function(){
     )
   );
 });
+</script>
+
+
+<script>
+/* ===== 縦書き記事欄：開いた時は右端から表示 ===== */
+(function(){
+  function afterLayout(callback){
+    requestAnimationFrame(function(){
+      requestAnimationFrame(callback);
+    });
+    setTimeout(callback, 80);
+    setTimeout(callback, 220);
+  }
+
+  function showWizardArticleFromRight(){
+    const step = document.getElementById('step4');
+    if (!step || !step.classList.contains('active')) return;
+
+    const panel = document.getElementById('wizardArticleLivePanel');
+    const editor = document.getElementById('mobileArticleEditor');
+
+    afterLayout(function(){
+      /*
+       * ④の記事欄は720px幅の編集面を外側のパネルで横スクロールするため、
+       * 外側のパネルを右端まで移動する。
+       */
+      if (panel) {
+        panel.scrollLeft = Math.max(0, panel.scrollWidth - panel.clientWidth);
+      }
+
+      /*
+       * vertical-rl の編集面自体は、scrollLeft=0が文章の始まる右端。
+       * 前回のスクロール位置が残っていても右端へ戻す。
+       */
+      if (editor) {
+        editor.scrollLeft = 0;
+        editor.scrollTop = 0;
+      }
+    });
+  }
+
+  function showEditArticleFromRight(){
+    const editor = document.getElementById('editMobileArticleEditor');
+    const panel = document.getElementById('editArticleLivePanel');
+
+    afterLayout(function(){
+      if (panel && panel.scrollWidth > panel.clientWidth) {
+        panel.scrollLeft = Math.max(0, panel.scrollWidth - panel.clientWidth);
+      }
+
+      if (editor) {
+        editor.scrollLeft = 0;
+        editor.scrollTop = 0;
+      }
+    });
+  }
+
+  const step4 = document.getElementById('step4');
+  if (step4) {
+    const observer = new MutationObserver(function(){
+      if (step4.classList.contains('active')) {
+        showWizardArticleFromRight();
+      }
+    });
+
+    observer.observe(step4, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    if (step4.classList.contains('active')) {
+      showWizardArticleFromRight();
+    }
+  }
+
+  const editInput = document.getElementById('editArticle');
+  const articleDetails = editInput ? editInput.closest('details') : null;
+
+  if (articleDetails) {
+    articleDetails.addEventListener('toggle', function(){
+      if (articleDetails.open) {
+        showEditArticleFromRight();
+      }
+    });
+
+    if (articleDetails.open) {
+      showEditArticleFromRight();
+    }
+  }
+
+  /*
+   * 端末回転や画面幅変更後も、開いている記事欄は右端表示を保つ。
+   */
+  window.addEventListener('resize', function(){
+    if (step4 && step4.classList.contains('active')) {
+      showWizardArticleFromRight();
+    }
+    if (articleDetails && articleDetails.open) {
+      showEditArticleFromRight();
+    }
+  });
+})();
 </script>
 
 </body>
