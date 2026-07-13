@@ -5049,7 +5049,7 @@ function lockEditingAfterOrderComplete() {
   // 完了画面の外側にある編集操作だけを無効化する。
   // PDF保存・閉じるボタンは常に操作可能なまま残す。
   const editableRoots = document.querySelectorAll(
-    "#workspace, #wizardPreviewHost, .step, #saveArea"
+    "#workspace, #wizardPreviewHost, .step"
   );
   editableRoots.forEach(root => {
     root.setAttribute("aria-hidden", "true");
@@ -5057,6 +5057,26 @@ function lockEditingAfterOrderComplete() {
       el.disabled = true;
     });
   });
+
+  // #saveArea の中に申込完了画面があるため、親要素ごと無効化しない。
+  // 完了画面以外の入力・編集操作だけを個別に停止する。
+  document.querySelectorAll(
+    "#saveArea input:not(#pdfSaveAfterComplete), #saveArea textarea, #saveArea select, #saveArea button:not(#pdfSaveAfterComplete):not(.closeCompletedPageBtn)"
+  ).forEach(el => {
+    if (!el.closest("#deliveryComplete")) el.disabled = true;
+  });
+
+  // 完了画面の2ボタンは必ず操作可能に戻す。
+  const pdfButton = document.getElementById("pdfSaveAfterComplete");
+  const closeButton = document.querySelector(".closeCompletedPageBtn");
+  if (pdfButton) {
+    pdfButton.disabled = false;
+    pdfButton.style.pointerEvents = "auto";
+  }
+  if (closeButton) {
+    closeButton.disabled = false;
+    closeButton.style.pointerEvents = "auto";
+  }
 
   document.querySelectorAll("details.editSection").forEach(section => {
     section.open = false;
@@ -5083,20 +5103,49 @@ function closeCompletedPage() {
   const help = document.getElementById("closeCompletedHelp");
   const closeButton = document.querySelector(".closeCompletedPageBtn");
 
-  // JavaScriptで開かれたタブは閉じられるが、通常遷移で開いたページは
-  // iPhone/Safari等の仕様で閉じられない。その場合は案内を強調する。
+  if (closeButton) {
+    closeButton.disabled = true;
+    closeButton.textContent = "終了しています…";
+  }
+  if (help) {
+    help.style.display = "block";
+    help.style.background = "#eef7ff";
+    help.style.border = "2px solid #0f5e9c";
+    help.textContent = "画面を終了しています。";
+  }
+
+  // JavaScriptで開かれた別タブ・ウインドウでは、そのまま閉じる。
   try { window.close(); } catch (error) { console.warn(error); }
 
+  // 通常のリンクやQRコードから開いた画面はブラウザ仕様で閉じられない。
+  // その場合は前の画面へ戻し、戻れない時は終了専用画面へ切り替える。
   window.setTimeout(() => {
-    if (help) {
-      help.style.display = "block";
-      help.style.background = "#fff3cd";
-      help.style.border = "2px solid #e7a900";
-      help.textContent = "この画面はブラウザの仕様で自動的に閉じられません。画面上部のタブを閉じるか、ブラウザの戻る操作で終了してください。";
-      help.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (document.visibilityState === "hidden" || window.closed) return;
+
+    if (window.history.length > 1) {
+      window.history.back();
+      window.setTimeout(() => {
+        if (document.visibilityState !== "hidden") showCompletedExitScreen();
+      }, 700);
+    } else {
+      showCompletedExitScreen();
     }
-    if (closeButton) closeButton.textContent = "タブを閉じて終了してください";
-  }, 450);
+  }, 300);
+}
+
+function showCompletedExitScreen() {
+  document.body.className = "";
+  document.body.innerHTML = `
+    <main style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#eef7ff;font-family:'Hiragino Sans','Yu Gothic',sans-serif;text-align:center;">
+      <div style="width:min(100%,520px);background:#fff;border:3px solid #0f5e9c;border-radius:18px;padding:28px 20px;box-shadow:0 6px 20px rgba(0,0,0,.16);">
+        <div style="font-size:42px;line-height:1;">✓</div>
+        <h2 style="margin:12px 0 8px;color:#0f5e9c;">申込画面を終了しました</h2>
+        <p style="line-height:1.8;font-weight:700;">このタブは閉じて大丈夫です。</p>
+        <button type="button" onclick="window.close()" style="width:100%;margin-top:12px;padding:14px;border:0;border-radius:10px;background:#001E55;color:#fff;font-size:17px;font-weight:900;">タブを閉じる</button>
+        <p style="margin-top:12px;font-size:13px;line-height:1.7;color:#555;">ボタンで閉じない場合は、ブラウザ上部の「×」でこのタブを閉じてください。</p>
+      </div>
+    </main>`;
+  window.scrollTo(0, 0);
 }
 
 async function submitFreeDeliveryOrder() {
