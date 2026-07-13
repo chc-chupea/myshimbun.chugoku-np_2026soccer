@@ -2399,6 +2399,8 @@ body.photoEditorBodyLocked {
 }
 .articleSampleDetails .hint { margin: 0; border-radius: 0; }
 
+
+.sampleTitle{color:#c00000;font-weight:900;}
 @media (max-width: 900px) {
   /* 記事STEPでは新聞全体の縮小表示をやめ、記事欄を大きく見せる */
   body.articleFocusMode #wizardPreviewHost { display: none !important; }
@@ -3192,10 +3194,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <section class="step" id="step4">
 <h2>④ 記事を書こう</h2>
 <p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
-<details class="articleSampleDetails">
-<summary> 書き方の見本を見る <span style="display:inline-block;background:#ff8a00;color:#fff;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:900;margin:0 6px;">コピペOK！</span><span style="font-size:0.9em;color:#555;">○や●だけ変えてもOK！書き足してもOK！</span></summary>
-<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
-</details>
+
 <div aria-live="polite" class="articleLivePanel" id="wizardArticleLivePanel">
 <div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
 <div class="articleDirectHelp">記事欄をタップするとカーソルが出ます。スマホでは左右に動かして、書きたい場所を大きく見られます。</div>
@@ -3203,6 +3202,10 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <div aria-label="紙面の記事欄を直接編集" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox"></div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
 </div>
 <label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
+<details class="articleSampleDetails">
+<summary><span class="sampleTitle">書き方の見本を見る</span> <span style="display:inline-block;background:#ff8a00;color:#fff;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:900;margin:0 6px;">コピペOK！</span><span style="font-size:0.9em;color:#555;">○や●だけ変えてもOK！書き足してもOK！</span></summary>
+<div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
+</details>
 <textarea class="articleWritingArea" id="articleInput" placeholder="ここに記事本文が入ります。" placeholder="ここに記事本文が入ります。"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
