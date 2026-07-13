@@ -4470,7 +4470,7 @@ function addPdfManagementLabel(clone, receiptNo, quantity) {
   clone.appendChild(label);
 }
 
-async function buildCompletedPdfFile() {
+async function buildCompletedPdfPackage() {
   if (!lastCompletedOrderForPdf || !lastCompletedOrderForPdf.receiptNo) {
     throw new Error("先にお申し込みを完了してください。");
   }
@@ -4483,6 +4483,10 @@ async function buildCompletedPdfFile() {
     const canvas = await renderStableNewspaperCanvas(7, clone => {
       addPdfManagementLabel(clone, receiptNo, quantity);
     });
+
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      throw new Error("PDF作成機能を読み込めませんでした。");
+    }
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({
@@ -4516,43 +4520,10 @@ async function buildCompletedPdfFile() {
 
     const fileName = `${receiptNo}-chugoku-my-shinbun-a4.pdf`;
     const blob = pdf.output("blob");
-    return new File([blob], fileName, { type: "application/pdf" });
+    const file = new File([blob], fileName, { type: "application/pdf" });
+    return { pdf, blob, file, fileName };
   } finally {
     restorePreviewArticleResolution();
-  }
-}
-
-async function prepareCompletedPdf() {
-  const button = document.getElementById("pdfSaveAfterComplete");
-  if (button) {
-    button.disabled = true;
-    button.textContent = "PDFを準備しています…";
-  }
-
-  preparedPdfFile = null;
-  preparedPdfName = "";
-  if (preparedPdfBlobUrl) {
-    URL.revokeObjectURL(preparedPdfBlobUrl);
-    preparedPdfBlobUrl = "";
-  }
-
-  preparingPdfPromise = buildCompletedPdfFile();
-  try {
-    preparedPdfFile = await preparingPdfPromise;
-    preparedPdfName = preparedPdfFile.name;
-    preparedPdfBlobUrl = URL.createObjectURL(preparedPdfFile);
-    if (button) {
-      button.disabled = false;
-      button.textContent = "控え用A4 PDFを保存・共有";
-    }
-  } catch (error) {
-    console.error(error);
-    if (button) {
-      button.disabled = false;
-      button.textContent = "PDFをもう一度準備する";
-    }
-  } finally {
-    preparingPdfPromise = null;
   }
 }
 
@@ -4563,45 +4534,61 @@ async function saveAsPDF() {
   }
 
   const button = document.getElementById("pdfSaveAfterComplete");
+  const help = document.querySelector(".pdfSaveHelp");
   if (button && button.dataset.busy === "1") return;
+
   if (button) {
     button.dataset.busy = "1";
     button.disabled = true;
     button.textContent = "PDFを作成しています…";
   }
+  if (help) help.textContent = "新聞をPDFにしています。数秒お待ちください。";
 
   try {
-    if (!preparedPdfFile) {
-      await prepareCompletedPdf();
-    }
-    if (!preparedPdfFile) {
-      throw new Error("PDFを準備できませんでした。");
-    }
+    // ボタンを押した時だけ生成する。申込完了直後の自動生成は行わない。
+    const pkg = await buildCompletedPdfPackage();
 
-    // iPhone・アプリ内ブラウザでは、通常のdownloadより共有シートが安定する。
-    // 「ファイルに保存」「AirDrop」「メール」などを選択できる。
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [preparedPdfFile] })) {
+    // スマホは共有シートを優先する。
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [pkg.file] })) {
       await navigator.share({
-        files: [preparedPdfFile],
+        files: [pkg.file],
         title: "中国新聞 My新聞 控え用PDF",
         text: `受付番号 ${lastCompletedOrderForPdf.receiptNo} の控え用PDFです。`
       });
+      if (help) help.textContent = "共有画面から「ファイルに保存」などを選んでください。";
       return;
     }
 
-    // Web Share非対応ブラウザでは通常ダウンロードへフォールバック。
+    // PCは新しい画面を開かず、jsPDFの標準保存処理で直接ダウンロードする。
+    // Chrome・Edge・Safariのポップアップ制限を受けにくい方式。
+    if (pkg.pdf && typeof pkg.pdf.save === "function") {
+      pkg.pdf.save(pkg.fileName);
+      if (help) help.textContent = `「${pkg.fileName}」をダウンロードしました。`;
+      return;
+    }
+
+    // 万一jsPDF.saveが使えない場合の予備ダウンロード。
+    if (navigator.msSaveOrOpenBlob) {
+      navigator.msSaveOrOpenBlob(pkg.blob, pkg.fileName);
+      if (help) help.textContent = `「${pkg.fileName}」を保存しました。`;
+      return;
+    }
+
+    const url = URL.createObjectURL(pkg.blob);
     const link = document.createElement("a");
-    link.href = preparedPdfBlobUrl;
-    link.download = preparedPdfName;
-    link.rel = "noopener";
+    link.href = url;
+    link.download = pkg.fileName;
+    link.style.display = "none";
     document.body.appendChild(link);
     link.click();
     link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    if (help) help.textContent = `「${pkg.fileName}」をダウンロードしました。`;
   } catch (error) {
-    // 共有画面を利用者が閉じた場合はエラー表示しない。
     if (!(error && error.name === "AbortError")) {
-      console.error(error);
-      alert("PDFの保存画面を開けませんでした。SafariまたはChromeで開いて、もう一度お試しください。");
+      console.error("PDF保存エラー:", error);
+      if (help) help.textContent = "PDFを保存できませんでした。通信状態を確認して、もう一度押してください。";
+      alert("PDFを保存できませんでした。ページを再読み込みせず、もう一度「控え用A4 PDFを保存・共有」を押してください。");
     }
   } finally {
     if (button) {
@@ -5225,7 +5212,7 @@ async function submitFreeDeliveryOrder() {
         <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
         <p><strong>申込完了後は内容を編集できません。</strong></p>
         <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">控え用A4 PDFを保存・共有</button>
-        <p class="pdfSaveHelp">iPhoneでは共有画面が開きます。「ファイルに保存」を選んでください。PDFの右下に受付番号と注文枚数が入ります。</p>
+        <p class="pdfSaveHelp">スマホは共有画面、PCはPDFファイルのダウンロードが始まります。PDFの右下に受付番号と注文枚数が入ります。</p>
         <button class="closeCompletedPageBtn" type="button" onclick="closeCompletedPage()">この画面を閉じる</button>
         <p class="closeHelp" id="closeCompletedHelp">自動で閉じない場合は、画面上部のタブを閉じるか、ブラウザの戻る操作で終了してください。</p>
       </div>
