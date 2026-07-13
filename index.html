@@ -2473,7 +2473,8 @@ body.photoEditorBodyLocked {
 
 /* ===== 申込完了後：編集ロック＋完了画面 ===== */
 body.orderCompleted {
-  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 
 body.orderCompleted #workspace,
@@ -2556,7 +2557,7 @@ body.orderCompleted #deliveryComplete {
 }
 
 .orderCompleteCard .closeHelp {
-  display: none;
+  display: block;
   margin-top: 10px;
   padding: 9px;
   border-radius: 8px;
@@ -4561,15 +4562,22 @@ async function saveAsPDF() {
     return;
   }
 
-  if (!preparedPdfFile) {
-    await prepareCompletedPdf();
-  }
-  if (!preparedPdfFile) {
-    alert("PDFを準備できませんでした。もう一度お試しください。");
-    return;
+  const button = document.getElementById("pdfSaveAfterComplete");
+  if (button && button.dataset.busy === "1") return;
+  if (button) {
+    button.dataset.busy = "1";
+    button.disabled = true;
+    button.textContent = "PDFを作成しています…";
   }
 
   try {
+    if (!preparedPdfFile) {
+      await prepareCompletedPdf();
+    }
+    if (!preparedPdfFile) {
+      throw new Error("PDFを準備できませんでした。");
+    }
+
     // iPhone・アプリ内ブラウザでは、通常のdownloadより共有シートが安定する。
     // 「ファイルに保存」「AirDrop」「メール」などを選択できる。
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [preparedPdfFile] })) {
@@ -4591,9 +4599,16 @@ async function saveAsPDF() {
     link.remove();
   } catch (error) {
     // 共有画面を利用者が閉じた場合はエラー表示しない。
-    if (error && error.name === "AbortError") return;
-    console.error(error);
-    alert("PDFの保存画面を開けませんでした。SafariまたはChromeで開いて、もう一度お試しください。");
+    if (!(error && error.name === "AbortError")) {
+      console.error(error);
+      alert("PDFの保存画面を開けませんでした。SafariまたはChromeで開いて、もう一度お試しください。");
+    }
+  } finally {
+    if (button) {
+      button.dataset.busy = "0";
+      button.disabled = false;
+      button.textContent = "控え用A4 PDFを保存・共有";
+    }
   }
 }
 
@@ -5031,8 +5046,16 @@ function buildDeliveryLabel(order) {
 function lockEditingAfterOrderComplete() {
   document.body.classList.add("orderCompleted");
 
-  document.querySelectorAll("input, textarea, select, button").forEach(el => {
-    if (!el.closest("#deliveryComplete")) el.disabled = true;
+  // 完了画面の外側にある編集操作だけを無効化する。
+  // PDF保存・閉じるボタンは常に操作可能なまま残す。
+  const editableRoots = document.querySelectorAll(
+    "#workspace, #wizardPreviewHost, .step, #saveArea"
+  );
+  editableRoots.forEach(root => {
+    root.setAttribute("aria-hidden", "true");
+    root.querySelectorAll("input, textarea, select, button").forEach(el => {
+      el.disabled = true;
+    });
   });
 
   document.querySelectorAll("details.editSection").forEach(section => {
@@ -5045,17 +5068,35 @@ function lockEditingAfterOrderComplete() {
     photoFrame.removeAttribute("tabindex");
   }
 
+  // 以前の全画面編集時に残ったスクロール固定を確実に解除する。
   document.documentElement.classList.remove("photoDragging", "photoEditorOpen");
   document.body.classList.remove("photoEditorBodyLocked");
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  document.documentElement.style.overflow = "";
 }
 
 function closeCompletedPage() {
-  window.close();
+  const help = document.getElementById("closeCompletedHelp");
+  const closeButton = document.querySelector(".closeCompletedPageBtn");
+
+  // JavaScriptで開かれたタブは閉じられるが、通常遷移で開いたページは
+  // iPhone/Safari等の仕様で閉じられない。その場合は案内を強調する。
+  try { window.close(); } catch (error) { console.warn(error); }
 
   window.setTimeout(() => {
-    const help = document.getElementById("closeCompletedHelp");
-    if (help) help.style.display = "block";
-  }, 300);
+    if (help) {
+      help.style.display = "block";
+      help.style.background = "#fff3cd";
+      help.style.border = "2px solid #e7a900";
+      help.textContent = "この画面はブラウザの仕様で自動的に閉じられません。画面上部のタブを閉じるか、ブラウザの戻る操作で終了してください。";
+      help.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    if (closeButton) closeButton.textContent = "タブを閉じて終了してください";
+  }, 450);
 }
 
 async function submitFreeDeliveryOrder() {
@@ -5134,14 +5175,13 @@ async function submitFreeDeliveryOrder() {
         <strong class="receiptNumber">${receiptNo}</strong>
         <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
         <p><strong>申込完了後は内容を編集できません。</strong></p>
-        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()" disabled>PDFを準備しています…</button>
+        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">控え用A4 PDFを保存・共有</button>
         <p class="pdfSaveHelp">iPhoneでは共有画面が開きます。「ファイルに保存」を選んでください。PDFの右下に受付番号と注文枚数が入ります。</p>
         <button class="closeCompletedPageBtn" type="button" onclick="closeCompletedPage()">この画面を閉じる</button>
-        <p class="closeHelp" id="closeCompletedHelp">自動で閉じない場合は、ブラウザのタブを閉じてください。</p>
+        <p class="closeHelp" id="closeCompletedHelp">自動で閉じない場合は、画面上部のタブを閉じるか、ブラウザの戻る操作で終了してください。</p>
       </div>
     `;
     lockEditingAfterOrderComplete();
-    prepareCompletedPdf();
   } catch (err) {
     if (typeof showGuide === "function") showGuide();
     if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
