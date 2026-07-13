@@ -219,21 +219,12 @@ button { border: none; background: #111; color: #fff; font-weight: bold; cursor:
 }
 
 
-
-
-
-
-
-
-
 #articleCanvas {
   width: 100%;
   height: 230px;
   display: block;
   background: #fff;
 }
-
-
 
 
 .side { border-left: 1px solid #222; padding: 5px 0 0 7px; text-align: center; }
@@ -1377,7 +1368,6 @@ button {
 }
 
 
-
 /* ===== 東広島芸陽会杯サッカー大会テーマ ===== */
 body {
   background: linear-gradient(180deg, #eef7ff 0%, #fffaf0 55%, #f2fff4 100%) !important;
@@ -1703,7 +1693,6 @@ button {
 }
 
 
-
 /* ===== 無料イベント：後日販売所お届けフォーム ===== */
 .deliveryModeBox {
   margin-top: 14px;
@@ -1792,7 +1781,6 @@ button {
     font-size: 17px;
   }
 }
-
 
 
 /* ===== 任意アンケート ===== */
@@ -1996,7 +1984,6 @@ body.wizardMode .step {
 }
 
 
-
 /* ===== iPhone 14：仕上げ編集プレビューを画面内に全体表示 ===== */
 @media (max-width: 900px) {
   body:not(.wizardMode) #workspace #previewColumn {
@@ -2088,7 +2075,6 @@ body.wizardMode .step {
 .fontChoiceGrid {
   gap: 5px !important;
 }
-
 
 
 /* ===== STEP・仕上げ編集共通：新聞全体を端末内へ最大フィット ===== */
@@ -2354,7 +2340,6 @@ body.photoEditorBodyLocked {
 }
 
 
-
 /* ===== 2026-07-13：記事入力とリアルプレビューを同時に見せる ===== */
 .articleLivePanel {
   margin: 10px 0 10px;
@@ -2470,7 +2455,6 @@ body.photoEditorBodyLocked {
 }
 
 
-
 /* ===== 申込完了後：編集ロック＋完了画面 ===== */
 body.orderCompleted {
   overflow-x: hidden !important;
@@ -2552,7 +2536,6 @@ body.orderCompleted #deliveryComplete {
 }
 
 
-
 /* ===== PC：ブラウザ標準の印刷画面からPDF保存 ===== */
 .pcPrintManagementLabel {
   position: absolute;
@@ -2620,7 +2603,6 @@ body.orderCompleted #deliveryComplete {
 }
 
 
-
 /* ===== 新聞プレビューの記事欄を直接編集 ===== */
 #outArticle.directArticleEditing {
   outline: 4px solid #0f5e9c;
@@ -2666,7 +2648,6 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
     z-index: 250 !important;
   }
 }
-
 
 
 /* ===== 記事STEP：大きな紙面の記事欄だけを直接編集 ===== */
@@ -2913,6 +2894,136 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   }
 }
 
+
+/* ===== スマホ：編集画面の記事校正を大きく見せる ===== */
+.editArticleHintDetails {
+  margin: 10px 0 4px;
+  border: 1px solid #cfe6f5;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.editArticleHintDetails > summary {
+  padding: 11px 12px;
+  color: #0f3f68;
+  background: #eef7ff;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  list-style: none;
+}
+
+.editArticleHintDetails > summary::-webkit-details-marker {
+  display: none;
+}
+
+.editArticleHintDetails > summary::after {
+  content: "＋";
+  float: right;
+}
+
+.editArticleHintDetails[open] > summary::after {
+  content: "－";
+}
+
+.editArticleHintDetails > button {
+  width: calc(100% - 24px);
+  margin: 0 12px 12px;
+}
+
+@media (max-width: 900px) {
+  /* 記事編集を開いている間は、上の小さい新聞全体を隠す */
+  body.editArticleFocusMode #workspace #previewColumn {
+    display: none !important;
+  }
+
+  body.editArticleFocusMode #workspace {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  body.editArticleFocusMode #workspace #editorColumn {
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  body.editArticleFocusMode #workspace #editPanel {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 8px !important;
+    border-radius: 12px !important;
+  }
+
+  body.editArticleFocusMode #editArticleLivePanel {
+    position: relative !important;
+    top: auto !important;
+    z-index: auto !important;
+    width: 100% !important;
+    margin: 6px 0 8px !important;
+    padding: 8px !important;
+    box-shadow: none !important;
+  }
+
+  body.editArticleFocusMode #editArticleLivePanel .articleLiveTitle {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    margin: -8px -8px 8px;
+    padding: 10px 12px;
+    background: #eef7ff;
+    border-bottom: 1px solid #cfe6f5;
+  }
+
+  body.editArticleFocusMode #editArticleLivePanel .articleDirectHelp {
+    margin: 0 0 8px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* 端末幅いっぱい、高さも大きく使う */
+  body.editArticleFocusMode #editMobileArticleEditor {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: min(58dvh, 560px) !important;
+    min-height: 390px !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    font-size: 24px !important;
+    line-height: 1.5 !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x !important;
+  }
+
+  body.editArticleFocusMode #editArticleLiveCanvas {
+    display: none !important;
+  }
+
+  body.editArticleFocusMode .articleInputNote {
+    margin-top: 8px !important;
+  }
+
+  body.editArticleFocusMode .editArticleHintDetails {
+    margin-top: 8px;
+  }
+
+  /* 記事以外の編集項目は一時的に隠し、校正に集中 */
+  body.editArticleFocusMode #editPanel > details.editSection:not(.articleEditingOpen) {
+    display: none !important;
+  }
+
+  body.editArticleFocusMode #saveArea {
+    display: none !important;
+  }
+}
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -3099,12 +3210,15 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
           tabindex="-1">ここに記事本文が入ります。</textarea>
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
+<details class="editArticleHintDetails">
+<summary>💡 記事のヒントを見る</summary>
 <div class="quickHintChips">
-<button onclick="insertQuickArticle('hit')" type="button">記事のヒント：走った・守ったことの文章を足す</button>
-<button onclick="insertQuickArticle('team')" type="button">記事のヒント：仲間と声かけあった文章を足す</button>
-<button onclick="insertQuickArticle('feeling')" type="button">記事のヒント：感じたことの文章を足す</button>
+<button onclick="insertQuickArticle('hit')" type="button">走った・守ったことの文章を足す</button>
+<button onclick="insertQuickArticle('team')" type="button">仲間と声をかけ合った文章を足す</button>
+<button onclick="insertQuickArticle('feeling')" type="button">感じたことの文章を足す</button>
 </div>
-<button onclick="addArticleHint()">記事のヒント：取材メモを追加</button>
+<button onclick="addArticleHint()" type="button">取材メモを追加</button>
+</details>
 </details>
 <details class="editSection">
 <summary>日付・記者名</summary>
@@ -3296,8 +3410,6 @@ function setupPhotoHoldButtons() {
 }
 
 document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
-
-
 
 
 </script>
@@ -3728,8 +3840,6 @@ function makeNewspaper() {
 }
 
 
-
-
 function updateArticleLengthNotice(text) {
   const notice = document.getElementById("articleLengthNotice");
   if (!notice) return;
@@ -3752,7 +3862,6 @@ function updateArticleLengthNotice(text) {
     notice.textContent = "現在 " + len + "文字：かなり長いです。全文が入らない場合は短くしてください。";
   }
 }
-
 
 
 function updatePreviewText() {
@@ -3830,11 +3939,6 @@ function measureVerticalArticle(chars, fontSize, lineGap, colGap, maxH) {
   const needW = colCount * fontSize + Math.max(0, colCount - 1) * colGap;
   return { charsPerCol, colCount, needW, lineHeight };
 }
-
-
-
-
-
 
 
 function toHalfWidthNumberText(text) {
@@ -3925,9 +4029,6 @@ function drawVerticalPunctuation(ctx, ch, x, y, fontSize) {
   ctx.restore();
   return true;
 }
-
-
-
 
 
 function drawArticleCanvas() {
@@ -4192,8 +4293,6 @@ function drawArticleCanvas() {
 }
 
 
-
-
 function fitArticleText() {
   drawArticleCanvas();
 }
@@ -4390,7 +4489,6 @@ function pickBestShortHeadline(words, original) {
 }
 
 
-
 function addArticleHint() {
   const area = document.getElementById("editArticle");
   if (!area) return;
@@ -4400,7 +4498,6 @@ function addArticleHint() {
   area.value = area.value.trimEnd() + hint;
   updatePreviewText();
 }
-
 
 
 function reselectPhoto() {
@@ -4634,7 +4731,6 @@ function restorePreviewArticleResolution() {
     drawArticleCanvas();
   }
 }
-
 
 
 function copyCanvasPixels(sourceRoot, cloneRoot) {
@@ -4956,7 +5052,6 @@ function applyHeadlineDesignSafe() {
     headline.style.letterSpacing = getHeadlineLetterSpacing(fontClass);
   }
 }
-
 
 
 function setHeadlineBgColor(color) {
@@ -5315,7 +5410,6 @@ function buildDeliveryLabel(order) {
     `ステータス：${order.status}`
   ].join("\n");
 }
-
 
 
 function lockEditingAfterOrderComplete() {
@@ -5887,6 +5981,10 @@ window.nextStep = function(num) {
     const refreshDetailsState = function(){
       const isOpen = !!articleDetails.open;
       articleDetails.classList.toggle('articleEditingOpen', isOpen);
+      document.body.classList.toggle(
+        'editArticleFocusMode',
+        isOpen && window.matchMedia('(max-width: 900px)').matches
+      );
 
       /* iPhone Safariでsticky要素がdetailsを閉じても残る現象を防ぐ */
       if (articleLivePanel) {
@@ -5896,6 +5994,11 @@ window.nextStep = function(num) {
 
       if (isOpen) {
         setTimeout(window.refreshLargeArticlePreview, 60);
+        if (window.matchMedia('(max-width: 900px)').matches) {
+          setTimeout(function(){
+            articleDetails.scrollIntoView({behavior:'smooth', block:'start'});
+          }, 80);
+        }
       } else {
         /* 閉じた後にレイアウトを再計算し、次の項目への重なりを解除 */
         void articleDetails.offsetHeight;
@@ -6537,6 +6640,25 @@ window.nextStep = function(num) {
     if (el) el.addEventListener('input', syncEmptyState);
   });
 })();
+</script>
+
+
+  
+
+
+<script>
+/* ===== スマホ記事編集モード：画面幅変更時の再判定 ===== */
+window.addEventListener('resize', function(){
+  const articleDetailsNow = document.querySelector('#editArticle')?.closest('details');
+  document.body.classList.toggle(
+    'editArticleFocusMode',
+    !!(
+      articleDetailsNow &&
+      articleDetailsNow.open &&
+      window.matchMedia('(max-width: 900px)').matches
+    )
+  );
+});
 </script>
 
 </body>
