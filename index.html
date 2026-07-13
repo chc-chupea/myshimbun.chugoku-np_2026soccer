@@ -2642,23 +2642,6 @@ body.orderCompleted #deliveryComplete {
   white-space: nowrap;
 }
 #articleCanvas { cursor: text; }
-.directArticleDoneBar {
-  display: none;
-  position: fixed;
-  left: 50%;
-  bottom: max(12px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  z-index: 30000;
-  width: min(92vw, 440px);
-  padding: 8px;
-  border-radius: 14px;
-  background: rgba(0,30,85,.94);
-  box-shadow: 0 8px 28px rgba(0,0,0,.32);
-  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
-}
-.directArticleDoneBar.open { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
-.directArticleDoneBar span { color:#fff; font-weight:900; font-size:13px; line-height:1.45; padding-left:6px; }
-.directArticleDoneBar button { width:auto; min-width:94px; margin:0 !important; padding:11px 18px; background:#fff !important; color:#0057b8 !important; border-radius:10px; }
 #directArticleKeyboard {
   position: fixed;
   left: 2px;
@@ -2682,7 +2665,6 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
     top: 0 !important;
     z-index: 250 !important;
   }
-  .directArticleDoneBar.open { grid-template-columns: 1fr 92px; }
 }
 
 
@@ -5853,24 +5835,16 @@ window.nextStep = function(num) {
   });
 })();
 </script>
-
-
-<div id="directArticleDoneBar" class="directArticleDoneBar" role="status" aria-live="polite">
-  <span>記事欄を直接編集しています</span>
-  <button id="directArticleDoneButton" type="button">できた</button>
-</div>
 <textarea id="directArticleKeyboard" aria-label="記事を直接編集"></textarea>
 
 
 <script>
-/* ===== Canvasと同じ組版を使う、新聞プレビュー直接編集 ===== */
+/* ===== 新聞の記事欄を直接編集 ===== */
 (function(){
   const article = document.getElementById('outArticle');
   const canvas = document.getElementById('articleCanvas');
   const keyboard = document.getElementById('directArticleKeyboard');
-  const doneBar = document.getElementById('directArticleDoneBar');
-  const doneButton = document.getElementById('directArticleDoneButton');
-  if (!article || !canvas || !keyboard || !doneBar || !doneButton) return;
+  if (!article || !canvas || !keyboard) return;
 
   let editing = false;
   let caretSourceIndex = 0;
@@ -6019,7 +5993,6 @@ window.nextStep = function(num) {
     try{keyboard.setSelectionRange(caretSourceIndex,caretSourceIndex);}catch(e){}
     article.classList.add('directArticleEditing');
     document.body.classList.add('directArticleMode');
-    doneBar.classList.add('open');
     blinkOn=true;
     clearInterval(blinkTimer);
     blinkTimer=setInterval(function(){blinkOn=!blinkOn;window.drawArticleCanvas();},520);
@@ -6049,7 +6022,6 @@ window.nextStep = function(num) {
     blinkTimer=0;
     article.classList.remove('directArticleEditing');
     document.body.classList.remove('directArticleMode');
-    doneBar.classList.remove('open');
     keyboard.blur();
     const live=document.getElementById('wizardArticleLiveCanvas');
     if(live) live.classList.remove('directLiveEditing');
@@ -6101,10 +6073,15 @@ window.nextStep = function(num) {
     });
   }
 
-  doneButton.addEventListener('click',closeEditor);
-  document.addEventListener('keydown',function(e){if(editing && e.key==='Escape') closeEditor();});
+  // 「次へ」「戻る」で記事STEPを離れる時に編集状態を終了する
+  const articleStep = document.getElementById('step4');
+  if(articleStep){
+    articleStep.querySelectorAll('.nextBtn, .backBtn').forEach(function(button){
+      button.addEventListener('click', closeEditor);
+    });
+  }
 
-  // 既存の別記事入力欄は残すが、新聞側をタップできる案内を追加
+  // 新聞の記事欄をタップできることをブラウザにも伝える
   article.title='タップすると、この新聞の記事欄を直接編集できます';
 })();
 </script>
