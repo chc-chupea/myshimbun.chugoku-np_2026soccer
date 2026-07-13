@@ -2469,6 +2469,102 @@ body.photoEditorBodyLocked {
   }
 }
 
+
+
+/* ===== 申込完了後：編集ロック＋完了画面 ===== */
+body.orderCompleted {
+  overflow: hidden !important;
+}
+
+body.orderCompleted #workspace,
+body.orderCompleted #wizardPreviewHost,
+body.orderCompleted .step,
+body.orderCompleted > h1,
+body.orderCompleted .heroTitleSimple {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+body.orderCompleted #deliveryComplete {
+  display: flex !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 30000 !important;
+  margin: 0 !important;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    16px
+    max(18px, env(safe-area-inset-bottom)) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(0, 30, 55, 0.94) !important;
+  color: #123 !important;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+.orderCompleteCard {
+  width: min(100%, 520px);
+  padding: 24px 18px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 38px rgba(0,0,0,0.34);
+  text-align: center;
+}
+
+.orderCompleteCard .completeTitle {
+  margin: 0 0 12px;
+  color: #126b37;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.orderCompleteCard .receiptLabel {
+  margin-top: 12px;
+  color: #555;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.orderCompleteCard .receiptNumber {
+  display: block;
+  margin: 4px 0 12px;
+  color: #0057b8;
+  font-size: clamp(28px, 8vw, 38px);
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+}
+
+.orderCompleteCard p {
+  margin: 9px 0;
+  line-height: 1.7;
+}
+
+.orderCompleteCard button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px !important;
+  border-radius: 12px;
+}
+
+.orderCompleteCard .closeCompletedPageBtn {
+  background: #6c8798 !important;
+  color: #fff !important;
+}
+
+.orderCompleteCard .closeHelp {
+  display: none;
+  margin-top: 10px;
+  padding: 9px;
+  border-radius: 8px;
+  background: #fff3cd;
+  color: #7a5200;
+  font-size: 13px;
+  font-weight: 700;
+}
 </style>
 
 
@@ -4930,6 +5026,38 @@ function buildDeliveryLabel(order) {
   ].join("\n");
 }
 
+
+
+function lockEditingAfterOrderComplete() {
+  document.body.classList.add("orderCompleted");
+
+  document.querySelectorAll("input, textarea, select, button").forEach(el => {
+    if (!el.closest("#deliveryComplete")) el.disabled = true;
+  });
+
+  document.querySelectorAll("details.editSection").forEach(section => {
+    section.open = false;
+  });
+
+  const photoFrame = document.getElementById("photoFrame");
+  if (photoFrame) {
+    photoFrame.style.pointerEvents = "none";
+    photoFrame.removeAttribute("tabindex");
+  }
+
+  document.documentElement.classList.remove("photoDragging", "photoEditorOpen");
+  document.body.classList.remove("photoEditorBodyLocked");
+}
+
+function closeCompletedPage() {
+  window.close();
+
+  window.setTimeout(() => {
+    const help = document.getElementById("closeCompletedHelp");
+    if (help) help.style.display = "block";
+  }, 300);
+}
+
 async function submitFreeDeliveryOrder() {
   const status = document.getElementById("deliveryStatus");
   const complete = document.getElementById("deliveryComplete");
@@ -5000,13 +5128,19 @@ async function submitFreeDeliveryOrder() {
     status.style.display = "none";
     complete.style.display = "block";
     complete.innerHTML = `
-      <div>お申し込みを受け付けました。</div>
-      <div>受付番号</div>
-      <strong>${receiptNo}</strong>
-      <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
-      <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()" disabled>PDFを準備しています…</button>
-      <p class="pdfSaveHelp">iPhoneでは共有画面が開きます。「ファイルに保存」を選んでください。PDFの右下に受付番号と注文枚数が入ります。</p>
+      <div class="orderCompleteCard" role="dialog" aria-modal="true" aria-labelledby="orderCompleteTitle">
+        <div class="completeTitle" id="orderCompleteTitle">お申し込みを受け付けました</div>
+        <div class="receiptLabel">受付番号</div>
+        <strong class="receiptNumber">${receiptNo}</strong>
+        <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
+        <p><strong>申込完了後は内容を編集できません。</strong></p>
+        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()" disabled>PDFを準備しています…</button>
+        <p class="pdfSaveHelp">iPhoneでは共有画面が開きます。「ファイルに保存」を選んでください。PDFの右下に受付番号と注文枚数が入ります。</p>
+        <button class="closeCompletedPageBtn" type="button" onclick="closeCompletedPage()">この画面を閉じる</button>
+        <p class="closeHelp" id="closeCompletedHelp">自動で閉じない場合は、ブラウザのタブを閉じてください。</p>
+      </div>
     `;
+    lockEditingAfterOrderComplete();
     prepareCompletedPdf();
   } catch (err) {
     if (typeof showGuide === "function") showGuide();
