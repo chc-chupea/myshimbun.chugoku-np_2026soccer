@@ -4106,7 +4106,11 @@ function drawArticleCanvas() {
   const canvas = document.getElementById("articleCanvas");
   if (!articleEl || !canvas) return;
 
-  let text = articleEl.dataset.rawText || "";
+  const rawArticleText = articleEl.dataset.rawText || "";
+  const showArticlePlaceholder = !String(rawArticleText).trim() && !window.hideArticlePlaceholder;
+  let text = showArticlePlaceholder
+    ? "ここに記事を書いてみよう！\n・楽しかったこと\n・がんばったこと\n・思い出に残ったこと\n自由に書いてみよう♪"
+    : rawArticleText;
   text = text.replace(/…/g, "︙");
 
   const cssW = articleEl.clientWidth || 460;
@@ -4229,7 +4233,7 @@ function drawArticleCanvas() {
 
   const fontSize = selected.size;
 
-  ctx.fillStyle = "#111";
+  ctx.fillStyle = showArticlePlaceholder ? "#b5b5b5" : "#111";
   ctx.font = "700 " + fontSize + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
@@ -4344,7 +4348,9 @@ function drawArticleCanvas() {
 
   const countEl = document.getElementById("articleCount");
   if (countEl) {
-    if (truncated || neededCells > selected.capacity) {
+    if (showArticlePlaceholder) {
+      countEl.textContent = "現在 0文字：入力すると紙面に反映されます。";
+    } else if (truncated || neededCells > selected.capacity) {
       countEl.innerHTML = '<span class="strongWarn">現在 ' + visibleLen + '文字：長すぎるため全文が入りきりません。少し短くしてください。</span>';
     } else if (visibleLen <= 150) {
       countEl.textContent = "現在 " + visibleLen + "文字：読みやすい大きさで表示しています。";
@@ -4358,7 +4364,7 @@ function drawArticleCanvas() {
   }
 
   if (typeof updateArticleLengthNotice === "function") {
-    updateArticleLengthNotice(text);
+    updateArticleLengthNotice(showArticlePlaceholder ? "" : text);
   }
 }
 
@@ -4846,6 +4852,20 @@ function createStableNewspaperClone() {
   if (cloneGuide) cloneGuide.style.display = "none";
 
   copyCanvasPixels(source, clone);
+
+  // 未入力時の案内文は画面表示専用。保存画像・PDFには含めない。
+  const sourceArticle = source.querySelector("#outArticle");
+  const cloneArticleCanvas = clone.querySelector("#articleCanvas");
+  if (sourceArticle && cloneArticleCanvas && !String(sourceArticle.dataset.rawText || "").trim()) {
+    const ctx = cloneArticleCanvas.getContext("2d");
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cloneArticleCanvas.width, cloneArticleCanvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, cloneArticleCanvas.width, cloneArticleCanvas.height);
+    ctx.restore();
+  }
+
   return clone;
 }
 
