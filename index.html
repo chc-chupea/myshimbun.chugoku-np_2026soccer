@@ -2836,6 +2836,83 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   border-radius:6px;
   font-family:"Hiragino Sans","Yu Gothic",sans-serif;
 }
+
+/* ===== 編集画面の記事も④と同じ直接編集方式 ===== */
+.hiddenArticleSource {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+
+.editMobileArticleEditor {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  #editArticleLivePanel #editArticleLiveCanvas {
+    display: none !important;
+  }
+
+  #editArticleLivePanel #editMobileArticleEditor {
+    display: block;
+    width: 720px;
+    min-width: 720px;
+    height: 362px;
+    margin: 0 auto;
+    padding: 18px 20px;
+    border: 2px solid #0f5e9c;
+    border-radius: 4px;
+    background: #fff;
+    color: #111;
+    outline: none;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    writing-mode: vertical-rl;
+    -webkit-writing-mode: vertical-rl;
+    text-orientation: mixed;
+    -webkit-text-orientation: mixed;
+
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif;
+    font-size: 28px;
+    line-height: 1.45;
+    letter-spacing: 0;
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: normal;
+
+    caret-color: #0057b8;
+    cursor: text;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    touch-action: pan-x;
+  }
+
+  #editArticleLivePanel #editMobileArticleEditor:focus {
+    border-color: #ff8a00;
+    box-shadow:
+      0 0 0 4px rgba(255,138,0,.22),
+      inset 0 0 0 1px rgba(255,138,0,.35);
+  }
+
+  #editArticleLivePanel #editMobileArticleEditor:empty::before {
+    content: attr(data-placeholder);
+    color: #789;
+    font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-size: 22px;
+    line-height: 1.6;
+    pointer-events: none;
+  }
+}
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -3003,11 +3080,23 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <summary>記事</summary>
 <label for="editArticle"></label>
 <div aria-live="polite" class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel">
-<div class="articleLiveTitle"><span>紙面の記事欄</span><small>改行もそのまま確認できます</small></div>
-<canvas id="editArticleLiveCanvas"></canvas>
+<div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
+<div class="articleDirectHelp">記事欄をタップして、その場で文字入力・削除・改行ができます。</div>
+<canvas aria-label="紙面の記事欄を直接編集" id="editArticleLiveCanvas" tabindex="0"></canvas>
+<div aria-label="紙面の記事欄を直接編集" aria-multiline="true"
+     class="mobileArticleEditor editMobileArticleEditor"
+     contenteditable="true"
+     data-placeholder="ここをタップして記事を直そう"
+     id="editMobileArticleEditor"
+     role="textbox"></div>
+<p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
 </div>
-<label class="articleInputLabel" for="editArticle">記事を直す</label>
-<textarea class="articleWritingArea" id="editArticle" oninput="updatePreviewText()" placeholder="記事本文を入力"></textarea>
+<textarea class="articleWritingArea hiddenArticleSource"
+          id="editArticle"
+          oninput="updatePreviewText()"
+          placeholder="記事本文を入力"
+          aria-hidden="true"
+          tabindex="-1"></textarea>
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 <div class="quickHintChips">
@@ -6253,5 +6342,125 @@ window.nextStep = function(num) {
   article.title='タップすると、この新聞の記事欄を直接編集できます';
 })();
 </script>
+
+<script>
+/* ===== 編集画面の記事欄を④と同じ方法で直接編集 ===== */
+(function(){
+  const editor = document.getElementById('editMobileArticleEditor');
+  const editInput = document.getElementById('editArticle');
+  const firstInput = document.getElementById('articleInput');
+  const editCanvas = document.getElementById('editArticleLiveCanvas');
+  const articleDetails = editInput ? editInput.closest('details') : null;
+
+  if (!editor || !editInput) return;
+
+  function isMobile(){
+    return window.matchMedia('(max-width: 900px)').matches;
+  }
+
+  function normalizeText(value){
+    return String(value || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\u00a0/g, ' ');
+  }
+
+  function editorText(){
+    return normalizeText(editor.innerText);
+  }
+
+  function setEditorText(value){
+    const normalized = normalizeText(value);
+    if (editorText() !== normalized) editor.textContent = normalized;
+  }
+
+  function syncFromEditor(){
+    const value = editorText();
+
+    if (editInput.value !== value) editInput.value = value;
+    if (firstInput && firstInput.value !== value) firstInput.value = value;
+
+    if (typeof window.updatePreviewText === 'function') {
+      window.updatePreviewText();
+    }
+    if (typeof window.refreshLargeArticlePreview === 'function') {
+      requestAnimationFrame(window.refreshLargeArticlePreview);
+    }
+  }
+
+  editor.addEventListener('focus', function(){
+    if (!isMobile()) return;
+    setEditorText(editInput.value);
+  });
+
+  editor.addEventListener('input', function(){
+    if (!isMobile()) return;
+    syncFromEditor();
+  });
+
+  editor.addEventListener('compositionend', function(){
+    if (!isMobile()) return;
+    syncFromEditor();
+  });
+
+  editor.addEventListener('paste', function(event){
+    if (!isMobile()) return;
+
+    event.preventDefault();
+    const text = normalizeText(
+      (event.clipboardData || window.clipboardData).getData('text/plain')
+    );
+
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+
+    selection.deleteFromDocument();
+    const node = document.createTextNode(text);
+    selection.getRangeAt(0).insertNode(node);
+    selection.collapse(node, node.length);
+    syncFromEditor();
+  });
+
+  editInput.addEventListener('input', function(){
+    if (document.activeElement !== editor) setEditorText(editInput.value);
+  });
+
+  if (articleDetails) {
+    articleDetails.addEventListener('toggle', function(){
+      if (!articleDetails.open) {
+        if (document.activeElement === editor) {
+          syncFromEditor();
+          editor.blur();
+        }
+        return;
+      }
+
+      setEditorText(editInput.value);
+
+      if (typeof window.refreshLargeArticlePreview === 'function') {
+        setTimeout(window.refreshLargeArticlePreview, 30);
+      }
+    });
+  }
+
+  // PCでは④と同じCanvas直接編集を使う
+  if (editCanvas) {
+    editCanvas.addEventListener('pointerdown', function(event){
+      if (isMobile()) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      if (typeof window.openDirectArticleAtNormalizedPoint !== 'function') return;
+
+      event.preventDefault();
+      const rect = editCanvas.getBoundingClientRect();
+      const nx = (event.clientX - rect.left) / Math.max(1, rect.width);
+      const ny = (event.clientY - rect.top) / Math.max(1, rect.height);
+      window.openDirectArticleAtNormalizedPoint(nx, ny);
+    });
+  }
+
+  setEditorText(editInput.value);
+})();
+</script>
+
 </body>
 </html>
