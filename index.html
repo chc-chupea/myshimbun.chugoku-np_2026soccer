@@ -3003,10 +3003,10 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
 <div class="articleDirectHelp">記事欄をタップするとカーソルが出ます。スマホでは左右に動かして、書きたい場所を大きく見られます。</div>
 <canvas aria-label="紙面の記事欄を直接編集" id="wizardArticleLiveCanvas" tabindex="0"></canvas>
-<div aria-label="紙面の記事欄を直接編集" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox"></div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
+<div aria-label="紙面の記事欄を直接編集" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox">ここに記事本文が入ります。</div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
 </div>
 <label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
-<textarea class="articleWritingArea" id="articleInput" placeholder="記事本文を入力"></textarea>
+<textarea class="articleWritingArea" id="articleInput" placeholder="記事本文を入力">ここに記事本文が入ります。</textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
 </section>
@@ -3088,7 +3088,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
      contenteditable="true"
      data-placeholder="ここをタップして記事を直そう"
      id="editMobileArticleEditor"
-     role="textbox"></div>
+     role="textbox">ここに記事本文が入ります。</div>
 <p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
 </div>
 <textarea class="articleWritingArea hiddenArticleSource"
@@ -3096,7 +3096,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
           oninput="updatePreviewText()"
           placeholder="記事本文を入力"
           aria-hidden="true"
-          tabindex="-1"></textarea>
+          tabindex="-1">ここに記事本文が入ります。</textarea>
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 <div class="quickHintChips">
@@ -3387,7 +3387,7 @@ function scheduleLiveArticleUpdate() {
   clearTimeout(liveArticleTimer);
   liveArticleTimer = setTimeout(() => {
     document.getElementById("editArticle").value =
-      document.getElementById("articleInput").value.trim() || "記事本文が入ります。";
+      document.getElementById("articleInput").value.trim();
     updatePreviewText();
   }, 160);
 }
@@ -3758,7 +3758,7 @@ function updateArticleLengthNotice(text) {
 function updatePreviewText() {
   const sublogo = document.getElementById("editSublogo").value.trim() || "My大会新聞";
   const headline = document.getElementById("editHeadline").value.trim() || "見出し";
-  const article = document.getElementById("editArticle").value.trim() || "記事本文が入ります。";
+  const article = document.getElementById("editArticle").value.trim();
   const dateRaw = document.getElementById("editDate").value || "2026-08-23";
   const sideDate = formatSideDate(dateRaw);
   const topDate = formatTopDate(dateRaw);
@@ -3779,13 +3779,13 @@ function updatePreviewText() {
 
 function renderArticleText(text) {
   const articleEl = document.getElementById("outArticle");
-  const safeText = text || "記事本文が入ります。";
+  const safeText = text;
   articleEl.dataset.rawText = safeText;
   drawArticleCanvas();
 }
 
 function normalizeArticleText(text) {
-  return (text || "記事本文が入ります。")
+  return (text || "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
     .trim();
@@ -3935,7 +3935,7 @@ function drawArticleCanvas() {
   const canvas = document.getElementById("articleCanvas");
   if (!articleEl || !canvas) return;
 
-  let text = articleEl.dataset.rawText || "記事本文が入ります。";
+  let text = articleEl.dataset.rawText || "";
   text = text.replace(/…/g, "︙");
 
   const cssW = articleEl.clientWidth || 460;
@@ -5986,7 +5986,7 @@ window.nextStep = function(num) {
     if (firstInput.value !== value) firstInput.value = value;
     if (editInput && editInput.value !== value) editInput.value = value;
 
-    article.dataset.rawText = value || '記事本文が入ります。';
+    article.dataset.rawText = value;
 
     if (typeof window.updatePreviewText === 'function') {
       window.updatePreviewText();
@@ -6237,7 +6237,7 @@ window.nextStep = function(num) {
     const edit=document.getElementById('editArticle');
     if(first && first.value!==value) first.value=value;
     if(edit && edit.value!==value) edit.value=value;
-    article.dataset.rawText=value || '記事本文が入ります。';
+    article.dataset.rawText=value;
     if(typeof window.updatePreviewText==='function') window.updatePreviewText();
     else window.drawArticleCanvas();
   }
@@ -6459,6 +6459,83 @@ window.nextStep = function(num) {
   }
 
   setEditorText(editInput.value);
+})();
+</script>
+
+
+<script>
+/* ===== 記事の初期値を初回だけ設定 ===== */
+(function(){
+  const initialArticleText = 'ここに記事本文が入ります。';
+
+  function setInitialArticleTextOnce(){
+    const firstInput = document.getElementById('articleInput');
+    const editInput = document.getElementById('editArticle');
+    const mobileEditor = document.getElementById('mobileArticleEditor');
+    const editMobileEditor = document.getElementById('editMobileArticleEditor');
+    const article = document.getElementById('outArticle');
+
+    if (firstInput && firstInput.value === '') firstInput.value = initialArticleText;
+    if (editInput && editInput.value === '') editInput.value = initialArticleText;
+    if (mobileEditor && mobileEditor.textContent === '') mobileEditor.textContent = initialArticleText;
+    if (editMobileEditor && editMobileEditor.textContent === '') editMobileEditor.textContent = initialArticleText;
+    if (article && !article.dataset.rawText) article.dataset.rawText = initialArticleText;
+
+    if (typeof window.updatePreviewText === 'function') {
+      window.updatePreviewText();
+    } else if (typeof window.drawArticleCanvas === 'function') {
+      window.drawArticleCanvas();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setInitialArticleTextOnce, {once:true});
+  } else {
+    setInitialArticleTextOnce();
+  }
+})();
+</script>
+
+
+<script>
+/* ===== 空欄の記事を自動復活させない ===== */
+(function(){
+  const ids = ['articleInput', 'editArticle'];
+  const editableIds = ['mobileArticleEditor', 'editMobileArticleEditor'];
+  const article = document.getElementById('outArticle');
+
+  function syncEmptyState(){
+    const first = document.getElementById('articleInput');
+    const edit = document.getElementById('editArticle');
+    const mobile = document.getElementById('mobileArticleEditor');
+    const editMobile = document.getElementById('editMobileArticleEditor');
+
+    const active = document.activeElement;
+    let value = '';
+
+    if (active === mobile) value = mobile.innerText.replace(/\u00a0/g, ' ');
+    else if (active === editMobile) value = editMobile.innerText.replace(/\u00a0/g, ' ');
+    else if (active === edit) value = edit.value;
+    else if (first) value = first.value;
+
+    if (value === '') {
+      if (first) first.value = '';
+      if (edit) edit.value = '';
+      if (mobile && active !== mobile) mobile.textContent = '';
+      if (editMobile && active !== editMobile) editMobile.textContent = '';
+      if (article) article.dataset.rawText = '';
+    }
+  }
+
+  ids.forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', syncEmptyState);
+  });
+
+  editableIds.forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', syncEmptyState);
+  });
 })();
 </script>
 
