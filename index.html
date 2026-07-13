@@ -3024,6 +3024,54 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   }
 }
 
+
+/* ===== 記事欄：実データを持たない仮表示 ===== */
+#articleInput::placeholder,
+#editArticle::placeholder {
+  color: #a7adb4;
+  opacity: 1;
+}
+
+.mobileArticleEditor:empty::before,
+.editMobileArticleEditor:empty::before {
+  content: attr(data-placeholder) !important;
+  color: #a7adb4 !important;
+  font-weight: 400 !important;
+  pointer-events: none;
+}
+
+/* PCのCanvas直接編集画面にも、実データとは別の仮表示を重ねる */
+.articleLivePanel.articlePlaceholderVisible {
+  position: relative;
+}
+
+.articleLivePanel.articlePlaceholderVisible::after {
+  content: "ここに記事本文が入ります。";
+  position: absolute;
+  top: 54px;
+  right: 26px;
+  z-index: 2;
+  color: #a7adb4;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif;
+  font-size: 24px;
+  line-height: 1.45;
+  font-weight: 400;
+  writing-mode: vertical-rl;
+  -webkit-writing-mode: vertical-rl;
+  pointer-events: none;
+}
+
+.articleLivePanel.articlePlaceholderActive::after {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  /* スマホはcontenteditable自身の仮表示を使う */
+  .articleLivePanel.articlePlaceholderVisible::after {
+    display: none;
+  }
+}
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -3114,10 +3162,10 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
 <div class="articleDirectHelp">記事欄をタップするとカーソルが出ます。スマホでは左右に動かして、書きたい場所を大きく見られます。</div>
 <canvas aria-label="紙面の記事欄を直接編集" id="wizardArticleLiveCanvas" tabindex="0"></canvas>
-<div aria-label="紙面の記事欄を直接編集" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox">ここに記事本文が入ります。</div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
+<div aria-label="紙面の記事欄を直接編集" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox"></div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
 </div>
 <label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
-<textarea class="articleWritingArea" id="articleInput" placeholder="記事本文を入力">ここに記事本文が入ります。</textarea>
+<textarea class="articleWritingArea" id="articleInput" placeholder="ここに記事本文が入ります。" placeholder="ここに記事本文が入ります。"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
 </section>
@@ -3199,15 +3247,15 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
      contenteditable="true"
      data-placeholder="ここをタップして記事を直そう"
      id="editMobileArticleEditor"
-     role="textbox">ここに記事本文が入ります。</div>
+     role="textbox"></div>
 <p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
 </div>
 <textarea class="articleWritingArea hiddenArticleSource"
           id="editArticle"
           oninput="updatePreviewText()"
-          placeholder="記事本文を入力"
+          placeholder="ここに記事本文が入ります。"
           aria-hidden="true"
-          tabindex="-1">ここに記事本文が入ります。</textarea>
+          tabindex="-1"></textarea>
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 <details class="editArticleHintDetails">
@@ -3472,8 +3520,7 @@ function movePreviewToWorkspace() {
 function syncStartFieldsToEditor(redrawArticle = true) {
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
   const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
-  const article = document.getElementById("articleInput").value.trim() ||
-    "第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。";
+  const article = document.getElementById("articleInput").value.trim();
   const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
   const reporter = document.getElementById("reporterInput").value.trim() || "記者 （氏名）";
 
@@ -3619,7 +3666,7 @@ document.getElementById("photoInput").addEventListener("change", function(e) {
     }
 
     if (status) {
-      status.innerText = "写真の準備ができました！PC：マウスで写真を動かせます／スマホ：1本指で移動、2本指で拡大・縮小・回転ができます。";
+      status.innerText = "写真の準備ができました！PC：マウスで写真を動かせます／スマホ：1本指で移動、2本指で拡大・縮小・回転ができます。 💡 写真をタップすると、大きな画面で編集できます。";
       const editStatus = document.getElementById("editPhotoStatus");
       if (editStatus) editStatus.innerText = "写真を変更しました。位置を調整できます。";
     }
@@ -3782,8 +3829,7 @@ function makeNewspaper() {
 
   const sublogo = document.getElementById("sublogoInput").value.trim() || "第6回大会記念新聞";
   const headline = document.getElementById("headlineInput").value.trim() || "仲間と掴んだ 夏の一勝";
-  const article = document.getElementById("articleInput").value.trim() ||
-    "第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。";
+  const article = document.getElementById("articleInput").value.trim();
   const dateRaw = document.getElementById("dateInput").value || "2026-08-23";
   const reporter = document.getElementById("reporterInput").value.trim() || "記者 （氏名）";
 
@@ -6564,42 +6610,6 @@ window.nextStep = function(num) {
   setEditorText(editInput.value);
 })();
 </script>
-
-
-<script>
-/* ===== 記事の初期値を初回だけ設定 ===== */
-(function(){
-  const initialArticleText = 'ここに記事本文が入ります。';
-
-  function setInitialArticleTextOnce(){
-    const firstInput = document.getElementById('articleInput');
-    const editInput = document.getElementById('editArticle');
-    const mobileEditor = document.getElementById('mobileArticleEditor');
-    const editMobileEditor = document.getElementById('editMobileArticleEditor');
-    const article = document.getElementById('outArticle');
-
-    if (firstInput && firstInput.value === '') firstInput.value = initialArticleText;
-    if (editInput && editInput.value === '') editInput.value = initialArticleText;
-    if (mobileEditor && mobileEditor.textContent === '') mobileEditor.textContent = initialArticleText;
-    if (editMobileEditor && editMobileEditor.textContent === '') editMobileEditor.textContent = initialArticleText;
-    if (article && !article.dataset.rawText) article.dataset.rawText = initialArticleText;
-
-    if (typeof window.updatePreviewText === 'function') {
-      window.updatePreviewText();
-    } else if (typeof window.drawArticleCanvas === 'function') {
-      window.drawArticleCanvas();
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setInitialArticleTextOnce, {once:true});
-  } else {
-    setInitialArticleTextOnce();
-  }
-})();
-</script>
-
-
 <script>
 /* ===== 空欄の記事を自動復活させない ===== */
 (function(){
@@ -6760,6 +6770,79 @@ window.addEventListener('resize', function(){
       showEditArticleFromRight();
     }
   });
+})();
+</script>
+
+
+<script>
+/* ===== 記事欄の仮表示を管理 ===== */
+(function(){
+  const firstInput = document.getElementById('articleInput');
+  const editInput = document.getElementById('editArticle');
+  const mobileEditor = document.getElementById('mobileArticleEditor');
+  const editMobileEditor = document.getElementById('editMobileArticleEditor');
+  const wizardPanel = document.getElementById('wizardArticleLivePanel');
+  const editPanel = document.getElementById('editArticleLivePanel');
+  const article = document.getElementById('outArticle');
+
+  function plainEditableText(element){
+    return element
+      ? String(element.innerText || '').replace(/\u00a0/g, ' ').trim()
+      : '';
+  }
+
+  function currentArticleText(){
+    const active = document.activeElement;
+
+    if (active === mobileEditor) return plainEditableText(mobileEditor);
+    if (active === editMobileEditor) return plainEditableText(editMobileEditor);
+    if (active === editInput) return String(editInput.value || '').trim();
+    return firstInput ? String(firstInput.value || '').trim() : '';
+  }
+
+  function updatePlaceholderState(){
+    const empty = currentArticleText() === '';
+
+    [wizardPanel, editPanel].forEach(function(panel){
+      if (!panel) return;
+      panel.classList.toggle('articlePlaceholderVisible', empty);
+    });
+
+    const active =
+      document.activeElement === mobileEditor ||
+      document.activeElement === editMobileEditor ||
+      document.body.classList.contains('directArticleMode');
+
+    [wizardPanel, editPanel].forEach(function(panel){
+      if (!panel) return;
+      panel.classList.toggle('articlePlaceholderActive', active);
+    });
+
+    if (empty && article) {
+      article.dataset.rawText = '';
+    }
+  }
+
+  [firstInput, editInput, mobileEditor, editMobileEditor].forEach(function(element){
+    if (!element) return;
+    element.addEventListener('input', updatePlaceholderState);
+    element.addEventListener('focus', updatePlaceholderState);
+    element.addEventListener('blur', function(){
+      setTimeout(updatePlaceholderState, 0);
+    });
+  });
+
+  const bodyObserver = new MutationObserver(updatePlaceholderState);
+  bodyObserver.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updatePlaceholderState, {once:true});
+  } else {
+    updatePlaceholderState();
+  }
 })();
 </script>
 
