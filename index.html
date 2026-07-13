@@ -2448,6 +2448,27 @@ body.photoEditorBodyLocked {
   .articleLiveTitle small { font-size: 10px; }
 }
 
+
+/* ===== 2026-07-13：編集画面の記事プレビュー重なり防止 ===== */
+@media (max-width: 900px) {
+  /* 記事欄を開いている間だけ固定プレビューを有効にする */
+  .editSection:not([open]) .editArticleLivePanel {
+    display: none !important;
+    position: static !important;
+  }
+
+  .editSection[open].articleEditingOpen .editArticleLivePanel {
+    display: block !important;
+    position: sticky !important;
+    top: 0 !important;
+  }
+
+  /* 記事編集終了後に後続項目へ余白や重なりを残さない */
+  .editSection:not([open]).articleEditingOpen {
+    overflow: hidden !important;
+  }
+}
+
 </style>
 
 
@@ -5421,13 +5442,47 @@ window.nextStep = function(num) {
   }
 
   const articleDetails = document.querySelector('#editArticle')?.closest('details');
+  const editPanel = document.getElementById('editPanel');
+
   if (articleDetails) {
+    /* 記事編集は最後に行えるよう、編集項目の一番下へ移動 */
+    if (editPanel) editPanel.appendChild(articleDetails);
+
+    const articleLivePanel = document.getElementById('editArticleLivePanel');
+
     const refreshDetailsState = function(){
-      articleDetails.classList.toggle('articleEditingOpen', articleDetails.open);
-      if (articleDetails.open) setTimeout(window.refreshLargeArticlePreview, 60);
+      const isOpen = !!articleDetails.open;
+      articleDetails.classList.toggle('articleEditingOpen', isOpen);
+
+      /* iPhone Safariでsticky要素がdetailsを閉じても残る現象を防ぐ */
+      if (articleLivePanel) {
+        articleLivePanel.style.display = isOpen ? '' : 'none';
+        articleLivePanel.style.position = isOpen ? '' : 'static';
+      }
+
+      if (isOpen) {
+        setTimeout(window.refreshLargeArticlePreview, 60);
+      } else {
+        /* 閉じた後にレイアウトを再計算し、次の項目への重なりを解除 */
+        void articleDetails.offsetHeight;
+        requestAnimationFrame(function(){
+          window.dispatchEvent(new Event('resize'));
+        });
+      }
     };
+
     articleDetails.addEventListener('toggle', refreshDetailsState);
     refreshDetailsState();
+
+    /* スマホでは別項目を開いたら記事編集を自動で閉じる */
+    document.querySelectorAll('#editPanel > details.editSection').forEach(function(section){
+      if (section === articleDetails) return;
+      section.addEventListener('toggle', function(){
+        if (window.matchMedia('(max-width: 900px)').matches && section.open && articleDetails.open) {
+          articleDetails.open = false;
+        }
+      });
+    });
   }
 
   ['articleInput','editArticle'].forEach(function(id){
