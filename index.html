@@ -2922,12 +2922,12 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 }
 
 .editArticleHintDetails > summary::after {
-  content: "＋";
+  content: "▼";
   float: right;
 }
 
 .editArticleHintDetails[open] > summary::after {
-  content: "－";
+  content: "▼";
 }
 
 .editArticleHintDetails > button {
@@ -3112,6 +3112,17 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   pointer-events:none !important;
 }
 
+
+
+/* ===== 写真操作範囲ロック ===== */
+#photoFrame.photoLocked {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+#photoFrame.photoLocked .photoGuide {
+  display: none !important;
+}
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -3194,36 +3205,36 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <section class="step" id="step4">
 <h2>④ 記事を書こう</h2>
 <p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
-
-<div aria-live="polite" class="articleLivePanel" id="wizardArticleLivePanel">
-<div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
-<div class="articleDirectHelp">記事欄をタップするとカーソルが出ます。スマホでは左右に動かして、書きたい場所を大きく見られます。</div>
-<canvas aria-label="紙面の記事欄を直接編集" id="wizardArticleLiveCanvas" tabindex="0"></canvas>
-<div aria-label="紙面の記事欄を直接編集" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox"></div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
-</div>
-<label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
 <details class="articleSampleDetails">
 <summary><span class="sampleTitle">書き方の見本を見る</span> <span style="display:inline-block;background:#ff8a00;color:#fff;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:900;margin:0 6px;">コピペOK！</span><span style="font-size:0.9em;color:#555;">○や●だけ変えてもOK！書き足してもOK！</span></summary>
 <div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
 </details>
-<textarea class="articleWritingArea" id="articleInput" placeholder="ここに記事本文が入ります。" placeholder="ここに記事本文が入ります。"></textarea>
+<div aria-live="polite" class="articleLivePanel" id="wizardArticleLivePanel">
+<div class="articleLiveTitle"><span></span><small>記事欄をタップして入力します</small></div>
+
+<canvas aria-label="" id="wizardArticleLiveCanvas" tabindex="0"></canvas>
+<div aria-label="" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox"></div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
+</div>
+<label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
+
+<textarea class="articleWritingArea" id="articleInput" placeholder="ここに記事本文が入ります。"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
 </section>
 <section class="step" id="step5">
 <h2>⑤ 日にちを入れよう</h2>
 <p>写真を撮った日、または新聞発行日を入れてください。</p>
-<input id="dateInput" type="date" value="2026-08-23">
+<input id="dateInput" type="date" value="2026-08-23"/>
 <button class="nextBtn" onclick="nextStep(6)">次へ</button>
 <button class="backBtn" onclick="nextStep(4)">戻る</button>
-</input></section>
+</section>
 <section class="step" id="step6">
 <h2>⑥ 記者名を書こう</h2>
 <p>作った人の名前やニックネームを入れてください。</p>
-<input id="reporterInput" placeholder="例：記者 （氏名）">
+<input id="reporterInput" placeholder="例：記者 （氏名）"/>
 <button class="nextBtn" onclick="makeNewspaper()">次へ（仕上げ編集）</button>
 <button class="backBtn" onclick="nextStep(5)">戻る</button>
-</input></section><div id="workspace">
+</section><div id="workspace">
 <div id="editorColumn"><div class="editPanel" id="editPanel">
 <h2>編集する</h2>
 <div class="miniHelp">
@@ -3238,16 +3249,16 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <details class="editSection">
 <summary>見出し</summary>
 <label for="editHeadline"></label>
-<input id="editHeadline" oninput="headlineShortLevel = 0; updatePreviewText()" placeholder="見出しを入力">
+<input id="editHeadline" oninput="headlineShortLevel = 0; updatePreviewText()" placeholder="見出しを入力"/>
 <div class="countLine" id="headlineCount">目安：18文字くらいまで</div>
 <button onclick="makeHeadlineShorter()" type="button">見出しを短くする</button>
 <div class="headlineDesignBox">
 <h3>見出しをデコる</h3>
 <label for="editHeadlineColorPicker">背景色</label>
-<input class="headlineColorPicker" id="editHeadlineColorPicker" oninput="setHeadlineBgColor(this.value)" type="color" value="#001E55">
+<input class="headlineColorPicker" id="editHeadlineColorPicker" oninput="setHeadlineBgColor(this.value)" type="color" value="#001E55"/>
 <label>フォント</label>
 <label for="editHeadlineTextColorPicker">文字色</label>
-<input class="headlineColorPicker" id="editHeadlineTextColorPicker" oninput="setHeadlineTextColor(this.value)" type="color" value="#ffffff">
+<input class="headlineColorPicker" id="editHeadlineTextColorPicker" oninput="setHeadlineTextColor(this.value)" type="color" value="#ffffff"/>
 <div class="fontChoiceGrid">
 <label class="fontChoice fontHiraginoGothic">
 <input checked="" name="headlineFontEdit" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontHiraginoGothic"/>
@@ -3274,31 +3285,11 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
     Kiwi Maru
   </label>
 </div>
-</input></input></div>
-</input></details>
+</div>
+</details>
 <details class="editSection">
 <summary>記事</summary>
 <label for="editArticle"></label>
-<div aria-live="polite" class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel">
-<div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
-<div class="articleDirectHelp">記事欄をタップして、その場で文字入力・削除・改行ができます。</div>
-<canvas aria-label="紙面の記事欄を直接編集" id="editArticleLiveCanvas" tabindex="0"></canvas>
-<div aria-label="紙面の記事欄を直接編集" aria-multiline="true"
-     class="mobileArticleEditor editMobileArticleEditor"
-     contenteditable="true"
-     data-placeholder="ここをタップして記事を直そう"
-     id="editMobileArticleEditor"
-     role="textbox"></div>
-<p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
-</div>
-<textarea class="articleWritingArea hiddenArticleSource"
-          id="editArticle"
-          oninput="updatePreviewText()"
-          placeholder="ここに記事本文が入ります。"
-          aria-hidden="true"
-          tabindex="-1"></textarea>
-<div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
-<div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 <details class="editArticleHintDetails">
 <summary>💡 記事のヒントを見る</summary>
 <div class="quickHintChips">
@@ -3308,15 +3299,24 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 </div>
 <button onclick="addArticleHint()" type="button">取材メモを追加</button>
 </details>
+<div aria-live="polite" class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel">
+<div class="articleLiveTitle"><span></span><small>記事欄をタップして入力します</small></div>
+<canvas aria-label="" id="editArticleLiveCanvas" tabindex="0"></canvas>
+<div aria-label="" aria-multiline="true" class="mobileArticleEditor editMobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を直そう" id="editMobileArticleEditor" role="textbox"></div>
+<p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
+</div>
+<textarea aria-hidden="true" class="articleWritingArea hiddenArticleSource" id="editArticle" oninput="updatePreviewText()" placeholder="ここに記事本文が入ります。" tabindex="-1"></textarea>
+<div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
+<div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 </details>
 <details class="editSection">
 <summary>日付・記者名</summary>
 <label for="editDate">日にち</label>
-<input id="editDate" oninput="updatePreviewText()" type="date">
+<input id="editDate" oninput="updatePreviewText()" type="date"/>
 <label for="editReporter">記者名</label>
-<input id="editReporter" oninput="updatePreviewText()" placeholder="例：記者 （氏名）">
-</input></input></details>
-<details class="editSection">
+<input id="editReporter" oninput="updatePreviewText()" placeholder="例：記者 （氏名）"/>
+</details>
+<details class="editSection" id="photoEditSection">
 <summary>写真変更＆移動</summary>
 <div class="photoEditButtons">
 <button onclick="reselectPhoto()" type="button">写真を選び直す</button>
@@ -3335,8 +3335,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <button class="backBtn" onclick="resetPhotoPosition()">写真位置をリセット</button>
 </details>
 </div><div id="saveArea">
-<p class="notice">内容を確認して、お申し込みへ進んでください。<br>申込完了後に、控え用PDFを保存できます。</p>
-
+<p class="notice">内容を確認して、お申し込みへ進んでください。<br/>申込完了後に、控え用PDFを保存できます。</p>
 <button class="backBtn" onclick="resetForm()">最初から作り直す</button>
 <div class="deliveryModeBox" id="deliveryFormBox">
 <h3>中国新聞 My新聞申し込み</h3>
@@ -3346,17 +3345,17 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   </div>
 <div class="deliveryFormGrid">
 <label for="customerName">お名前<span class="deliveryRequired">必須</span></label>
-<input autocomplete="name" id="customerName" placeholder="例：山田 太郎">
+<input autocomplete="name" id="customerName" placeholder="例：山田 太郎"/>
 <label for="customerKana">ふりがな<span class="deliveryRequired">必須</span></label>
-<input id="customerKana" placeholder="例：やまだ たろう">
+<input id="customerKana" placeholder="例：やまだ たろう"/>
 <label for="customerPhone">電話番号<span class="deliveryRequired">必須</span></label>
-<input autocomplete="tel" id="customerPhone" inputmode="tel" placeholder="例：09012345678">
+<input autocomplete="tel" id="customerPhone" inputmode="tel" placeholder="例：09012345678"/>
 <label for="customerAddress">お届け先住所<span class="deliveryRequired">必須</span></label>
 <textarea autocomplete="street-address" id="customerAddress" placeholder="例：東広島市西条町〇〇1-2-3"></textarea>
 <label for="customerTeam">所属チーム・学校名</label>
-<input id="customerTeam" placeholder="例：〇〇サッカークラブ">
+<input id="customerTeam" placeholder="例：〇〇サッカークラブ"/>
 <label for="customerGrade">学年</label>
-<input id="customerGrade" placeholder="例：小学5年">
+<input id="customerGrade" placeholder="例：小学5年"/>
 <label for="customerQuantity">希望枚数</label>
 <input id="customerQuantity" max="1" min="1" readonly="" type="number" value="1"/>
 <div class="countLine">無料イベントのため、希望枚数は1部固定です。</div>
@@ -3376,12 +3375,12 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <h4>アンケート②（任意）</h4>
 <p>中国新聞を購読されていない方へ</p>
 <div class="surveyOptions">
-<label><input data-label="中国新聞を読んでみたい" name="interestStatus" type="radio" value="trial"/>中国新聞を読んでみたい</label>
+<label><input data-label="中国新聞を読んでみたい" name="interestStatus" type="radio" value="trial">中国新聞を読んでみたい</input></label>
 <label><input data-label="資料だけ欲しい" name="interestStatus" type="radio" value="catalog"/>資料だけ欲しい</label>
 <label><input data-label="今は希望しない" name="interestStatus" type="radio" value="none"/>今は希望しない</label>
 </div>
 </div>
-</input></input></input></input></input></div>
+</div>
 <button class="deliverySubmitBtn" onclick="submitFreeDeliveryOrder()" type="button">この内容で申し込む</button>
 <div class="deliveryStatus" id="deliveryStatus"></div>
 <div class="deliveryComplete" id="deliveryComplete"></div>
@@ -3518,6 +3517,32 @@ let pinchStart = null;
 const photo = document.getElementById("previewPhoto");
 const photoFrame = document.getElementById("photoFrame");
 
+function isPhotoEditingAllowed() {
+  const step1 = document.getElementById("step1");
+  if (step1 && step1.classList.contains("active")) return true;
+
+  const workspace = document.getElementById("workspace");
+  const photoEditSection = document.getElementById("photoEditSection");
+  const workspaceVisible = workspace && getComputedStyle(workspace).display !== "none";
+  return !!(workspaceVisible && photoEditSection && photoEditSection.open);
+}
+
+function updatePhotoInteractionLock() {
+  if (!photoFrame) return;
+  const allowed = isPhotoEditingAllowed();
+  photoFrame.classList.toggle("photoLocked", !allowed);
+  photoFrame.setAttribute("aria-disabled", allowed ? "false" : "true");
+  if (allowed) {
+    photoFrame.setAttribute("tabindex", "0");
+  } else {
+    photoFrame.removeAttribute("tabindex");
+    activePointers.clear();
+    dragStart = null;
+    pinchStart = null;
+    document.documentElement.classList.remove("photoDragging");
+  }
+}
+
 function applyPhotoTransform() {
   photo.style.transform =
     "translate(-50%, -50%) translate(" + photoState.x + "px, " + photoState.y + "px) scale(" +
@@ -3648,6 +3673,7 @@ function nextStep(num) {
 
   next.classList.add("active");
   setStepPreviewFocus(num);
+  updatePhotoInteractionLock();
 
   // サンプル画像の位置ではなく、移動先ステップの先頭を表示する
   requestAnimationFrame(() => {
@@ -3907,11 +3933,12 @@ function makeNewspaper() {
   document.querySelectorAll(".step").forEach(step => step.classList.remove("active"));
   movePreviewToWorkspace();
   showWorkspace();
+  updatePhotoInteractionLock();
   if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
   updateArticleLengthNotice(document.getElementById("editArticle") ? document.getElementById("editArticle").value : "");
   const previewNotice = document.getElementById("previewEditNotice");
   if (previewNotice) previewNotice.style.display = "block";
-  setTimeout(() => photoFrame.focus(), 300);
+  setTimeout(() => { if (isPhotoEditingAllowed()) photoFrame.focus(); }, 300);
 
   requestAnimationFrame(() => {
     const previewColumn = document.getElementById("previewColumn");
@@ -4676,16 +4703,19 @@ function queuePhotoTransform(nextState) {
 }
 
 function preventPhotoPageScroll(e) {
+  if (!isPhotoEditingAllowed()) return;
   if (activePointers.size > 0) e.preventDefault();
 }
 
 photoFrame.addEventListener("touchstart", function(e) {
+  if (!isPhotoEditingAllowed()) return;
   e.preventDefault();
 }, { passive: false });
 
 photoFrame.addEventListener("touchmove", preventPhotoPageScroll, { passive: false });
 
 photoFrame.addEventListener("pointerdown", function(e) {
+  if (!isPhotoEditingAllowed()) return;
   e.preventDefault();
   photoFrame.focus({ preventScroll: true });
   try { photoFrame.setPointerCapture(e.pointerId); } catch (_) {}
@@ -4722,6 +4752,7 @@ photoFrame.addEventListener("pointerdown", function(e) {
 }, { passive: false });
 
 photoFrame.addEventListener("pointermove", function(e) {
+  if (!isPhotoEditingAllowed()) return;
   if (!activePointers.has(e.pointerId)) return;
   e.preventDefault();
   activePointers.set(e.pointerId, e);
@@ -4753,6 +4784,7 @@ photoFrame.addEventListener("pointermove", function(e) {
 }, { passive: false });
 
 function endPointer(e) {
+  if (!isPhotoEditingAllowed()) { activePointers.clear(); return; }
   activePointers.delete(e.pointerId);
   try {
     if (photoFrame.hasPointerCapture(e.pointerId)) photoFrame.releasePointerCapture(e.pointerId);
@@ -4780,11 +4812,13 @@ photoFrame.addEventListener("pointercancel", endPointer);
 photoFrame.addEventListener("lostpointercapture", endPointer);
 
 photoFrame.addEventListener("wheel", function(e) {
+  if (!isPhotoEditingAllowed()) return;
   e.preventDefault();
   changeScale(e.deltaY < 0 ? 1.05 : 0.95);
 }, { passive: false });
 
 photoFrame.addEventListener("keydown", function(e) {
+  if (!isPhotoEditingAllowed()) return;
   const move = e.shiftKey ? 10 : 3;
   const scaleStep = e.shiftKey ? 1.08 : 1.03;
   const rotateStep = e.shiftKey ? 5 : 2;
@@ -5839,6 +5873,7 @@ window.nextStep = function(num) {
   }
 
   function openPhotoEditor() {
+    if (!isPhotoEditingAllowed()) return;
     syncEditorSource();
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
@@ -5861,6 +5896,7 @@ window.nextStep = function(num) {
 
   /* 写真枠の「タップ」だけで開く。ドラッグやピンチ後には開かない */
   sourceFrame.addEventListener("pointerdown", function(e) {
+    if (!isPhotoEditingAllowed()) return;
     if (openingPointer === null) {
       openingPointer = e.pointerId;
       openingMoved = false;
@@ -5873,6 +5909,7 @@ window.nextStep = function(num) {
   }, true);
 
   sourceFrame.addEventListener("pointermove", function(e) {
+    if (!isPhotoEditingAllowed()) return;
     if (e.pointerId !== openingPointer) return;
     const sx = Number(sourceFrame.dataset.tapStartX || e.clientX);
     const sy = Number(sourceFrame.dataset.tapStartY || e.clientY);
@@ -5880,6 +5917,7 @@ window.nextStep = function(num) {
   }, true);
 
   sourceFrame.addEventListener("pointerup", function(e) {
+    if (!isPhotoEditingAllowed()) return;
     if (e.pointerId !== openingPointer) return;
     const shouldOpen = !openingMoved && !openingMulti;
     openingPointer = null;
@@ -6552,7 +6590,6 @@ window.nextStep = function(num) {
   article.title='タップすると、この新聞の記事欄を直接編集できます';
 })();
 </script>
-
 <script>
 /* ===== 編集画面の記事欄を④と同じ方法で直接編集 ===== */
 (function(){
@@ -6712,11 +6749,6 @@ window.nextStep = function(num) {
   });
 })();
 </script>
-
-
-  
-
-
 <script>
 /* ===== スマホ記事編集モード：画面幅変更時の再判定 ===== */
 window.addEventListener('resize', function(){
@@ -6731,8 +6763,6 @@ window.addEventListener('resize', function(){
   );
 });
 </script>
-
-
 <script>
 /* ===== 縦書き記事欄：開いた時は右端から表示 ===== */
 (function(){
@@ -6833,8 +6863,6 @@ window.addEventListener('resize', function(){
   });
 })();
 </script>
-
-
 <script>
 /* ===== 記事欄の仮表示を管理 ===== */
 (function(){
@@ -6906,8 +6934,6 @@ window.addEventListener('resize', function(){
   }
 })();
 </script>
-
-
 <script>
 /* ===== 申込フォーム入力中の固定プレビュー制御 ===== */
 (function(){
@@ -6975,6 +7001,18 @@ window.addEventListener('resize', function(){
   document.addEventListener('visibilitychange', function(){
     if (!document.hidden) updateApplicationFocusMode();
   });
+})();
+</script>
+
+<script>
+(function setupPhotoInteractionScopeLock(){
+  function bind(){
+    const section = document.getElementById("photoEditSection");
+    if (section) section.addEventListener("toggle", updatePhotoInteractionLock);
+    updatePhotoInteractionLock();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  else bind();
 })();
 </script>
 
