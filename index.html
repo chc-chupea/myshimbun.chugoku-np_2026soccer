@@ -2824,44 +2824,45 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   }
 }
 
+
+.articleInputNote{
+  margin:8px 0 0;
+  padding:8px 10px;
+  font-size:13px;
+  line-height:1.6;
+  color:#555;
+  background:#eef7ff;
+  border-left:4px solid #2a8fd6;
+  border-radius:6px;
+  font-family:"Hiragino Sans","Yu Gothic",sans-serif;
+}
 </style>
-
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Tokumin:wght@400;700&family=Kiwi+Maru:wght@400;500&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&amp;family=Kaisei+Tokumin:wght@400;700&amp;family=Kiwi+Maru:wght@400;500&amp;family=Zen+Maru+Gothic:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 </head>
 <body>
 <h1>中国新聞 My新聞づくり</h1>
-
-
 <div class="eventTitle heroTitleSimple blueHeroBand">
 <div class="eventTitleText">
-    <div class="eventTitleName">2026年8月23日（日）開催</div>
-    <div class="eventTitleMain">第6回中国新聞東広島芸陽会杯<br/>サッカー大会を新聞にしよう！</div>
-    <div class="eventTitleSub">
+<div class="eventTitleName">2026年8月23日（日）開催</div>
+<div class="eventTitleMain">第6回中国新聞東広島芸陽会杯<br/>サッカー大会を新聞にしよう！</div>
+<div class="eventTitleSub">
       見たこと・感じたこと、仲間の頑張りを記事に書こう
     </div>
-    
-  </div>
 </div>
-
-<div id="receptionClosedBox" class="receptionClosedBox" aria-live="polite">
-  <h2>受付は終了しました</h2>
-  <p>第6回中国新聞東広島芸陽会杯サッカー大会<br/>My新聞づくりにご参加いただき、ありがとうございました。</p>
-  <p class="closedThanks">お申し込みいただいた新聞は、順次販売所よりお届けします。</p>
 </div>
-
-
-
+<div aria-live="polite" class="receptionClosedBox" id="receptionClosedBox">
+<h2>受付は終了しました</h2>
+<p>第6回中国新聞東広島芸陽会杯サッカー大会<br/>My新聞づくりにご参加いただき、ありがとうございました。</p>
+<p class="closedThanks">お申し込みいただいた新聞は、順次販売所よりお届けします。</p>
+</div>
 <div id="wizardPreviewHost"></div>
-
 <section class="step active" id="step1">
 <h2>① ベストショットを選ぼう</h2>
 <p>試合のワクワクが伝わる写真を選んでください。</p>
 <input accept="image/*" id="photoInput" type="file"/>
-<div id="photoStatus" class="countLine">写真はあとから選び直せます。まずは1枚選んでスタート！</div>
+<div class="countLine" id="photoStatus">写真はあとから選び直せます。まずは1枚選んでスタート！</div>
 <button class="nextBtn" onclick="nextStep(2)">次へ</button>
 </section>
 <section class="step" id="step2">
@@ -2871,62 +2872,48 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <textarea id="sublogoInput" placeholder="例：第6回大会新聞"></textarea>
 <button class="nextBtn" onclick="nextStep(3)">次へ</button>
 <button class="backBtn" onclick="nextStep(1)">戻る</button>
-
 </section>
 <section class="step" id="step3">
 <h2>③ 大きな見出しをつけよう</h2>
 <p>写真を見た人が「読んでみたい」と思う短いタイトルにしましょう。</p>
 <div class="hint">例：仲間と掴んだ 夏の一勝<br/>例：最後まで全力プレー<br/>例：白熱の東広島芸陽会杯</div>
 <input id="headlineInput" placeholder="見出しを入力"/>
-
 <div class="headlineDesignBox">
-  <h3>見出しをデコる</h3>
-  <label for="headlineColorPicker">背景色</label>
-  <input class="headlineColorPicker" id="headlineColorPicker" type="color" value="#001E55" oninput="setHeadlineBgColor(this.value)" />
- 
-
-  <label>フォント</label>
-  <label for="headlineTextColorPicker">文字色</label>
-  <input class="headlineColorPicker"
-         id="headlineTextColorPicker"
-         type="color"
-         value="#ffffff"
-         oninput="setHeadlineTextColor(this.value)" />
-
-
+<h3>見出しをデコる</h3>
+<label for="headlineColorPicker">背景色</label>
+<input class="headlineColorPicker" id="headlineColorPicker" oninput="setHeadlineBgColor(this.value)" type="color" value="#001E55"/>
+<label>フォント</label>
+<label for="headlineTextColorPicker">文字色</label>
+<input class="headlineColorPicker" id="headlineTextColorPicker" oninput="setHeadlineTextColor(this.value)" type="color" value="#ffffff"/>
 <div class="fontChoiceGrid">
-  <label class="fontChoice fontHiraginoGothic">
-    <input type="radio" name="headlineFontStart" value="fontHiraginoGothic" onchange="setHeadlineFontClass(this.value)" checked>
+<label class="fontChoice fontHiraginoGothic">
+<input checked="" name="headlineFontStart" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontHiraginoGothic"/>
     ヒラギノゴシック
   </label>
-  <label class="fontChoice fontHiraginoMincho">
-    <input type="radio" name="headlineFontStart" value="fontHiraginoMincho" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontHiraginoMincho">
+<input name="headlineFontStart" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontHiraginoMincho"/>
     ヒラギノ明朝
   </label>
-  <label class="fontChoice fontZenMaru">
-    <input type="radio" name="headlineFontStart" value="fontZenMaru" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontZenMaru">
+<input name="headlineFontStart" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontZenMaru"/>
     Zen Maru Gothic
   </label>
-  <label class="fontChoice fontKaisei">
-    <input type="radio" name="headlineFontStart" value="fontKaisei" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontKaisei">
+<input name="headlineFontStart" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontKaisei"/>
     Kaisei Tokumin
   </label>
-  <label class="fontChoice fontDot">
-    <input type="radio" name="headlineFontStart" value="fontDot" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontDot">
+<input name="headlineFontStart" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontDot"/>
     ドットゴシック
   </label>
-  <label class="fontChoice fontKiwi">
-    <input type="radio" name="headlineFontStart" value="fontKiwi" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontKiwi">
+<input name="headlineFontStart" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontKiwi"/>
     Kiwi Maru
   </label>
 </div>
-
 </div>
-
-
 <button class="nextBtn" onclick="nextStep(4)">次へ</button>
 <button class="backBtn" onclick="nextStep(2)">戻る</button>
-
 </section>
 <section class="step" id="step4">
 <h2>④ 記事を書こう</h2>
@@ -2935,40 +2922,31 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <summary>書き方の見本を見る</summary>
 <div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
 </details>
-<div class="articleLivePanel" id="wizardArticleLivePanel" aria-live="polite">
-  <div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
-  <div class="articleDirectHelp">記事欄をタップするとカーソルが出ます。スマホでは左右に動かして、書きたい場所を大きく見られます。</div>
-  <canvas id="wizardArticleLiveCanvas" tabindex="0" aria-label="紙面の記事欄を直接編集"></canvas>
-  <div id="mobileArticleEditor"
-       class="mobileArticleEditor"
-       contenteditable="true"
-       role="textbox"
-       aria-multiline="true"
-       aria-label="紙面の記事欄を直接編集"
-       data-placeholder="ここをタップして記事を書こう"></div>
+<div aria-live="polite" class="articleLivePanel" id="wizardArticleLivePanel">
+<div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
+<div class="articleDirectHelp">記事欄をタップするとカーソルが出ます。スマホでは左右に動かして、書きたい場所を大きく見られます。</div>
+<canvas aria-label="紙面の記事欄を直接編集" id="wizardArticleLiveCanvas" tabindex="0"></canvas>
+<div aria-label="紙面の記事欄を直接編集" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox"></div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
 </div>
 <label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
-<textarea id="articleInput" class="articleWritingArea" placeholder="記事本文を入力"></textarea>
+<textarea class="articleWritingArea" id="articleInput" placeholder="記事本文を入力"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
-
 </section>
 <section class="step" id="step5">
 <h2>⑤ 日にちを入れよう</h2>
 <p>写真を撮った日、または新聞発行日を入れてください。</p>
-<input id="dateInput" type="date" value="2026-08-23"/>
+<input id="dateInput" type="date" value="2026-08-23">
 <button class="nextBtn" onclick="nextStep(6)">次へ</button>
 <button class="backBtn" onclick="nextStep(4)">戻る</button>
-
-</section>
+</input></section>
 <section class="step" id="step6">
 <h2>⑥ 記者名を書こう</h2>
 <p>作った人の名前やニックネームを入れてください。</p>
-<input id="reporterInput" placeholder="例：記者 （氏名）"/>
+<input id="reporterInput" placeholder="例：記者 （氏名）">
 <button class="nextBtn" onclick="makeNewspaper()">次へ（仕上げ編集）</button>
 <button class="backBtn" onclick="nextStep(5)">戻る</button>
-
-</section><div id="workspace">
+</input></section><div id="workspace">
 <div id="editorColumn"><div class="editPanel" id="editPanel">
 <h2>編集する</h2>
 <div class="miniHelp">
@@ -2983,162 +2961,138 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <details class="editSection">
 <summary>見出し</summary>
 <label for="editHeadline"></label>
-<input id="editHeadline" oninput="headlineShortLevel = 0; updatePreviewText()" placeholder="見出しを入力"/>
+<input id="editHeadline" oninput="headlineShortLevel = 0; updatePreviewText()" placeholder="見出しを入力">
 <div class="countLine" id="headlineCount">目安：18文字くらいまで</div>
 <button onclick="makeHeadlineShorter()" type="button">見出しを短くする</button>
-
 <div class="headlineDesignBox">
-  <h3>見出しをデコる</h3>
-  <label for="editHeadlineColorPicker">背景色</label>
-  <input class="headlineColorPicker" id="editHeadlineColorPicker" type="color" value="#001E55" oninput="setHeadlineBgColor(this.value)" />
-
-
- <label>フォント</label>
-
-  <label for="editHeadlineTextColorPicker">文字色</label>
-  <input class="headlineColorPicker"
-         id="editHeadlineTextColorPicker"
-         type="color"
-         value="#ffffff"
-         oninput="setHeadlineTextColor(this.value)" />
-
+<h3>見出しをデコる</h3>
+<label for="editHeadlineColorPicker">背景色</label>
+<input class="headlineColorPicker" id="editHeadlineColorPicker" oninput="setHeadlineBgColor(this.value)" type="color" value="#001E55">
+<label>フォント</label>
+<label for="editHeadlineTextColorPicker">文字色</label>
+<input class="headlineColorPicker" id="editHeadlineTextColorPicker" oninput="setHeadlineTextColor(this.value)" type="color" value="#ffffff">
 <div class="fontChoiceGrid">
-  <label class="fontChoice fontHiraginoGothic">
-    <input type="radio" name="headlineFontEdit" value="fontHiraginoGothic" onchange="setHeadlineFontClass(this.value)" checked>
+<label class="fontChoice fontHiraginoGothic">
+<input checked="" name="headlineFontEdit" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontHiraginoGothic"/>
     ヒラギノゴシック
   </label>
-  <label class="fontChoice fontHiraginoMincho">
-    <input type="radio" name="headlineFontEdit" value="fontHiraginoMincho" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontHiraginoMincho">
+<input name="headlineFontEdit" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontHiraginoMincho"/>
     ヒラギノ明朝
   </label>
-  <label class="fontChoice fontZenMaru">
-    <input type="radio" name="headlineFontEdit" value="fontZenMaru" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontZenMaru">
+<input name="headlineFontEdit" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontZenMaru"/>
     Zen Maru Gothic
   </label>
-  <label class="fontChoice fontKaisei">
-    <input type="radio" name="headlineFontEdit" value="fontKaisei" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontKaisei">
+<input name="headlineFontEdit" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontKaisei"/>
     Kaisei Tokumin
   </label>
-  <label class="fontChoice fontDot">
-    <input type="radio" name="headlineFontEdit" value="fontDot" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontDot">
+<input name="headlineFontEdit" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontDot"/>
     ドットゴシック
   </label>
-  <label class="fontChoice fontKiwi">
-    <input type="radio" name="headlineFontEdit" value="fontKiwi" onchange="setHeadlineFontClass(this.value)">
+<label class="fontChoice fontKiwi">
+<input name="headlineFontEdit" onchange="setHeadlineFontClass(this.value)" type="radio" value="fontKiwi"/>
     Kiwi Maru
   </label>
 </div>
-
-</div>
-
-
-</details>
+</input></input></div>
+</input></details>
 <details class="editSection">
 <summary>記事</summary>
 <label for="editArticle"></label>
-<div class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel" aria-live="polite">
-  <div class="articleLiveTitle"><span>紙面の記事欄</span><small>改行もそのまま確認できます</small></div>
-  <canvas id="editArticleLiveCanvas"></canvas>
+<div aria-live="polite" class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel">
+<div class="articleLiveTitle"><span>紙面の記事欄</span><small>改行もそのまま確認できます</small></div>
+<canvas id="editArticleLiveCanvas"></canvas>
 </div>
 <label class="articleInputLabel" for="editArticle">記事を直す</label>
-<textarea id="editArticle" class="articleWritingArea" oninput="updatePreviewText()" placeholder="記事本文を入力"></textarea>
+<textarea class="articleWritingArea" id="editArticle" oninput="updatePreviewText()" placeholder="記事本文を入力"></textarea>
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 <div class="quickHintChips">
-  <button type="button" onclick="insertQuickArticle('hit')">記事のヒント：走った・守ったことの文章を足す</button>
-  <button type="button" onclick="insertQuickArticle('team')">記事のヒント：仲間と声かけあった文章を足す</button>
-  <button type="button" onclick="insertQuickArticle('feeling')">記事のヒント：感じたことの文章を足す</button>
+<button onclick="insertQuickArticle('hit')" type="button">記事のヒント：走った・守ったことの文章を足す</button>
+<button onclick="insertQuickArticle('team')" type="button">記事のヒント：仲間と声かけあった文章を足す</button>
+<button onclick="insertQuickArticle('feeling')" type="button">記事のヒント：感じたことの文章を足す</button>
 </div>
 <button onclick="addArticleHint()">記事のヒント：取材メモを追加</button>
 </details>
 <details class="editSection">
 <summary>日付・記者名</summary>
 <label for="editDate">日にち</label>
-<input id="editDate" oninput="updatePreviewText()" type="date"/>
+<input id="editDate" oninput="updatePreviewText()" type="date">
 <label for="editReporter">記者名</label>
-<input id="editReporter" oninput="updatePreviewText()" placeholder="例：記者 （氏名）"/>
-</details>
+<input id="editReporter" oninput="updatePreviewText()" placeholder="例：記者 （氏名）">
+</input></input></details>
 <details class="editSection">
 <summary>写真変更＆移動</summary>
 <div class="photoEditButtons">
-  <button type="button" onclick="reselectPhoto()">写真を選び直す</button>
+<button onclick="reselectPhoto()" type="button">写真を選び直す</button>
 </div>
 <div class="photoEditStatus" id="editPhotoStatus">写真を変更したい時は「写真を選び直す」を押してください。下のボタンで位置を調整できます。ボタンは長押しできます。</div>
-
 <div class="controlGrid">
-<button type="button" data-hold-action="nudge" data-hold-a="0" data-hold-b="-10" onclick="nudgePhoto(0,-10)">↑</button>
-<button type="button" data-hold-action="scale" data-hold-a="1.05" onclick="changeScale(1.05)">拡大</button>
-<button type="button" data-hold-action="rotate" data-hold-a="-3" onclick="rotatePhoto(-3)">左回転</button>
-<button type="button" data-hold-action="rotate" data-hold-a="3" onclick="rotatePhoto(3)">右回転</button>
-<button type="button" data-hold-action="nudge" data-hold-a="-10" data-hold-b="0" onclick="nudgePhoto(-10,0)">←</button>
-<button type="button" data-hold-action="nudge" data-hold-a="0" data-hold-b="10" onclick="nudgePhoto(0,10)">↓</button>
-<button type="button" data-hold-action="nudge" data-hold-a="10" data-hold-b="0" onclick="nudgePhoto(10,0)">→</button>
-<button type="button" data-hold-action="scale" data-hold-a="0.95" onclick="changeScale(0.95)">縮小</button>
+<button data-hold-a="0" data-hold-action="nudge" data-hold-b="-10" onclick="nudgePhoto(0,-10)" type="button">↑</button>
+<button data-hold-a="1.05" data-hold-action="scale" onclick="changeScale(1.05)" type="button">拡大</button>
+<button data-hold-a="-3" data-hold-action="rotate" onclick="rotatePhoto(-3)" type="button">左回転</button>
+<button data-hold-a="3" data-hold-action="rotate" onclick="rotatePhoto(3)" type="button">右回転</button>
+<button data-hold-a="-10" data-hold-action="nudge" data-hold-b="0" onclick="nudgePhoto(-10,0)" type="button">←</button>
+<button data-hold-a="0" data-hold-action="nudge" data-hold-b="10" onclick="nudgePhoto(0,10)" type="button">↓</button>
+<button data-hold-a="10" data-hold-action="nudge" data-hold-b="0" onclick="nudgePhoto(10,0)" type="button">→</button>
+<button data-hold-a="0.95" data-hold-action="scale" onclick="changeScale(0.95)" type="button">縮小</button>
 </div>
 <button class="backBtn" onclick="resetPhotoPosition()">写真位置をリセット</button>
 </details>
 </div><div id="saveArea">
 <p class="notice">文字や写真位置を調整したあと、お申し込みフォームへ進んでください。申込完了後に、控え用PDFを保存できます。</p>
-
 <button class="deliverySubmitBtn" onclick="scrollToDeliveryForm()">中国新聞 My新聞を申し込む（1部無料・後日中国新聞販売所からお届け）</button>
 <button class="backBtn" onclick="resetForm()">最初から作り直す</button>
-
 <div class="deliveryModeBox" id="deliveryFormBox">
-  <h3>中国新聞 My新聞申し込み</h3>
-  <p><strong>1部無料</strong>で、完成した新聞を後日お近くの中国新聞販売所からお届けします。</p>
-  <div class="deliveryNote">
+<h3>中国新聞 My新聞申し込み</h3>
+<p><strong>1部無料</strong>で、完成した新聞を後日お近くの中国新聞販売所からお届けします。</p>
+<div class="deliveryNote">
     お届けは配達エリアに限らせていただきます。お申し込み後、受付番号を表示します。
   </div>
-  <div class="deliveryFormGrid">
-    <label for="customerName">お名前<span class="deliveryRequired">必須</span></label>
-    <input id="customerName" autocomplete="name" placeholder="例：山田 太郎" />
-
-    <label for="customerKana">ふりがな<span class="deliveryRequired">必須</span></label>
-    <input id="customerKana" placeholder="例：やまだ たろう" />
-
-    <label for="customerPhone">電話番号<span class="deliveryRequired">必須</span></label>
-    <input id="customerPhone" inputmode="tel" autocomplete="tel" placeholder="例：09012345678" />
-
-    <label for="customerAddress">お届け先住所<span class="deliveryRequired">必須</span></label>
-    <textarea id="customerAddress" autocomplete="street-address" placeholder="例：東広島市西条町〇〇1-2-3"></textarea>
-
-    <label for="customerTeam">所属チーム・学校名</label>
-    <input id="customerTeam" placeholder="例：〇〇サッカークラブ" />
-
-    <label for="customerGrade">学年</label>
-    <input id="customerGrade" placeholder="例：小学5年" />
-
-    <label for="customerQuantity">希望枚数</label>
-    <input id="customerQuantity" type="number" min="1" max="1" value="1" readonly />
-    <div class="countLine">無料イベントのため、希望枚数は1部固定です。</div>
-
-    <label for="customerMemo">連絡メモ</label>
-    <textarea id="customerMemo" placeholder="例：不在が多い時間帯、表札名が違う場合など"></textarea>
-
-    <div class="surveyBox">
-      <h4>アンケート①（任意）</h4>
-      <p>現在の新聞購読状況を教えてください。（複数選択可能）</p>
-      <div class="surveyOptions">
-        <label><input type="checkbox" name="subscriptionStatus" value="chugoku" data-label="中国新聞を購読中">中国新聞を購読中</label>
-        <label><input type="checkbox" name="subscriptionStatus" value="digital" data-label="中国新聞デジタルを購読中">中国新聞デジタルを購読中</label>
-        <label><input type="checkbox" name="subscriptionStatus" value="other" data-label="中国新聞以外の新聞を購読中">中国新聞以外の新聞を購読中</label>
-        <label><input type="checkbox" name="subscriptionStatus" value="none" data-label="新聞は購読していない">新聞は購読していない</label>
-      </div>
-    </div>
-
-    <div class="surveyBox">
-      <h4>アンケート②（任意）</h4>
-      <p>中国新聞を購読されていない方へ</p>
-      <div class="surveyOptions">
-        <label><input type="radio" name="interestStatus" value="trial" data-label="中国新聞を読んでみたい">中国新聞を読んでみたい</label>
-        <label><input type="radio" name="interestStatus" value="catalog" data-label="資料だけ欲しい">資料だけ欲しい</label>
-        <label><input type="radio" name="interestStatus" value="none" data-label="今は希望しない">今は希望しない</label>
-      </div>
-    </div>
-  </div>
-  <button class="deliverySubmitBtn" type="button" onclick="submitFreeDeliveryOrder()">この内容で申し込む</button>
-  <div class="deliveryStatus" id="deliveryStatus"></div>
-  <div class="deliveryComplete" id="deliveryComplete"></div>
+<div class="deliveryFormGrid">
+<label for="customerName">お名前<span class="deliveryRequired">必須</span></label>
+<input autocomplete="name" id="customerName" placeholder="例：山田 太郎">
+<label for="customerKana">ふりがな<span class="deliveryRequired">必須</span></label>
+<input id="customerKana" placeholder="例：やまだ たろう">
+<label for="customerPhone">電話番号<span class="deliveryRequired">必須</span></label>
+<input autocomplete="tel" id="customerPhone" inputmode="tel" placeholder="例：09012345678">
+<label for="customerAddress">お届け先住所<span class="deliveryRequired">必須</span></label>
+<textarea autocomplete="street-address" id="customerAddress" placeholder="例：東広島市西条町〇〇1-2-3"></textarea>
+<label for="customerTeam">所属チーム・学校名</label>
+<input id="customerTeam" placeholder="例：〇〇サッカークラブ">
+<label for="customerGrade">学年</label>
+<input id="customerGrade" placeholder="例：小学5年">
+<label for="customerQuantity">希望枚数</label>
+<input id="customerQuantity" max="1" min="1" readonly="" type="number" value="1"/>
+<div class="countLine">無料イベントのため、希望枚数は1部固定です。</div>
+<label for="customerMemo">連絡メモ</label>
+<textarea id="customerMemo" placeholder="例：不在が多い時間帯、表札名が違う場合など"></textarea>
+<div class="surveyBox">
+<h4>アンケート①（任意）</h4>
+<p>現在の新聞購読状況を教えてください。（複数選択可能）</p>
+<div class="surveyOptions">
+<label><input data-label="中国新聞を購読中" name="subscriptionStatus" type="checkbox" value="chugoku"/>中国新聞を購読中</label>
+<label><input data-label="中国新聞デジタルを購読中" name="subscriptionStatus" type="checkbox" value="digital"/>中国新聞デジタルを購読中</label>
+<label><input data-label="中国新聞以外の新聞を購読中" name="subscriptionStatus" type="checkbox" value="other"/>中国新聞以外の新聞を購読中</label>
+<label><input data-label="新聞は購読していない" name="subscriptionStatus" type="checkbox" value="none"/>新聞は購読していない</label>
+</div>
+</div>
+<div class="surveyBox">
+<h4>アンケート②（任意）</h4>
+<p>中国新聞を購読されていない方へ</p>
+<div class="surveyOptions">
+<label><input data-label="中国新聞を読んでみたい" name="interestStatus" type="radio" value="trial"/>中国新聞を読んでみたい</label>
+<label><input data-label="資料だけ欲しい" name="interestStatus" type="radio" value="catalog"/>資料だけ欲しい</label>
+<label><input data-label="今は希望しない" name="interestStatus" type="radio" value="none"/>今は希望しない</label>
+</div>
+</div>
+</input></input></input></input></input></div>
+<button class="deliverySubmitBtn" onclick="submitFreeDeliveryOrder()" type="button">この内容で申し込む</button>
+<div class="deliveryStatus" id="deliveryStatus"></div>
+<div class="deliveryComplete" id="deliveryComplete"></div>
 </div>
 </div></div>
 <div id="previewColumn">
@@ -3177,26 +3131,24 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 </div>
 </div><p class="previewEditNotice" id="previewEditNotice">「編集する」を開いて修正すると、紙面に反映されます。</p></div>
 </div>
-
-<div class="photoEditorModal" id="photoEditorModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="写真を大きく編集">
-  <div class="photoEditorHeader">
-    <strong>写真を大きく編集</strong>
-    <span>1本指で移動／2本指で拡大・縮小・回転</span>
-  </div>
-  <div class="photoEditorMain">
-    <div class="photoEditorStage" id="photoEditorStage">
-      <img id="photoEditorImage" alt="編集中の写真"/>
-      <div class="photoEditorEmpty" id="photoEditorEmpty">先に写真を選んでください。</div>
-    </div>
-  </div>
-  <div class="photoEditorControls">
-    <button type="button" onclick="rotatePhoto(-5)">↶ 左回転</button>
-    <button type="button" onclick="rotatePhoto(5)">右回転 ↷</button>
-    <button type="button" class="photoEditorReset" id="photoEditorResetBtn">中央に戻す</button>
-    <button type="button" class="photoEditorDone" id="photoEditorDoneBtn" style="grid-column:1 / -1;">決定して新聞全体へ戻る</button>
-  </div>
+<div aria-hidden="true" aria-label="写真を大きく編集" aria-modal="true" class="photoEditorModal" id="photoEditorModal" role="dialog">
+<div class="photoEditorHeader">
+<strong>写真を大きく編集</strong>
+<span>1本指で移動／2本指で拡大・縮小・回転</span>
 </div>
-
+<div class="photoEditorMain">
+<div class="photoEditorStage" id="photoEditorStage">
+<img alt="編集中の写真" id="photoEditorImage"/>
+<div class="photoEditorEmpty" id="photoEditorEmpty">先に写真を選んでください。</div>
+</div>
+</div>
+<div class="photoEditorControls">
+<button onclick="rotatePhoto(-5)" type="button">↶ 左回転</button>
+<button onclick="rotatePhoto(5)" type="button">右回転 ↷</button>
+<button class="photoEditorReset" id="photoEditorResetBtn" type="button">中央に戻す</button>
+<button class="photoEditorDone" id="photoEditorDoneBtn" style="grid-column:1 / -1;" type="button">決定して新聞全体へ戻る</button>
+</div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
 let photoPressTimer = null;
 let photoPressInterval = null;
@@ -3264,7 +3216,6 @@ document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
-
 <script>
 let photoData = "";
 let photoObjectUrl = "";
@@ -4878,7 +4829,6 @@ function resetForm() {
 
 applyPhotoTransform();
 </script>
-
 <script>
 /* ===== STEP2：見出しデザイン制御・安全版 ===== */
 window.selectedHeadlineBgColor = window.selectedHeadlineBgColor || "#0f5e9c";
@@ -4987,8 +4937,6 @@ document.addEventListener("DOMContentLoaded", function() {
   setupLiveWizardPreview();
 });
 </script>
-
-
 <script>
 /* ===== STEP2-2：フォント選択肢の見た目更新 ===== */
 function refreshFontChoiceChecked() {
@@ -5075,19 +5023,15 @@ document.addEventListener("keydown", function(e) {
 });
 
 </script>
-
-
-<div class="previewZoomModal" id="previewZoomModal" aria-hidden="true">
-  <div class="previewZoomHeader">
-    <div>新聞を大きく確認</div>
-    <button type="button" onclick="closePreviewZoom()">閉じる</button>
-  </div>
-  <div class="previewZoomScroll" id="previewZoomScroll">
-    <div class="previewZoomClone" id="previewZoomClone"></div>
-  </div>
+<div aria-hidden="true" class="previewZoomModal" id="previewZoomModal">
+<div class="previewZoomHeader">
+<div>新聞を大きく確認</div>
+<button onclick="closePreviewZoom()" type="button">閉じる</button>
 </div>
-
-
+<div class="previewZoomScroll" id="previewZoomScroll">
+<div class="previewZoomClone" id="previewZoomClone"></div>
+</div>
+</div>
 <script>
 /* ===== 無料イベント：1部無料・後日販売所お届け Firebase 接続版 ===== */
 const FREE_DELIVERY_EVENT = {
@@ -5426,8 +5370,6 @@ async function submitFreeDeliveryOrder() {
   }
 }
 </script>
-
-
 <script>
 /* ===== 受付期間チェック：2026年9月1日以降は受付終了表示 ===== */
 const RECEPTION_CLOSE_AT_JST = new Date("2026-09-01T00:00:00+09:00");
@@ -5469,8 +5411,6 @@ window.submitFreeDeliveryOrder = async function() {
   }
 };
 </script>
-
-
 <script>
 /* ===== STEP・仕上げ編集共通：端末サイズへ新聞全体を最大フィット ===== */
 function fitPhoneNewspaperPreview() {
@@ -5559,8 +5499,6 @@ window.nextStep = function(num) {
   return result;
 };
 </script>
-
-
 <script>
 (function setupFullscreenPhotoEditor() {
   const modal = document.getElementById("photoEditorModal");
@@ -5800,8 +5738,6 @@ window.nextStep = function(num) {
   /* モーダル外を触っても閉じない。誤操作防止のため「決定」だけで戻る */
 })();
 </script>
-
-
 <script>
 /* ===== 記事欄だけを大きくリアルタイム表示 ===== */
 (function(){
@@ -5913,10 +5849,7 @@ window.nextStep = function(num) {
   });
 })();
 </script>
-<textarea id="directArticleKeyboard" aria-label="記事を直接編集"></textarea>
-
-
-
+<textarea aria-label="記事を直接編集" id="directArticleKeyboard"></textarea>
 <script>
 /* ===== スマホ用：contenteditable記事入力 ===== */
 (function(){
@@ -6073,7 +6006,6 @@ window.nextStep = function(num) {
   setEditorText(currentText());
 })();
 </script>
-
 <script>
 /* ===== 新聞の記事欄を直接編集 ===== */
 (function(){
@@ -6321,6 +6253,5 @@ window.nextStep = function(num) {
   article.title='タップすると、この新聞の記事欄を直接編集できます';
 })();
 </script>
-
 </body>
 </html>
