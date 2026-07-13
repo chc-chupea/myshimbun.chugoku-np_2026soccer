@@ -2685,6 +2685,92 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   .directArticleDoneBar.open { grid-template-columns: 1fr 92px; }
 }
 
+
+
+/* ===== 記事STEP：大きな紙面の記事欄だけを直接編集 ===== */
+#step4 .articleInputLabel,
+#step4 #articleInput {
+  position: fixed !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+#step4 #wizardArticleLivePanel {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding: 10px;
+}
+
+.articleDirectHelp {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #eef7ff;
+  color: #0f3f68;
+  font: 800 13px/1.55 "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+#step4 #wizardArticleLiveCanvas {
+  display: block;
+  width: min(100%, 760px) !important;
+  min-width: 620px;
+  height: auto !important;
+  aspect-ratio: 458 / 230;
+  margin: 0 auto;
+  border: 2px solid #0f5e9c !important;
+  border-radius: 4px;
+  cursor: text;
+  touch-action: pan-x;
+  background: #fff;
+  image-rendering: auto !important;
+}
+
+#step4 #wizardArticleLiveCanvas.directLiveEditing {
+  outline: 5px solid #ff8a00;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 8px rgba(255,138,0,.16);
+}
+
+@media (max-width: 900px) {
+  body.articleFocusMode #step4 .articleLivePanel {
+    position: relative !important;
+    top: auto !important;
+    z-index: auto !important;
+    margin-left: -8px;
+    margin-right: -8px;
+    padding: 10px 8px 12px;
+  }
+
+  #step4 #wizardArticleLiveCanvas {
+    width: 720px !important;
+    min-width: 720px !important;
+  }
+
+  #step4 .articleLiveTitle,
+  #step4 .articleDirectHelp {
+    position: sticky;
+    left: 0;
+    width: calc(100vw - 48px);
+    max-width: 620px;
+    z-index: 3;
+  }
+
+  body.directArticleMode #step4 #wizardArticleLivePanel {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 280 !important;
+    background: rgba(255,255,255,.99);
+    box-shadow: 0 6px 18px rgba(0,0,0,.2);
+  }
+}
+
 </style>
 
 
@@ -2797,8 +2883,9 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
 </details>
 <div class="articleLivePanel" id="wizardArticleLivePanel" aria-live="polite">
-  <div class="articleLiveTitle"><span>紙面の記事欄</span><small>入力するとすぐ反映されます</small></div>
-  <canvas id="wizardArticleLiveCanvas"></canvas>
+  <div class="articleLiveTitle"><span>紙面の記事欄を直接編集</span><small>記事欄をタップして入力します</small></div>
+  <div class="articleDirectHelp">記事欄をタップするとカーソルが出ます。スマホでは左右に動かして、書きたい場所を大きく見られます。</div>
+  <canvas id="wizardArticleLiveCanvas" tabindex="0" aria-label="紙面の記事欄を直接編集"></canvas>
 </div>
 <label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
 <textarea id="articleInput" class="articleWritingArea" placeholder="記事本文を入力"></textarea>
@@ -5902,6 +5989,9 @@ window.nextStep = function(num) {
       ctx.stroke();
     }
     ctx.restore();
+    if(typeof window.refreshLargeArticlePreview==='function') {
+      requestAnimationFrame(window.refreshLargeArticlePreview);
+    }
   }
 
   window.drawArticleCanvas=function(){
@@ -5937,6 +6027,22 @@ window.nextStep = function(num) {
     setTimeout(function(){ keyboard.focus({preventScroll:true}); },20);
   }
 
+  window.openDirectArticleAtNormalizedPoint = function(nx, ny){
+    const layout = buildLayout(rawText());
+    lastLayout = layout;
+    const x = Math.max(0, Math.min(1, nx)) * layout.cssW;
+    const y = Math.max(0, Math.min(1, ny)) * layout.cssH;
+    let best = 0, dist = Infinity;
+    layout.boundaries.forEach(function(p,index){
+      const dx=x-p.x, dy=y-(p.y+layout.selected.lineHeight*.45);
+      const d=dx*dx+dy*dy;
+      if(d<dist){dist=d;best=index;}
+    });
+    openEditor(best);
+    const live=document.getElementById('wizardArticleLiveCanvas');
+    if(live) live.classList.add('directLiveEditing');
+  };
+
   function closeEditor(){
     editing=false;
     clearInterval(blinkTimer);
@@ -5945,7 +6051,12 @@ window.nextStep = function(num) {
     document.body.classList.remove('directArticleMode');
     doneBar.classList.remove('open');
     keyboard.blur();
+    const live=document.getElementById('wizardArticleLiveCanvas');
+    if(live) live.classList.remove('directLiveEditing');
     window.drawArticleCanvas();
+    if(typeof window.refreshLargeArticlePreview==='function') {
+      setTimeout(window.refreshLargeArticlePreview, 20);
+    }
   }
 
   function sourceIndexFromPoint(clientX,clientY){
@@ -5978,6 +6089,18 @@ window.nextStep = function(num) {
   keyboard.addEventListener('compositionend',function(){composition=false;caretSourceIndex=keyboard.selectionStart||0;syncAll(keyboard.value);});
   keyboard.addEventListener('keyup',function(){if(!composition){caretSourceIndex=keyboard.selectionStart||0;window.drawArticleCanvas();}});
   keyboard.addEventListener('click',function(){caretSourceIndex=keyboard.selectionStart||0;window.drawArticleCanvas();});
+  const largeLiveCanvas=document.getElementById('wizardArticleLiveCanvas');
+  if(largeLiveCanvas){
+    largeLiveCanvas.addEventListener('pointerdown',function(e){
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      e.preventDefault();
+      const rect=largeLiveCanvas.getBoundingClientRect();
+      const nx=(e.clientX-rect.left)/Math.max(1,rect.width);
+      const ny=(e.clientY-rect.top)/Math.max(1,rect.height);
+      window.openDirectArticleAtNormalizedPoint(nx,ny);
+    });
+  }
+
   doneButton.addEventListener('click',closeEditor);
   document.addEventListener('keydown',function(e){if(editing && e.key==='Escape') closeEditor();});
 
