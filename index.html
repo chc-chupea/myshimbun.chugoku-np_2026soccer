@@ -3072,6 +3072,30 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   }
 }
 
+
+/* ===== 申込フォーム入力中：固定新聞プレビューを隠す ===== */
+@media (max-width: 900px) {
+  body.applicationFormFocus #workspace #previewColumn {
+    display: none !important;
+  }
+
+  body.applicationFormFocus #workspace {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto 22px !important;
+  }
+
+  body.applicationFormFocus #workspace #editorColumn {
+    width: 100% !important;
+    padding-top: 0 !important;
+  }
+
+  body.applicationFormFocus #workspace #saveArea {
+    margin-top: 0 !important;
+  }
+}
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -6843,6 +6867,77 @@ window.addEventListener('resize', function(){
   } else {
     updatePlaceholderState();
   }
+})();
+</script>
+
+
+<script>
+/* ===== 申込フォーム入力中の固定プレビュー制御 ===== */
+(function(){
+  const saveArea = document.getElementById('saveArea');
+  if (!saveArea) return;
+
+  const formFields = Array.from(
+    saveArea.querySelectorAll(
+      '.deliveryModeBox input, .deliveryModeBox textarea, .deliveryModeBox select'
+    )
+  );
+
+  function isPhoneLayout(){
+    return window.matchMedia('(max-width: 900px)').matches;
+  }
+
+  function isApplicationField(element){
+    return !!(
+      element &&
+      element.closest &&
+      element.closest('#saveArea .deliveryModeBox') &&
+      element.matches('input, textarea, select')
+    );
+  }
+
+  function updateApplicationFocusMode(){
+    const shouldHide =
+      isPhoneLayout() &&
+      isApplicationField(document.activeElement);
+
+    document.body.classList.toggle(
+      'applicationFormFocus',
+      shouldHide
+    );
+  }
+
+  formFields.forEach(function(field){
+    field.addEventListener('focus', function(){
+      document.body.classList.add('applicationFormFocus');
+
+      /*
+       * iPhoneではキーボード表示直後に画面位置がずれることがあるため、
+       * 入力欄が見える位置へ再調整する。
+       */
+      setTimeout(function(){
+        field.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 120);
+    });
+
+    field.addEventListener('blur', function(){
+      setTimeout(updateApplicationFocusMode, 80);
+    });
+  });
+
+  saveArea.addEventListener('focusin', updateApplicationFocusMode);
+  saveArea.addEventListener('focusout', function(){
+    setTimeout(updateApplicationFocusMode, 80);
+  });
+
+  window.addEventListener('resize', updateApplicationFocusMode);
+
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden) updateApplicationFocusMode();
+  });
 })();
 </script>
 
