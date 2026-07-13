@@ -2551,21 +2551,6 @@ body.orderCompleted #deliveryComplete {
   border-radius: 12px;
 }
 
-.orderCompleteCard .closeCompletedPageBtn {
-  background: #6c8798 !important;
-  color: #fff !important;
-}
-
-.orderCompleteCard .closeHelp {
-  display: block;
-  margin-top: 10px;
-  padding: 9px;
-  border-radius: 8px;
-  background: #fff3cd;
-  color: #7a5200;
-  font-size: 13px;
-  font-weight: 700;
-}
 
 
 /* ===== PC：ブラウザ標準の印刷画面からPDF保存 ===== */
@@ -5091,7 +5076,7 @@ function lockEditingAfterOrderComplete() {
   document.body.classList.add("orderCompleted");
 
   // 完了画面の外側にある編集操作だけを無効化する。
-  // PDF保存・閉じるボタンは常に操作可能なまま残す。
+  // PDF保存ボタンは常に操作可能なまま残す。
   const editableRoots = document.querySelectorAll(
     "#workspace, #wizardPreviewHost, .step"
   );
@@ -5105,21 +5090,16 @@ function lockEditingAfterOrderComplete() {
   // #saveArea の中に申込完了画面があるため、親要素ごと無効化しない。
   // 完了画面以外の入力・編集操作だけを個別に停止する。
   document.querySelectorAll(
-    "#saveArea input:not(#pdfSaveAfterComplete), #saveArea textarea, #saveArea select, #saveArea button:not(#pdfSaveAfterComplete):not(.closeCompletedPageBtn)"
+    "#saveArea input:not(#pdfSaveAfterComplete), #saveArea textarea, #saveArea select, #saveArea button:not(#pdfSaveAfterComplete)"
   ).forEach(el => {
     if (!el.closest("#deliveryComplete")) el.disabled = true;
   });
 
-  // 完了画面の2ボタンは必ず操作可能に戻す。
+  // PDF保存ボタンは必ず操作可能に戻す。
   const pdfButton = document.getElementById("pdfSaveAfterComplete");
-  const closeButton = document.querySelector(".closeCompletedPageBtn");
   if (pdfButton) {
     pdfButton.disabled = false;
     pdfButton.style.pointerEvents = "auto";
-  }
-  if (closeButton) {
-    closeButton.disabled = false;
-    closeButton.style.pointerEvents = "auto";
   }
 
   document.querySelectorAll("details.editSection").forEach(section => {
@@ -5143,54 +5123,6 @@ function lockEditingAfterOrderComplete() {
   document.documentElement.style.overflow = "";
 }
 
-function closeCompletedPage() {
-  const help = document.getElementById("closeCompletedHelp");
-  const closeButton = document.querySelector(".closeCompletedPageBtn");
-
-  if (closeButton) {
-    closeButton.disabled = true;
-    closeButton.textContent = "終了しています…";
-  }
-  if (help) {
-    help.style.display = "block";
-    help.style.background = "#eef7ff";
-    help.style.border = "2px solid #0f5e9c";
-    help.textContent = "画面を終了しています。";
-  }
-
-  // JavaScriptで開かれた別タブ・ウインドウでは、そのまま閉じる。
-  try { window.close(); } catch (error) { console.warn(error); }
-
-  // 通常のリンクやQRコードから開いた画面はブラウザ仕様で閉じられない。
-  // その場合は前の画面へ戻し、戻れない時は終了専用画面へ切り替える。
-  window.setTimeout(() => {
-    if (document.visibilityState === "hidden" || window.closed) return;
-
-    if (window.history.length > 1) {
-      window.history.back();
-      window.setTimeout(() => {
-        if (document.visibilityState !== "hidden") showCompletedExitScreen();
-      }, 700);
-    } else {
-      showCompletedExitScreen();
-    }
-  }, 300);
-}
-
-function showCompletedExitScreen() {
-  document.body.className = "";
-  document.body.innerHTML = `
-    <main style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#eef7ff;font-family:'Hiragino Sans','Yu Gothic',sans-serif;text-align:center;">
-      <div style="width:min(100%,520px);background:#fff;border:3px solid #0f5e9c;border-radius:18px;padding:28px 20px;box-shadow:0 6px 20px rgba(0,0,0,.16);">
-        <div style="font-size:42px;line-height:1;">✓</div>
-        <h2 style="margin:12px 0 8px;color:#0f5e9c;">申込画面を終了しました</h2>
-        <p style="line-height:1.8;font-weight:700;">このタブは閉じて大丈夫です。</p>
-        <button type="button" onclick="window.close()" style="width:100%;margin-top:12px;padding:14px;border:0;border-radius:10px;background:#001E55;color:#fff;font-size:17px;font-weight:900;">タブを閉じる</button>
-        <p style="margin-top:12px;font-size:13px;line-height:1.7;color:#555;">ボタンで閉じない場合は、ブラウザ上部の「×」でこのタブを閉じてください。</p>
-      </div>
-    </main>`;
-  window.scrollTo(0, 0);
-}
 
 async function submitFreeDeliveryOrder() {
   const status = document.getElementById("deliveryStatus");
@@ -5268,10 +5200,7 @@ async function submitFreeDeliveryOrder() {
         <strong class="receiptNumber">${receiptNo}</strong>
         <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
         <p><strong>申込完了後は内容を編集できません。</strong></p>
-        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">控え用A4 PDFを保存・共有</button>
-        <p class="pdfSaveHelp">スマホは共有画面、PCはA4・1ページのPDFファイルを直接保存します。PDFの右下に受付番号と注文枚数が入ります。</p>
-        <button class="closeCompletedPageBtn" type="button" onclick="closeCompletedPage()">この画面を閉じる</button>
-        <p class="closeHelp" id="closeCompletedHelp">自動で閉じない場合は、画面上部のタブを閉じるか、ブラウザの戻る操作で終了してください。</p>
+        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">📄 控え用PDFを保存</button>
       </div>
     `;
     lockEditingAfterOrderComplete();
