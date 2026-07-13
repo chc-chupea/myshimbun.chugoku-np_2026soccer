@@ -2589,24 +2589,24 @@ body.orderCompleted #deliveryComplete {
     margin: 8mm;
   }
 
-  body.pcPdfPrintMode * {
+  body.pcPdfPrintModeUnused * {
     visibility: hidden !important;
   }
 
-  body.pcPdfPrintMode,
-  body.pcPdfPrintMode #newspaper,
-  body.pcPdfPrintMode #newspaper * {
+  body.pcPdfPrintModeUnused,
+  body.pcPdfPrintModeUnused #newspaper,
+  body.pcPdfPrintModeUnused #newspaper * {
     visibility: visible !important;
   }
 
-  body.pcPdfPrintMode {
+  body.pcPdfPrintModeUnused {
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
     overflow: visible !important;
   }
 
-  body.pcPdfPrintMode #newspaper {
+  body.pcPdfPrintModeUnused #newspaper {
     display: block !important;
     position: relative !important;
     width: 595px !important;
@@ -2619,9 +2619,9 @@ body.orderCompleted #deliveryComplete {
     break-inside: avoid-page !important;
   }
 
-  body.pcPdfPrintMode #newspaperWrap,
-  body.pcPdfPrintMode #previewColumn,
-  body.pcPdfPrintMode #workspace {
+  body.pcPdfPrintModeUnused #newspaperWrap,
+  body.pcPdfPrintModeUnused #previewColumn,
+  body.pcPdfPrintModeUnused #workspace {
     display: block !important;
     position: static !important;
     width: auto !important;
@@ -4548,7 +4548,7 @@ async function buildCompletedPdfPackage() {
   fitArticleText();
 
   try {
-    const canvas = await renderStableNewspaperCanvas(7, clone => {
+    const canvas = await renderStableNewspaperCanvas(3, clone => {
       addPdfManagementLabel(clone, receiptNo, quantity);
     });
 
@@ -4611,55 +4611,16 @@ async function saveAsPDF() {
   if (button) {
     button.dataset.busy = "1";
     button.disabled = true;
+    button.textContent = "PDFを作成しています…";
   }
+  if (help) help.textContent = "A4・1ページのPDFを作成しています。少しお待ちください。";
 
   try {
-    // PCではcanvas/jsPDFを使わず、ブラウザ標準の印刷画面を開く。
-    // 保存先で「PDFに保存」を選べるため、画像・フォント・メモリ制限による失敗を回避できる。
-    if (!isMobile) {
-      if (button) button.textContent = "PDF保存画面を開いています…";
-      if (help) help.textContent = "印刷画面の送信先で「PDFに保存」を選んでください。";
-
-      const newspaper = document.getElementById("newspaper");
-      if (!newspaper) throw new Error("新聞プレビューが見つかりません。");
-
-      let printLabel = document.getElementById("pcPrintManagementLabel");
-      if (!printLabel) {
-        printLabel = document.createElement("div");
-        printLabel.id = "pcPrintManagementLabel";
-        printLabel.className = "pcPrintManagementLabel";
-        newspaper.appendChild(printLabel);
-      }
-      printLabel.innerHTML = `受付番号：${lastCompletedOrderForPdf.receiptNo}<br>注文枚数：${Number(lastCompletedOrderForPdf.quantity || 1)}部`;
-
-      document.body.classList.add("pcPdfPrintMode");
-
-      const cleanup = () => {
-        document.body.classList.remove("pcPdfPrintMode");
-        const label = document.getElementById("pcPrintManagementLabel");
-        if (label) label.remove();
-        if (button) {
-          button.dataset.busy = "0";
-          button.disabled = false;
-          button.textContent = "控え用A4 PDFを保存・共有";
-        }
-      };
-
-      window.addEventListener("afterprint", cleanup, { once: true });
-      setTimeout(() => {
-        window.print();
-        // afterprintが発火しないブラウザ向けの保険
-        setTimeout(cleanup, 1500);
-      }, 80);
-      return;
-    }
-
-    // スマホは従来どおり共有シートを使う。
-    if (button) button.textContent = "PDFを作成しています…";
-    if (help) help.textContent = "新聞をPDFにしています。数秒お待ちください。";
-
+    // PC・スマホとも、印刷画面を使わず同じPDF生成処理を使用する。
     const pkg = await buildCompletedPdfPackage();
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [pkg.file] })) {
+
+    // スマホは共有シートが使える場合のみ共有する。
+    if (isMobile && navigator.share && navigator.canShare && navigator.canShare({ files: [pkg.file] })) {
       await navigator.share({
         files: [pkg.file],
         title: "中国新聞 My新聞 控え用PDF",
@@ -4669,6 +4630,7 @@ async function saveAsPDF() {
       return;
     }
 
+    // PC、および共有非対応スマホはPDFファイルを直接保存する。
     const url = URL.createObjectURL(pkg.blob);
     const link = document.createElement("a");
     link.href = url;
@@ -4678,20 +4640,16 @@ async function saveAsPDF() {
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
-    if (help) help.textContent = `「${pkg.fileName}」を保存しました。`;
+
+    if (help) help.textContent = `「${pkg.fileName}」をPDFファイルとして保存しました。`;
   } catch (error) {
     if (!(error && error.name === "AbortError")) {
       console.error("PDF保存エラー:", error);
-      if (help) help.textContent = isMobile
-        ? "PDFを作成できませんでした。もう一度お試しください。"
-        : "印刷画面を開けませんでした。ブラウザの印刷（Ctrl+P）をお試しください。";
-      alert(isMobile
-        ? "PDFを作成できませんでした。もう一度お試しください。"
-        : "印刷画面を開けませんでした。キーボードの Ctrl+P を押し、送信先で「PDFに保存」を選んでください。");
+      if (help) help.textContent = "PDFを作成できませんでした。ページを再読み込みせず、もう一度ボタンを押してください。";
+      alert("PDFを作成できませんでした。もう一度お試しください。");
     }
   } finally {
-    // PCはafterprint側で解除する。
-    if (isMobile && button) {
+    if (button) {
       button.dataset.busy = "0";
       button.disabled = false;
       button.textContent = "控え用A4 PDFを保存・共有";
@@ -5075,7 +5033,7 @@ async function createNewspaperPngBlob(receiptNo, quantity) {
   const managementNo = `${receiptNo}-${printCount}`;
 
   try {
-    const canvas = await renderStableNewspaperCanvas(7, clone => {
+    const canvas = await renderStableNewspaperCanvas(3, clone => {
       const label = document.createElement("div");
       label.textContent = managementNo;
       label.setAttribute("aria-hidden", "true");
@@ -5311,7 +5269,7 @@ async function submitFreeDeliveryOrder() {
         <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
         <p><strong>申込完了後は内容を編集できません。</strong></p>
         <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">控え用A4 PDFを保存・共有</button>
-        <p class="pdfSaveHelp">スマホは共有画面、PCはPDFファイルのダウンロードが始まります。PDFの右下に受付番号と注文枚数が入ります。</p>
+        <p class="pdfSaveHelp">スマホは共有画面、PCはA4・1ページのPDFファイルを直接保存します。PDFの右下に受付番号と注文枚数が入ります。</p>
         <button class="closeCompletedPageBtn" type="button" onclick="closeCompletedPage()">この画面を閉じる</button>
         <p class="closeHelp" id="closeCompletedHelp">自動で閉じない場合は、画面上部のタブを閉じるか、ブラウザの戻る操作で終了してください。</p>
       </div>
