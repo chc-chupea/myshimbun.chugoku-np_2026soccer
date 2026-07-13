@@ -2619,6 +2619,72 @@ body.orderCompleted #deliveryComplete {
   }
 }
 
+
+
+/* ===== 新聞プレビューの記事欄を直接編集 ===== */
+#outArticle.directArticleEditing {
+  outline: 4px solid #0f5e9c;
+  outline-offset: 2px;
+  overflow: visible !important;
+  z-index: 120;
+  cursor: text;
+}
+#outArticle.directArticleEditing::before {
+  content: "記事を直接編集中";
+  position: absolute;
+  right: 0;
+  top: -30px;
+  padding: 5px 9px;
+  border-radius: 7px 7px 0 0;
+  background: #0f5e9c;
+  color: #fff;
+  font: 900 12px/1.3 "Hiragino Sans", "Yu Gothic", sans-serif;
+  white-space: nowrap;
+}
+#articleCanvas { cursor: text; }
+.directArticleDoneBar {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 30000;
+  width: min(92vw, 440px);
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(0,30,85,.94);
+  box-shadow: 0 8px 28px rgba(0,0,0,.32);
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+.directArticleDoneBar.open { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.directArticleDoneBar span { color:#fff; font-weight:900; font-size:13px; line-height:1.45; padding-left:6px; }
+.directArticleDoneBar button { width:auto; min-width:94px; margin:0 !important; padding:11px 18px; background:#fff !important; color:#0057b8 !important; border-radius:10px; }
+#directArticleKeyboard {
+  position: fixed;
+  left: 2px;
+  bottom: 2px;
+  width: 2px;
+  height: 2px;
+  opacity: .01;
+  z-index: 29999;
+  resize: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  pointer-events: none;
+}
+body.directArticleMode #previewColumn { z-index: 200 !important; }
+body.directArticleMode #outArticle { touch-action: manipulation; }
+@media (max-width:900px) {
+  body.directArticleMode #workspace #previewColumn,
+  body.directArticleMode #wizardPreviewHost {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 250 !important;
+  }
+  .directArticleDoneBar.open { grid-template-columns: 1fr 92px; }
+}
+
 </style>
 
 
@@ -5698,6 +5764,225 @@ window.nextStep = function(num) {
   document.addEventListener('DOMContentLoaded', function(){
     setTimeout(window.refreshLargeArticlePreview, 180);
   });
+})();
+</script>
+
+
+<div id="directArticleDoneBar" class="directArticleDoneBar" role="status" aria-live="polite">
+  <span>記事欄を直接編集しています</span>
+  <button id="directArticleDoneButton" type="button">できた</button>
+</div>
+<textarea id="directArticleKeyboard" aria-label="記事を直接編集"></textarea>
+
+
+<script>
+/* ===== Canvasと同じ組版を使う、新聞プレビュー直接編集 ===== */
+(function(){
+  const article = document.getElementById('outArticle');
+  const canvas = document.getElementById('articleCanvas');
+  const keyboard = document.getElementById('directArticleKeyboard');
+  const doneBar = document.getElementById('directArticleDoneBar');
+  const doneButton = document.getElementById('directArticleDoneButton');
+  if (!article || !canvas || !keyboard || !doneBar || !doneButton) return;
+
+  let editing = false;
+  let caretSourceIndex = 0;
+  let blinkOn = true;
+  let blinkTimer = 0;
+  let composition = false;
+  let lastLayout = null;
+
+  const originalDraw = window.drawArticleCanvas;
+
+  function rawText(){
+    const edit = document.getElementById('editArticle');
+    const first = document.getElementById('articleInput');
+    return (edit && edit.value !== '' ? edit.value : first && first.value !== '' ? first.value : article.dataset.rawText || '');
+  }
+
+  function normalizedChars(text){
+    return Array.from(String(text || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n')).map(function(ch){
+      const map={
+        'ー':'｜','－':'｜','―':'｜','ｰ':'｜','〜':'｜','～':'｜',
+        '【':'︻','】':'︼','「':'﹁','」':'﹂','（':'︵','）':'︶',
+        '…':'︙'
+      };
+      return map[ch] || ch;
+    });
+  }
+
+  function isDigit(ch){ return /^[0-9０-９]$/.test(ch || ''); }
+  function isSkip(ch){ return ch === ' ' || ch === '　' || ch === '\t'; }
+
+  function buildLayout(text){
+    const cssW = article.clientWidth || 460;
+    const cssH = article.clientHeight || 230;
+    const chars = normalizedChars(text);
+    const padX=10, padY=10;
+    const candidates=[
+      {size:32,lineGapRate:.30,colGapRate:.44},{size:30,lineGapRate:.27,colGapRate:.40},
+      {size:28,lineGapRate:.23,colGapRate:.36},{size:26,lineGapRate:.18,colGapRate:.30},
+      {size:24,lineGapRate:.13,colGapRate:.24},{size:22,lineGapRate:.08,colGapRate:.18},
+      {size:20,lineGapRate:.04,colGapRate:.12},{size:18,lineGapRate:0,colGapRate:.08},
+      {size:16,lineGapRate:0,colGapRate:.04},{size:14,lineGapRate:0,colGapRate:0}
+    ];
+    function needed(){
+      let cells=0, paragraphStart=true;
+      for(let i=0;i<chars.length;i++){
+        const ch=chars[i];
+        if(ch==='\n'){ paragraphStart=true; continue; }
+        if(isSkip(ch)) continue;
+        if(paragraphStart){ cells++; paragraphStart=false; }
+        const prev=chars[i-1], next=chars[i+1], after=chars[i+2];
+        if(isDigit(ch)&&isDigit(next)&&!isDigit(prev)&&!isDigit(after)){cells++;i++;}else cells++;
+      }
+      return cells;
+    }
+    function metrics(c){
+      const lineGap=Math.round(c.size*c.lineGapRate), colGap=Math.round(c.size*c.colGapRate);
+      const lineHeight=c.size+lineGap, colWidth=c.size+colGap;
+      const rows=Math.max(1,Math.floor((cssH-padY*2)/lineHeight));
+      const cols=Math.max(1,Math.floor((cssW-padX*2)/colWidth));
+      return Object.assign({},c,{lineGap,colGap,lineHeight,colWidth,rows,cols,capacity:rows*cols});
+    }
+    const need=needed();
+    let selected=metrics(candidates[candidates.length-1]);
+    for(const c of candidates){ const m=metrics(c); if(need<=m.capacity){selected=m;break;} }
+    const startX=cssW-padX-selected.size/2, startY=padY;
+    let col=0,row=0,paragraphStart=true;
+    const slots=[];
+    const boundaries=new Map();
+    function boundary(index){
+      boundaries.set(index,{x:startX-col*selected.colWidth,y:startY+row*selected.lineHeight,col,row});
+    }
+    function nextCell(){ row++; if(row>=selected.rows){row=0;col++;} }
+    boundary(0);
+    for(let i=0;i<chars.length && col<selected.cols;i++){
+      const ch=chars[i];
+      boundary(i);
+      if(ch==='\n'){
+        if(row!==0){row=0;col++;}
+        paragraphStart=true;
+        boundary(i+1);
+        continue;
+      }
+      if(isSkip(ch)){ boundary(i+1); continue; }
+      if(paragraphStart){ nextCell(); paragraphStart=false; }
+      const prev=chars[i-1],next=chars[i+1],after=chars[i+2];
+      const pair=isDigit(ch)&&isDigit(next)&&!isDigit(prev)&&!isDigit(after);
+      const x=startX-col*selected.colWidth,y=startY+row*selected.lineHeight;
+      slots.push({start:i,end:pair?i+2:i+1,x,y,w:selected.colWidth,h:selected.lineHeight,pair});
+      nextCell();
+      if(pair){ i++; boundary(i+1); } else boundary(i+1);
+    }
+    boundary(chars.length);
+    return {cssW,cssH,chars,selected,startX,startY,slots,boundaries};
+  }
+
+  function drawCaret(){
+    if(!editing || !blinkOn) return;
+    const layout=lastLayout || buildLayout(rawText());
+    const ratio=canvas.width/(layout.cssW || 1);
+    const ctx=canvas.getContext('2d');
+    ctx.save();
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    let p=layout.boundaries.get(caretSourceIndex);
+    if(!p){
+      let best=null,dist=Infinity;
+      layout.boundaries.forEach(function(v,k){const d=Math.abs(k-caretSourceIndex);if(d<dist){dist=d;best=v;}});
+      p=best;
+    }
+    if(p){
+      const fs=layout.selected.size;
+      ctx.strokeStyle='#0057b8';
+      ctx.lineWidth=Math.max(2,fs*.10);
+      ctx.beginPath();
+      ctx.moveTo(p.x+fs*.48,p.y-1);
+      ctx.lineTo(p.x+fs*.48,p.y+layout.selected.lineHeight-2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  window.drawArticleCanvas=function(){
+    const result=originalDraw.apply(this,arguments);
+    lastLayout=buildLayout(rawText());
+    if(editing) requestAnimationFrame(drawCaret);
+    return result;
+  };
+
+  function syncAll(value){
+    const first=document.getElementById('articleInput');
+    const edit=document.getElementById('editArticle');
+    if(first && first.value!==value) first.value=value;
+    if(edit && edit.value!==value) edit.value=value;
+    article.dataset.rawText=value || '記事本文が入ります。';
+    if(typeof window.updatePreviewText==='function') window.updatePreviewText();
+    else window.drawArticleCanvas();
+  }
+
+  function openEditor(sourceIndex){
+    if(document.body.classList.contains('orderCompleted')) return;
+    editing=true;
+    caretSourceIndex=Math.max(0,Math.min(sourceIndex,Array.from(rawText()).length));
+    keyboard.value=rawText();
+    try{keyboard.setSelectionRange(caretSourceIndex,caretSourceIndex);}catch(e){}
+    article.classList.add('directArticleEditing');
+    document.body.classList.add('directArticleMode');
+    doneBar.classList.add('open');
+    blinkOn=true;
+    clearInterval(blinkTimer);
+    blinkTimer=setInterval(function(){blinkOn=!blinkOn;window.drawArticleCanvas();},520);
+    window.drawArticleCanvas();
+    setTimeout(function(){ keyboard.focus({preventScroll:true}); },20);
+  }
+
+  function closeEditor(){
+    editing=false;
+    clearInterval(blinkTimer);
+    blinkTimer=0;
+    article.classList.remove('directArticleEditing');
+    document.body.classList.remove('directArticleMode');
+    doneBar.classList.remove('open');
+    keyboard.blur();
+    window.drawArticleCanvas();
+  }
+
+  function sourceIndexFromPoint(clientX,clientY){
+    const rect=canvas.getBoundingClientRect();
+    const x=(clientX-rect.left)*(article.clientWidth/rect.width);
+    const y=(clientY-rect.top)*(article.clientHeight/rect.height);
+    const layout=buildLayout(rawText());
+    lastLayout=layout;
+    let best=0,dist=Infinity;
+    layout.boundaries.forEach(function(p,index){
+      const dx=x-p.x,dy=y-(p.y+layout.selected.lineHeight*.45);
+      const d=dx*dx+dy*dy;
+      if(d<dist){dist=d;best=index;}
+    });
+    return best;
+  }
+
+  canvas.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    e.preventDefault();
+    openEditor(sourceIndexFromPoint(e.clientX,e.clientY));
+  });
+
+  keyboard.addEventListener('input',function(){
+    const value=keyboard.value;
+    caretSourceIndex=keyboard.selectionStart || 0;
+    syncAll(value);
+  });
+  keyboard.addEventListener('compositionstart',function(){composition=true;});
+  keyboard.addEventListener('compositionend',function(){composition=false;caretSourceIndex=keyboard.selectionStart||0;syncAll(keyboard.value);});
+  keyboard.addEventListener('keyup',function(){if(!composition){caretSourceIndex=keyboard.selectionStart||0;window.drawArticleCanvas();}});
+  keyboard.addEventListener('click',function(){caretSourceIndex=keyboard.selectionStart||0;window.drawArticleCanvas();});
+  doneButton.addEventListener('click',closeEditor);
+  document.addEventListener('keydown',function(e){if(editing && e.key==='Escape') closeEditor();});
+
+  // 既存の別記事入力欄は残すが、新聞側をタップできる案内を追加
+  article.title='タップすると、この新聞の記事欄を直接編集できます';
 })();
 </script>
 
