@@ -2353,6 +2353,101 @@ body.photoEditorBodyLocked {
   }
 }
 
+
+
+/* ===== 2026-07-13：記事入力とリアルプレビューを同時に見せる ===== */
+.articleLivePanel {
+  margin: 10px 0 10px;
+  padding: 9px;
+  border: 2px solid #0f5e9c;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+.articleLiveTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: #0f3f68;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-weight: 900;
+}
+.articleLiveTitle small { font-size: 11px; font-weight: 700; color: #4e718a; }
+.articleLivePanel canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 458 / 230;
+  background: #fff;
+  border: 1px solid #999;
+}
+.articleInputLabel {
+  display: block;
+  margin-top: 8px;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  color: #0f3f68;
+}
+.articleWritingArea {
+  min-height: 190px;
+  resize: vertical;
+  font-size: 17px;
+  line-height: 1.8;
+  border: 2px solid #0f5e9c;
+}
+.articleSampleDetails {
+  margin: 8px 0 10px;
+  border: 1px solid #cfe6f5;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.articleSampleDetails summary {
+  padding: 10px 12px;
+  background: #eef7ff;
+  color: #0f3f68;
+  cursor: pointer;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-weight: 900;
+}
+.articleSampleDetails .hint { margin: 0; border-radius: 0; }
+
+@media (max-width: 900px) {
+  /* 記事STEPでは新聞全体の縮小表示をやめ、記事欄を大きく見せる */
+  body.articleFocusMode #wizardPreviewHost { display: none !important; }
+  body.articleFocusMode #step4 { padding-top: 10px; }
+  body.articleFocusMode #step4 .articleLivePanel {
+    position: sticky;
+    top: 0;
+    z-index: 95;
+    margin-left: -6px;
+    margin-right: -6px;
+    background: rgba(255,255,255,0.98);
+  }
+  body.articleFocusMode #step4 p { margin-bottom: 6px; }
+  body.articleFocusMode #step4 .articleWritingArea {
+    height: min(30vh, 230px);
+    min-height: 170px;
+  }
+  .editArticleLivePanel {
+    position: sticky;
+    top: 0;
+    z-index: 96;
+    background: rgba(255,255,255,0.98);
+  }
+  .editSection.articleEditingOpen {
+    overflow: visible !important;
+  }
+  .editSection.articleEditingOpen .articleWritingArea {
+    height: min(31vh, 240px);
+    min-height: 180px;
+  }
+  .articleLiveTitle span { font-size: 15px; }
+  .articleLiveTitle small { font-size: 10px; }
+}
+
 </style>
 
 
@@ -2460,8 +2555,16 @@ body.photoEditorBodyLocked {
 <section class="step" id="step4">
 <h2>④ 記事を書こう</h2>
 <p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
+<details class="articleSampleDetails">
+<summary>書き方の見本を見る</summary>
 <div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
-<textarea id="articleInput" placeholder="記事本文を入力"></textarea>
+</details>
+<div class="articleLivePanel" id="wizardArticleLivePanel" aria-live="polite">
+  <div class="articleLiveTitle"><span>紙面の記事欄</span><small>入力するとすぐ反映されます</small></div>
+  <canvas id="wizardArticleLiveCanvas"></canvas>
+</div>
+<label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
+<textarea id="articleInput" class="articleWritingArea" placeholder="記事本文を入力"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
 <button class="backBtn" onclick="nextStep(3)">戻る</button>
 
@@ -2549,7 +2652,12 @@ body.photoEditorBodyLocked {
 <details class="editSection">
 <summary>記事</summary>
 <label for="editArticle"></label>
-<textarea id="editArticle" oninput="updatePreviewText()" placeholder="記事本文を入力"></textarea>
+<div class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel" aria-live="polite">
+  <div class="articleLiveTitle"><span>紙面の記事欄</span><small>改行もそのまま確認できます</small></div>
+  <canvas id="editArticleLiveCanvas"></canvas>
+</div>
+<label class="articleInputLabel" for="editArticle">記事を直す</label>
+<textarea id="editArticle" class="articleWritingArea" oninput="updatePreviewText()" placeholder="記事本文を入力"></textarea>
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
 <div class="quickHintChips">
@@ -5260,6 +5368,85 @@ window.nextStep = function(num) {
   });
 
   /* モーダル外を触っても閉じない。誤操作防止のため「決定」だけで戻る */
+})();
+</script>
+
+
+<script>
+/* ===== 記事欄だけを大きくリアルタイム表示 ===== */
+(function(){
+  let articlePreviewRaf = 0;
+
+  function copyArticleCanvas(targetId) {
+    const source = document.getElementById('articleCanvas');
+    const target = document.getElementById(targetId);
+    if (!source || !target || !source.width || !source.height) return;
+    if (target.width !== source.width) target.width = source.width;
+    if (target.height !== source.height) target.height = source.height;
+    const ctx = target.getContext('2d');
+    ctx.clearRect(0, 0, target.width, target.height);
+    ctx.drawImage(source, 0, 0);
+  }
+
+  window.refreshLargeArticlePreview = function() {
+    cancelAnimationFrame(articlePreviewRaf);
+    articlePreviewRaf = requestAnimationFrame(function(){
+      copyArticleCanvas('wizardArticleLiveCanvas');
+      copyArticleCanvas('editArticleLiveCanvas');
+    });
+  };
+
+  const originalUpdate = window.updatePreviewText;
+  if (typeof originalUpdate === 'function') {
+    window.updatePreviewText = function(){
+      const result = originalUpdate.apply(this, arguments);
+      window.refreshLargeArticlePreview();
+      setTimeout(window.refreshLargeArticlePreview, 40);
+      return result;
+    };
+  }
+
+  function setArticleFocusForStep(stepNumber) {
+    document.body.classList.toggle('articleFocusMode', Number(stepNumber) === 4 && document.body.classList.contains('wizardMode'));
+    if (Number(stepNumber) === 4) setTimeout(window.refreshLargeArticlePreview, 80);
+  }
+
+  const originalNextStep = window.nextStep;
+  if (typeof originalNextStep === 'function') {
+    window.nextStep = function(num){
+      const result = originalNextStep.apply(this, arguments);
+      setArticleFocusForStep(num);
+      return result;
+    };
+  }
+
+  const articleDetails = document.querySelector('#editArticle')?.closest('details');
+  if (articleDetails) {
+    const refreshDetailsState = function(){
+      articleDetails.classList.toggle('articleEditingOpen', articleDetails.open);
+      if (articleDetails.open) setTimeout(window.refreshLargeArticlePreview, 60);
+    };
+    articleDetails.addEventListener('toggle', refreshDetailsState);
+    refreshDetailsState();
+  }
+
+  ['articleInput','editArticle'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', function(){
+      setTimeout(window.refreshLargeArticlePreview, 20);
+    });
+    el.addEventListener('focus', function(){
+      setTimeout(window.refreshLargeArticlePreview, 20);
+    });
+  });
+
+  window.addEventListener('resize', function(){
+    setTimeout(window.refreshLargeArticlePreview, 60);
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(window.refreshLargeArticlePreview, 180);
+  });
 })();
 </script>
 
