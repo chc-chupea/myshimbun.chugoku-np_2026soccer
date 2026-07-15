@@ -82,6 +82,19 @@ button { border: none; background: #111; color: #fff; font-weight: bold; cursor:
   position: relative;
 }
 
+/* ここから追加 */
+.editArticleHintDetails > summary.articleHelpSummary{
+  color:#c00000 !important;
+  font-weight:700;
+  font-size:1.05rem;
+}
+
+.articleHelpSummary::after{
+  color:#c00000;
+}
+/* ここまで */
+
+
 .editSection summary::-webkit-details-marker {
   display: none;
 }
@@ -3123,6 +3136,8 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   display: none !important;
 }
 
+
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -3203,7 +3218,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <button class="backBtn" onclick="nextStep(2)">戻る</button>
 </section>
 <section class="step" id="step4">
-<h2>④ 記事を書こう</h2>
+<h2>④ ✍記事を書こう</h2>
 <p>「いつ・どこで・どんな大会があり、だれが、どんなプレーをして、何を感じたか」を書くと新聞らしくなります。</p>
 <details class="articleSampleDetails">
 <summary><span class="sampleTitle">書き方の見本を見る</span> <span style="display:inline-block;background:#ff8a00;color:#fff;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:900;margin:0 6px;">コピペOK！</span><span style="font-size:0.9em;color:#555;">○や●だけ変えてもOK！書き足してもOK！</span></summary>
@@ -3236,7 +3251,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <button class="backBtn" onclick="nextStep(5)">戻る</button>
 </section><div id="workspace">
 <div id="editorColumn"><div class="editPanel" id="editPanel">
-<h2>編集する</h2>
+<h2>⑦出来上がりをチェック</h2>
 <div class="miniHelp">
     仕上がりを見ながら、必要な項目だけ開いて微調整できます。完了したら申込フォームへ進んでください。
   </div>
@@ -3291,7 +3306,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <summary>記事</summary>
 <label for="editArticle"></label>
 <details class="editArticleHintDetails">
-<summary>📝 記事づくりをお手伝い</summary>
+<summary class="articleHelpSummary">📝 記事づくりをお手伝い</summary>
 <div style="margin:0 12px 8px;font-size:13px;color:#555;font-weight:700;">ボタンを押すと記事に文章が追加されます</div>
 <div class="quickHintChips">
 <button onclick="insertQuickArticle('hit')" type="button">🏃 走った・守ったこと</button>
@@ -4611,12 +4626,18 @@ function pickBestShortHeadline(words, original) {
 
 
 function addArticleHint() {
+  const hint = "\n\n【取材メモ】\n（印象に残ったプレー、仲間にかけた声、試合後に感じたことを一つ足すと、より自分だけの記事になります。）";
+
   const area = document.getElementById("editArticle");
-  if (!area) return;
+  const mobile = document.getElementById("editMobileArticleEditor");
 
-  const hint = "\n\n【取材メモ】　（印象に残ったプレー、仲間にかけた声、試合後に感じたことを一つ足すと、より自分だけの記事になります。）";
+  if (mobile && mobile.offsetParent !== null) {
+    mobile.innerText = mobile.innerText.trimEnd() + hint;
+    if (area) area.value = mobile.innerText;
+  } else if (area) {
+    area.value = area.value.trimEnd() + hint;
+  }
 
-  area.value = area.value.trimEnd() + hint;
   updatePreviewText();
 }
 
@@ -5709,7 +5730,6 @@ async function submitFreeDeliveryOrder() {
         <div class="receiptLabel">受付番号</div>
         <strong class="receiptNumber">${receiptNo}</strong>
         <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
-        <p><strong>申込完了後は内容を編集できません。</strong></p>
         <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">📄 控え用PDFを保存</button>
       </div>
     `;
