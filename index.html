@@ -3238,7 +3238,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <div id="editorColumn"><div class="editPanel" id="editPanel">
 <h2>編集する</h2>
 <div class="miniHelp">
-    仕上がりを見ながら、必要な項目だけ開いて微調整できます。完了したら下の申込ボタンへ進んでください。
+    仕上がりを見ながら、必要な項目だけ開いて微調整できます。完了したら申込フォームへ進んでください。
   </div>
 <details class="editSection" open="">
 <summary>サブ題字</summary>
@@ -5327,9 +5327,6 @@ function scrollToEditor() {
 }
 
 function insertQuickArticle(type) {
-  const article = document.getElementById("editArticle") || document.getElementById("articleInput");
-  if (!article) return;
-
   const samples = {
     hit: "試合では、鋭いドリブルや力強いシュート、最後まであきらめずにボールを追う姿が観客を魅了しました。",
     team: "仲間と励まし合い、パスをつないでゴールを目指す姿から、チームワークの大切さを感じました。",
@@ -5337,10 +5334,41 @@ function insertQuickArticle(type) {
   };
 
   const add = samples[type] || "";
-  const current = article.value.trim();
-  article.value = current ? current + "\n" + add : add;
-  article.dispatchEvent(new Event("input", { bubbles: true }));
-  if (typeof updatePreviewText === "function" && article.id === "editArticle") updatePreviewText();
+  if (!add) return;
+
+  const firstInput = document.getElementById("articleInput");
+  const editInput = document.getElementById("editArticle");
+  const firstEditor = document.getElementById("mobileArticleEditor");
+  const editEditor = document.getElementById("editMobileArticleEditor");
+
+  // 開いている画面の記事を基準にし、STEP4と仕上げ編集の両方へ同期する。
+  const editingMode = !!document.querySelector("#workspace[style*='display: flex'], #workspace[style*='display:flex']") ||
+    (editInput && editInput.closest("details") && editInput.closest("details").open);
+  const baseValue = editingMode && editInput ? editInput.value : (firstInput ? firstInput.value : (editInput ? editInput.value : ""));
+  const current = String(baseValue || "").trim();
+  const nextValue = current ? current + "\n" + add : add;
+
+  [firstInput, editInput].forEach(function(input) {
+    if (!input) return;
+    input.value = nextValue;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+
+  [firstEditor, editEditor].forEach(function(editor) {
+    if (!editor) return;
+    editor.textContent = nextValue;
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+
+  if (typeof window.updatePreviewText === "function") window.updatePreviewText();
+  if (typeof window.refreshLargeArticlePreview === "function") {
+    requestAnimationFrame(window.refreshLargeArticlePreview);
+  }
+
+  const visibleEditor = editingMode ? (editEditor || editInput) : (firstEditor || firstInput);
+  if (visibleEditor && typeof visibleEditor.focus === "function") {
+    visibleEditor.focus({ preventScroll: true });
+  }
 }
 
 document.addEventListener("keydown", function(e) {
