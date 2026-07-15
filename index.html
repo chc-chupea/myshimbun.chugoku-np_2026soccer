@@ -3307,13 +3307,12 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <label for="editArticle"></label>
 <details class="editArticleHintDetails">
 <summary class="articleHelpSummary">📝 記事づくりをお手伝い</summary>
-<div style="margin:0 12px 8px;font-size:13px;color:#555;font-weight:700;">ボタンを押すと記事に文章が追加されます</div>
+<div style="margin:0 12px 8px;font-size:13px;color:#555;font-weight:700;">文章を追加</div>
 <div class="quickHintChips">
 <button onclick="insertQuickArticle('hit')" type="button">🏃 走った・守ったこと</button>
 <button onclick="insertQuickArticle('team')" type="button">🤝 仲間とのようす</button>
 <button onclick="insertQuickArticle('feeling')" type="button">😊 感じたこと</button>
 </div>
-<button onclick="addArticleHint()" type="button">🗒 取材メモを追加</button>
 </details>
 <div aria-live="polite" class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel">
 <div class="articleLiveTitle"><span></span><small>記事欄をタップして入力します</small></div>
@@ -4625,21 +4624,7 @@ function pickBestShortHeadline(words, original) {
 }
 
 
-function addArticleHint() {
-  const hint = "\n\n【取材メモ】\n（印象に残ったプレー、仲間にかけた声、試合後に感じたことを一つ足すと、より自分だけの記事になります。）";
 
-  const area = document.getElementById("editArticle");
-  const mobile = document.getElementById("editMobileArticleEditor");
-
-  if (mobile && mobile.offsetParent !== null) {
-    mobile.innerText = mobile.innerText.trimEnd() + hint;
-    if (area) area.value = mobile.innerText;
-  } else if (area) {
-    area.value = area.value.trimEnd() + hint;
-  }
-
-  updatePreviewText();
-}
 
 
 function reselectPhoto() {
