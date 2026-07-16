@@ -1775,15 +1775,26 @@ button {
 .deliveryComplete strong {
   font-size: 24px;
 }
-.deliveryComplete .pdfSaveAfterComplete {
-  margin-top: 12px;
+.deliveryComplete .completedImageButton {
+  margin-top: 14px;
   background: #001E55 !important;
   color: #ffffff;
+  min-height: 54px;
+  font-size: 17px;
 }
-.deliveryComplete .pdfSaveHelp {
-  margin: 10px 0 0;
+.deliveryComplete .completedImageHelp {
+  margin: 9px 0 0;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.7;
+  color: #126b37;
+}
+.deliveryComplete .deliveryFinishMessage {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid #9bc9aa;
+  font-size: 15px;
+  line-height: 1.8;
+  font-weight: 800;
   color: #126b37;
 }
 @media (max-width: 640px) {
@@ -3516,7 +3527,6 @@ document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
 
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
@@ -4988,154 +4998,22 @@ async function saveAsImage() {
 }
 
 
-let lastCompletedOrderForPdf = null;
-let preparedPdfFile = null;
-let preparedPdfBlobUrl = "";
-let preparedPdfName = "";
-let preparingPdfPromise = null;
+let lastCompletedImageUrl = "";
 
-function addPdfManagementLabel(clone, receiptNo, quantity) {
-  const label = document.createElement("div");
-  label.setAttribute("aria-hidden", "true");
-  label.innerHTML = `受付番号：${receiptNo}<br>注文枚数：${Number(quantity || 1)}部`;
-  Object.assign(label.style, {
-    position: "absolute",
-    right: "3px",
-    bottom: "3px",
-    zIndex: "9999",
-    padding: "3px 5px",
-    background: "#ffffff",
-    color: "#111111",
-    border: "1px solid #111111",
-    fontFamily: '"Yu Gothic", "Hiragino Sans", sans-serif',
-    fontSize: "6px",
-    fontWeight: "700",
-    lineHeight: "1.35",
-    letterSpacing: "0.02em",
-    whiteSpace: "nowrap",
-    textAlign: "left",
-    boxShadow: "none",
-    borderRadius: "0"
-  });
-  clone.appendChild(label);
-}
-
-async function buildCompletedPdfPackage() {
-  if (!lastCompletedOrderForPdf || !lastCompletedOrderForPdf.receiptNo) {
-    throw new Error("先にお申し込みを完了してください。");
-  }
-
-  const { receiptNo, quantity } = lastCompletedOrderForPdf;
-  prepareHighResArticleForExport();
-  fitArticleText();
-
-  try {
-    // 利用者向けPDFはスマホで開きやすい軽量版にする。
-    // CSS幅595px × 2.2倍 ≒ A4換算で約158dpi。
-    // 管理・印刷用PNGは別処理のため、従来どおり高画質のまま保存される。
-    const canvas = await renderStableNewspaperCanvas(2.2, clone => {
-      addPdfManagementLabel(clone, receiptNo, quantity);
-    });
-
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-      throw new Error("PDF作成機能を読み込めませんでした。");
-    }
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-      compress: true
-    });
-
-    const pageWidth = 210;
-    const pageHeight = 297;
-    const margin = 8;
-    const usableWidth = pageWidth - margin * 2;
-    const usableHeight = pageHeight - margin * 2;
-    const canvasRatio = canvas.width / canvas.height;
-    const usableRatio = usableWidth / usableHeight;
-
-    let pdfWidth;
-    let pdfHeight;
-    if (canvasRatio > usableRatio) {
-      pdfWidth = usableWidth;
-      pdfHeight = usableWidth / canvasRatio;
-    } else {
-      pdfHeight = usableHeight;
-      pdfWidth = usableHeight * canvasRatio;
-    }
-
-    const x = (pageWidth - pdfWidth) / 2;
-    const y = (pageHeight - pdfHeight) / 2;
-    // PNG埋め込みは容量が大きくなるため、閲覧用PDFだけJPEG化する。
-    // 画質0.82は文字の読みやすさを維持しつつ、スマホ向けに大幅軽量化できる設定。
-    const jpegQuality = 0.82;
-    const imgData = canvas.toDataURL("image/jpeg", jpegQuality);
-    pdf.addImage(imgData, "JPEG", x, y, pdfWidth, pdfHeight, undefined, "MEDIUM");
-
-    const fileName = `${receiptNo}-chugoku-my-shinbun-a4.pdf`;
-    const blob = pdf.output("blob");
-    console.info(
-      "軽量PDFを作成しました:",
-      (blob.size / 1024 / 1024).toFixed(2) + "MB",
-      "canvas:",
-      canvas.width + "x" + canvas.height,
-      "JPEG quality:",
-      jpegQuality
-    );
-    const file = new File([blob], fileName, { type: "application/pdf" });
-    return { pdf, blob, file, fileName };
-  } finally {
-    restorePreviewArticleResolution();
-  }
-}
-
-async function saveAsPDF() {
-  const pdfUrl = lastCompletedOrderForPdf && lastCompletedOrderForPdf.pdfUrl;
-  if (!pdfUrl) {
-    alert("PDFのURLがありません。受付完了後に、もう一度お試しください。");
+function openCompletedNewspaper() {
+  if (!lastCompletedImageUrl) {
+    alert("完成した新聞画像が見つかりません。");
     return;
   }
 
-  const button = document.getElementById("pdfSaveAfterComplete");
-  const help = document.querySelector(".pdfSaveHelp");
-  if (button && button.dataset.busy === "1") return;
-
-  if (button) {
-    button.dataset.busy = "1";
-    button.disabled = true;
-    button.textContent = "PDFを開いています…";
-  }
-
-  try {
-    // URL文字列は画面に表示せず、ボタン操作だけでPDFを開く。
-    const opened = window.open(pdfUrl, "_blank", "noopener,noreferrer");
-    if (!opened) window.location.href = pdfUrl;
-    if (help) help.textContent = "PDFを開きました。保存や印刷はPDF画面の共有・メニューから行えます。";
-  } catch (error) {
-    console.error("PDF表示エラー:", error);
-    if (help) help.textContent = "PDFを開けませんでした。通信状況を確認して、もう一度お試しください。";
-    alert("PDFを開けませんでした。もう一度お試しください。");
-  } finally {
-    if (button) {
-      button.dataset.busy = "0";
-      button.disabled = false;
-      button.textContent = "📄 PDFを見る";
-    }
+  const opened = window.open(lastCompletedImageUrl, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    window.location.href = lastCompletedImageUrl;
   }
 }
 
 function resetForm() {
-  lastCompletedOrderForPdf = null;
-  preparedPdfFile = null;
-  preparedPdfName = "";
-  preparingPdfPromise = null;
-  if (preparedPdfBlobUrl) {
-    URL.revokeObjectURL(preparedPdfBlobUrl);
-    preparedPdfBlobUrl = "";
-  }
+  lastCompletedImageUrl = "";
   const complete = document.getElementById("deliveryComplete");
   if (complete) {
     complete.style.display = "none";
@@ -5390,7 +5268,6 @@ const FREE_DELIVERY_EVENT = {
   status: "WAIT"
 };
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyDICGLLgoopc-Jrsud5JLTnYXrpyTm730E",
   authDomain: "chugoku-mynewspaper.firebaseapp.com",
@@ -5407,13 +5284,8 @@ function isFirebaseConfigured() {
 function ensureFirebase() {
   if (!isFirebaseConfigured()) return null;
   if (!window.firebase) throw new Error("Firebase SDKを読み込めませんでした。");
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  return {
-    db: firebase.firestore(),
-    storage: firebase.storage()
-  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  return { db: firebase.firestore(), storage: firebase.storage() };
 }
 
 function scrollToDeliveryForm() {
@@ -5600,13 +5472,13 @@ function lockEditingAfterOrderComplete() {
   // #saveArea の中に申込完了画面があるため、親要素ごと無効化しない。
   // 完了画面以外の入力・編集操作だけを個別に停止する。
   document.querySelectorAll(
-    "#saveArea input:not(#pdfSaveAfterComplete), #saveArea textarea, #saveArea select, #saveArea button:not(#pdfSaveAfterComplete)"
+    "#saveArea input:not(#completedImageButton), #saveArea textarea, #saveArea select, #saveArea button:not(#completedImageButton)"
   ).forEach(el => {
     if (!el.closest("#deliveryComplete")) el.disabled = true;
   });
 
   // PDF保存ボタンは必ず操作可能に戻す。
-  const pdfButton = document.getElementById("pdfSaveAfterComplete");
+  const pdfButton = document.getElementById("completedImageButton");
   if (pdfButton) {
     pdfButton.disabled = false;
     pdfButton.style.pointerEvents = "auto";
@@ -5650,25 +5522,14 @@ async function submitFreeDeliveryOrder() {
 
     const receiptNo = await issueDailyReceiptNo(fb.db);
 
-    status.textContent = "高画質PNGとスマホ向け軽量PDFを作成しています。少しお待ちください。";
+    status.textContent = "新聞画像（PNG）を作成しています。少しお待ちください。";
     const pngBlob = await createNewspaperPngBlob(receiptNo, form.quantity);
-    lastCompletedOrderForPdf = { receiptNo, quantity: form.quantity };
-    const pdfPackage = await buildCompletedPdfPackage();
     const paper = getPaperMeta();
 
-    status.textContent = "PNGとPDFをFirebaseへ保存しています。";
+    status.textContent = "申込データを送信しています。";
     const storagePath = `newspapers/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.png`;
     await fb.storage.ref(storagePath).put(pngBlob, { contentType: "image/png" });
     const imageUrl = await fb.storage.ref(storagePath).getDownloadURL();
-
-    // 通常URL方式：管理画面で削除するまでPDFを保存する。
-    const pdfPath = `pdfs/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.pdf`;
-    await fb.storage.ref(pdfPath).put(pdfPackage.blob, {
-      contentType: "application/pdf",
-      cacheControl: "public, max-age=3600",
-      customMetadata: { receiptNo }
-    });
-    const pdfUrl = await fb.storage.ref(pdfPath).getDownloadURL();
 
     const order = {
       receiptNo,
@@ -5697,8 +5558,6 @@ async function submitFreeDeliveryOrder() {
       reporter: paper.reporter,
       imageUrl,
       storagePath,
-      pdfPath,
-      pdfUrl,
       labelText: "",
       status: FREE_DELIVERY_EVENT.status,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -5709,11 +5568,7 @@ async function submitFreeDeliveryOrder() {
 
     await fb.db.collection("freeDeliveryOrders").doc(receiptNo).set(order);
 
-    lastCompletedOrderForPdf = {
-      receiptNo,
-      quantity: form.quantity,
-      pdfUrl
-    };
+    lastCompletedImageUrl = imageUrl;
 
     status.style.display = "none";
     complete.style.display = "block";
@@ -5722,9 +5577,19 @@ async function submitFreeDeliveryOrder() {
         <div class="completeTitle" id="orderCompleteTitle">お申し込みを受け付けました</div>
         <div class="receiptLabel">受付番号</div>
         <strong class="receiptNumber">${receiptNo}</strong>
-        <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
-        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">📄 PDFを見る</button>
-        <p class="pdfSaveHelp">PDFは管理画面で削除するまで保管されます。URLは画面に表示されません。</p>
+
+        <button class="completedImageButton" type="button" onclick="openCompletedNewspaper()">
+          🖼 完成した新聞を見る
+        </button>
+        <p class="completedImageHelp">
+          完成した新聞が画像（PNG）で表示されます。<br>
+          画像を長押しすると保存できます。
+        </p>
+
+        <p class="deliveryFinishMessage">
+          後日、お近くの中国新聞販売所より、<br>
+          A3判の記念サイズに印刷してお届けします。
+        </p>
       </div>
     `;
     lockEditingAfterOrderComplete();
@@ -5732,7 +5597,7 @@ async function submitFreeDeliveryOrder() {
     if (typeof showGuide === "function") showGuide();
     if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
     status.style.display = "block";
-    status.textContent = "送信に失敗しました。Firebase設定・通信状況・Storage Rulesを確認して、もう一度お試しください。";
+    status.textContent = "送信に失敗しました。Firebase設定・通信状況・セキュリティルールを確認して、もう一度お試しください。";
     console.error(err);
   }
 }
