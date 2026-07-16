@@ -2497,6 +2497,7 @@ body.orderCompleted .heroTitleSimple {
 }
 
 body.orderCompleted #deliveryComplete {
+  pointer-events: auto !important;
   display: flex !important;
   position: fixed !important;
   inset: 0 !important;
@@ -5006,10 +5007,8 @@ function openCompletedNewspaper() {
     return;
   }
 
-  const opened = window.open(lastCompletedImageUrl, "_blank", "noopener,noreferrer");
-  if (!opened) {
-    window.location.href = lastCompletedImageUrl;
-  }
+  // 新しいタブのポップアップ制限を避け、同じ画面で確実にPNGを表示する。
+  window.location.assign(lastCompletedImageUrl);
 }
 
 function resetForm() {
@@ -5578,7 +5577,7 @@ async function submitFreeDeliveryOrder() {
         <div class="receiptLabel">受付番号</div>
         <strong class="receiptNumber">${receiptNo}</strong>
 
-        <button class="completedImageButton" type="button" onclick="openCompletedNewspaper()">
+        <button id="completedImageButton" class="completedImageButton" type="button" onclick="openCompletedNewspaper()">
           🖼 完成した新聞を見る
         </button>
         <p class="completedImageHelp">
