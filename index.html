@@ -3645,10 +3645,7 @@ document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
   <div class="orderConfirmCard">
     <h3 id="orderConfirmTitle">申込内容をご確認ください</h3>
     <div id="orderConfirmBody"></div>
-    <p class="orderConfirmNote">
-      内容に間違いがなければ「この内容で申し込む」を押してください。<br>
-      修正する場合は「入力画面に戻る」を押してください。
-    </p>
+
     <div class="orderConfirmButtons">
       <button class="orderConfirmBack" type="button" onclick="closeOrderConfirm()">入力画面に戻る</button>
       <button class="orderConfirmSubmit" id="orderConfirmSubmitButton" type="button" onclick="confirmAndSubmitOrder()">この内容で申し込む</button>
@@ -5666,23 +5663,24 @@ function openOrderConfirm() {
   const interestLabel = displayOptionalValue(form.interestStatusLabel, "未回答");
 
   document.getElementById("orderConfirmBody").innerHTML = `
-    <table class="orderConfirmTable">
-      <tr><th>お名前</th><td>${escapeConfirmHtml(form.name)}</td></tr>
-      <tr><th>ふりがな</th><td>${escapeConfirmHtml(form.kana)}</td></tr>
-      <tr><th>電話番号</th><td>${escapeConfirmHtml(form.phone)}</td></tr>
-      <tr><th>お届け先住所</th><td>${escapeConfirmHtml(form.address)}</td></tr>
-      <tr><th>所属チーム・学校名</th><td>${escapeConfirmHtml(displayOptionalValue(form.team))}</td></tr>
-      <tr><th>学年</th><td>${escapeConfirmHtml(displayOptionalValue(form.grade))}</td></tr>
-      <tr><th>希望枚数</th><td>${escapeConfirmHtml(form.quantity)}部</td></tr>
-      <tr><th>連絡メモ</th><td>${escapeConfirmHtml(displayOptionalValue(form.memo, "なし"))}</td></tr>
-      <tr><th>購読状況</th><td>${escapeConfirmHtml(subscriptionLabel)}</td></tr>
-      <tr><th>ご希望</th><td>${escapeConfirmHtml(interestLabel)}</td></tr>
-      <tr><th>新聞名</th><td>${escapeConfirmHtml(displayOptionalValue(paper.sublogo))}</td></tr>
-      <tr><th>見出し</th><td>${escapeConfirmHtml(displayOptionalValue(paper.headline))}</td></tr>
-      <tr><th>記事</th><td>${escapeConfirmHtml(displayOptionalValue(paper.article))}</td></tr>
-      <tr><th>日付</th><td>${escapeConfirmHtml(displayOptionalValue(paper.date))}</td></tr>
-      <tr><th>記者名</th><td>${escapeConfirmHtml(displayOptionalValue(paper.reporter))}</td></tr>
-    </table>
+  <table class="orderConfirmTable">
+    <tr><th>お名前</th><td>${escapeConfirmHtml(form.name)}</td></tr>
+    <tr><th>ふりがな</th><td>${escapeConfirmHtml(form.kana)}</td></tr>
+    <tr><th>電話番号</th><td>${escapeConfirmHtml(form.phone)}</td></tr>
+    <tr><th>お届け先住所</th><td>${escapeConfirmHtml(form.address)}</td></tr>
+    <tr><th>所属チーム・学校名</th><td>${escapeConfirmHtml(displayOptionalValue(form.team))}</td></tr>
+    <tr><th>学年</th><td>${escapeConfirmHtml(displayOptionalValue(form.grade))}</td></tr>
+    <tr><th>希望枚数</th><td>${escapeConfirmHtml(form.quantity)}部</td></tr>
+
+    ${
+      form.memo && form.memo.trim()
+        ? `<tr><th>連絡メモ</th><td>${escapeConfirmHtml(form.memo)}</td></tr>`
+        : ""
+    }
+
+    <tr><th>現在の新聞購読状況</th><td>${escapeConfirmHtml(subscriptionLabel)}</td></tr>
+    <tr><th>ご希望</th><td>${escapeConfirmHtml(interestLabel)}</td></tr>
+  </table>
   `;
 
   const modal = document.getElementById("orderConfirmModal");
