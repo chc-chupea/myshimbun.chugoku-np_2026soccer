@@ -4554,13 +4554,7 @@ function drawArticleCanvas() {
       "―": "｜",
       "ｰ": "｜",
       "〜": "｜",
-      "～": "｜",
-      "【": "︻",
-      "】": "︼",
-      "「": "﹁",
-      "」": "﹂",
-      "（": "︵",
-      "）": "︶"
+      "～": "｜"
     };
     return map[ch] || ch;
   });
@@ -4569,7 +4563,123 @@ function drawArticleCanvas() {
   const visibleLen = visibleChars.length;
 
   const isDigit = ch => /^[0-9０-９]$/.test(ch || "");
-  const isPunctuation = ch => /[、。，．,.]/.test(ch || "");
+
+  // 行頭に置かず、直前列の最後の文字へぶら下げる記号。
+  const isHangingPunctuation = ch =>
+    /[。、．，,.」』）】〕〉》！？]/.test(ch || "");
+
+  // 列の最後に置かない開始括弧。次の文字と一緒に次列へ送る。
+  const isOpeningBracket = ch =>
+    /[（「『【〔〈《]/.test(ch || "");
+
+  // Canvasには縦組み用字形選択がないため、括弧類は元の字形を90度回転して描く。
+  const isRotatedVerticalSymbol = ch =>
+    /[（）「」『』【】〔〕〈〉《》]/.test(ch || "");
+
+  // 句読点は1マス内の右上へ配置する。
+  const isPunctuation = ch =>
+    /[。、．，,.！？]/.test(ch || "");
+
+  /*
+    閉じ括弧専用描画
+    --------------------------------------------------
+    本文のフォントサイズ選択・列数・列幅には一切影響させず、
+    前の文字の座標を原点として、同じ列の直下へCanvas線画で描く。
+    フォント字形を使わないため、PC・スマホ・端末フォント差の影響を受けにくい。
+  */
+  function drawHangingClosingMark(ctx, ch, previousX, previousY, fontSize) {
+    const markY = previousY + fontSize * 1.15;
+    const markW = fontSize * 0.44;
+    const markH = fontSize * 0.22;
+
+    ctx.save();
+    ctx.translate(previousX, markY);
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = Math.max(1.1, fontSize * 0.055);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+
+    if (ch === "）") {
+      ctx.moveTo(-markW * 0.50, -markH * 0.28);
+      ctx.quadraticCurveTo(
+        0,
+        markH * 0.75,
+        markW * 0.50,
+        -markH * 0.28
+      );
+    } else if (ch === "」") {
+      ctx.moveTo(-markW * 0.42, -markH * 0.35);
+      ctx.lineTo(-markW * 0.42, markH * 0.42);
+      ctx.lineTo(markW * 0.42, markH * 0.42);
+    } else if (ch === "』") {
+      ctx.moveTo(-markW * 0.48, -markH * 0.38);
+      ctx.lineTo(-markW * 0.48, markH * 0.48);
+      ctx.lineTo(markW * 0.40, markH * 0.48);
+      ctx.moveTo(-markW * 0.22, -markH * 0.38);
+      ctx.lineTo(-markW * 0.22, markH * 0.20);
+      ctx.lineTo(markW * 0.40, markH * 0.20);
+    } else if (ch === "】" || ch === "〕") {
+      ctx.moveTo(-markW * 0.46, -markH * 0.42);
+      ctx.lineTo(markW * 0.34, -markH * 0.42);
+      ctx.lineTo(markW * 0.48, 0);
+      ctx.lineTo(markW * 0.34, markH * 0.42);
+      ctx.lineTo(-markW * 0.46, markH * 0.42);
+    } else if (ch === "〉") {
+      ctx.moveTo(-markW * 0.34, -markH * 0.48);
+      ctx.lineTo(markW * 0.38, 0);
+      ctx.lineTo(-markW * 0.34, markH * 0.48);
+    } else if (ch === "》") {
+      ctx.moveTo(-markW * 0.48, -markH * 0.48);
+      ctx.lineTo(markW * 0.12, 0);
+      ctx.lineTo(-markW * 0.48, markH * 0.48);
+      ctx.moveTo(-markW * 0.05, -markH * 0.48);
+      ctx.lineTo(markW * 0.50, 0);
+      ctx.lineTo(-markW * 0.05, markH * 0.48);
+    } else if (ch === "！") {
+      /*
+        感嘆符はフォント文字では位置が不安定になるため、
+        縦棒と点をCanvasで直接描く。
+      */
+      const bangTop = -fontSize * 0.30;
+      const bangBottom = fontSize * 0.20;
+      const dotY = fontSize * 0.40;
+      const dotR = Math.max(1.4, fontSize * 0.075);
+
+      ctx.strokeStyle = "#111";
+      ctx.fillStyle = "#111";
+      ctx.lineWidth = Math.max(1.5, fontSize * 0.085);
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      ctx.moveTo(0, bangTop);
+      ctx.lineTo(0, bangBottom);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, dotY, dotR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+      return;
+    } else if (ch === "？") {
+      /*
+        疑問符は現状の見え方を維持する。
+      */
+      ctx.font = "700 " + Math.round(fontSize * 0.70) +
+        'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
+      ctx.fillStyle = "#111";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(ch, 0, fontSize * 0.02);
+      ctx.restore();
+      return;
+    }
+
+    ctx.stroke();
+    ctx.restore();
+  }
+
   const toHalf = str => String(str || "").replace(/[０-９]/g, s =>
     String.fromCharCode(s.charCodeAt(0) - 65248)
   );
@@ -4614,16 +4724,16 @@ function drawArticleCanvas() {
   const padY = 10;
 
   const candidates = [
-    { size: 32, lineGapRate: 0.30, colGapRate: 0.44 },
-    { size: 30, lineGapRate: 0.27, colGapRate: 0.40 },
-    { size: 28, lineGapRate: 0.23, colGapRate: 0.36 },
-    { size: 26, lineGapRate: 0.18, colGapRate: 0.30 },
-    { size: 24, lineGapRate: 0.13, colGapRate: 0.24 },
-    { size: 22, lineGapRate: 0.08, colGapRate: 0.18 },
-    { size: 20, lineGapRate: 0.04, colGapRate: 0.12 },
-    { size: 18, lineGapRate: 0.00, colGapRate: 0.08 },
-    { size: 16, lineGapRate: 0.00, colGapRate: 0.04 },
-    { size: 14, lineGapRate: 0.00, colGapRate: 0.00 }
+    { size: 32, lineGapRate: 0.38, colGapRate: 0.44 },
+    { size: 30, lineGapRate: 0.35, colGapRate: 0.40 },
+    { size: 28, lineGapRate: 0.31, colGapRate: 0.36 },
+    { size: 26, lineGapRate: 0.26, colGapRate: 0.30 },
+    { size: 24, lineGapRate: 0.21, colGapRate: 0.24 },
+    { size: 22, lineGapRate: 0.16, colGapRate: 0.18 },
+    { size: 20, lineGapRate: 0.12, colGapRate: 0.12 },
+    { size: 18, lineGapRate: 0.08, colGapRate: 0.08 },
+    { size: 16, lineGapRate: 0.08, colGapRate: 0.04 },
+    { size: 14, lineGapRate: 0.08, colGapRate: 0.00 }
   ];
 
   function metrics(c) {
@@ -4681,18 +4791,25 @@ function drawArticleCanvas() {
     if (x < padX) return false;
 
     if (isPunctuation(ch)) {
-      // 縦書き新聞風：句読点は1マス内の右上。
-      // xは列中央なので、右へ寄せるためにプラス補正。
-      // yはマス上端なので、さらに少し上へ寄せる。
+      // 句読点はマスの右上へ小さく配置。
       ctx.save();
-      ctx.font = "700 " + Math.round(fontSize * 0.72) + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
+      ctx.font = "700 " + Math.round(fontSize * 0.68) + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
       ctx.textAlign = "center";
-      ctx.textBaseline = "top";
+      ctx.textBaseline = "middle";
       ctx.fillText(
         ch,
-        x + fontSize * 0.46,
-        y - fontSize * 0.32
+        x + fontSize * 0.34,
+        y + fontSize * 0.22
       );
+      ctx.restore();
+    } else if (isRotatedVerticalSymbol(ch)) {
+      // 縦組み用の括弧類。互換字形へ置換せず、元の字形をセル中央で90度回転。
+      ctx.save();
+      ctx.translate(x, y + fontSize * 0.50);
+      ctx.rotate(Math.PI / 2);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(ch, 0, 0);
       ctx.restore();
     } else {
       ctx.fillText(ch, x, y);
@@ -4755,6 +4872,56 @@ function drawArticleCanvas() {
       continue;
     }
 
+    /*
+      行末禁則：
+      「（」「「」「『」などの開始括弧が列の最下段へ来る場合は、
+      そのマスを空けて次の列の先頭へ送る。
+    */
+    if (isOpeningBracket(ch) && row === selected.rows - 1) {
+      row = 0;
+      col += 1;
+
+      if (!hasRoom()) {
+        truncated = true;
+        break;
+      }
+    }
+
+    /*
+      行頭禁則・ぶら下げ：
+      「。」「、」「」」「』」「）」などが次列の先頭へ来る場合は、
+      新しい1マスを使わず、直前列の末尾文字の右下へ添える。
+    */
+    if (isHangingPunctuation(ch) && row === 0 && col > 0) {
+      const previousCol = col - 1;
+      const previousRow = selected.rows - 1;
+      const previousX = startX - previousCol * selected.colWidth;
+      const previousY = startY + previousRow * selected.lineHeight;
+
+      ctx.save();
+
+      const isClosingMark = /[）」』】〕〉》！？]/.test(ch);
+
+      if (isClosingMark) {
+        // 閉じ括弧だけを本文とは完全に分離して描画する。
+        drawHangingClosingMark(ctx, ch, previousX, previousY, fontSize);
+      } else {
+        // 句読点・感嘆符・疑問符は前の文字の右下へ小さく添える。
+        ctx.save();
+        const punctuationX = previousX + fontSize * 0.26;
+        const punctuationY = previousY + fontSize * 0.82;
+
+        ctx.font = "700 " + Math.round(fontSize * 0.56) +
+          'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(ch, punctuationX, punctuationY);
+        ctx.restore();
+      }
+
+      continue;
+    }
+
     if (!drawOneCell(ch)) {
       truncated = true;
       break;
@@ -4770,7 +4937,7 @@ function drawArticleCanvas() {
     } else if (visibleLen <= 150) {
       countEl.textContent = "現在 " + visibleLen + "文字：読みやすい大きさで表示しています。";
     } else if (visibleLen <= 240) {
-      countEl.textContent = "現在 " + visibleLen + "文字：文字サイズ・間隔・句読点位置を新聞風に自動調整しています。";
+      countEl.textContent = "現在 " + visibleLen + "文字：文字サイズ・間隔・禁則処理を新聞風に自動調整しています。";
     } else if (visibleLen <= 300) {
       countEl.innerHTML = '<span class="warn">現在 ' + visibleLen + '文字：長めなので、文字サイズと間隔を詰めています。</span>';
     } else {
@@ -6717,11 +6884,11 @@ window.nextStep = function(num) {
     const chars = normalizedChars(text);
     const padX=10, padY=10;
     const candidates=[
-      {size:32,lineGapRate:.30,colGapRate:.44},{size:30,lineGapRate:.27,colGapRate:.40},
-      {size:28,lineGapRate:.23,colGapRate:.36},{size:26,lineGapRate:.18,colGapRate:.30},
-      {size:24,lineGapRate:.13,colGapRate:.24},{size:22,lineGapRate:.08,colGapRate:.18},
-      {size:20,lineGapRate:.04,colGapRate:.12},{size:18,lineGapRate:0,colGapRate:.08},
-      {size:16,lineGapRate:0,colGapRate:.04},{size:14,lineGapRate:0,colGapRate:0}
+      {size:32,lineGapRate:.38,colGapRate:.44},{size:30,lineGapRate:.35,colGapRate:.40},
+      {size:28,lineGapRate:.31,colGapRate:.36},{size:26,lineGapRate:.26,colGapRate:.30},
+      {size:24,lineGapRate:.21,colGapRate:.24},{size:22,lineGapRate:.16,colGapRate:.18},
+      {size:20,lineGapRate:.12,colGapRate:.12},{size:18,lineGapRate:.08,colGapRate:.08},
+      {size:16,lineGapRate:.08,colGapRate:.04},{size:14,lineGapRate:.08,colGapRate:0}
     ];
     function needed(){
       let cells=0, paragraphStart=true;
