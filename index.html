@@ -1807,6 +1807,118 @@ button {
 }
 
 
+
+/* ===== 申込内容確認モーダル ===== */
+.orderConfirmModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+  background: rgba(0, 31, 58, 0.82);
+  padding: 16px;
+  overflow-y: auto;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+.orderConfirmModal.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.orderConfirmCard {
+  width: min(100%, 620px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.32);
+}
+.orderConfirmCard h3 {
+  margin: 0 0 12px;
+  color: #0f5e9c;
+  text-align: center;
+  font-size: 22px;
+}
+.orderConfirmTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+.orderConfirmTable th,
+.orderConfirmTable td {
+  border-bottom: 1px solid #d8e7f0;
+  padding: 9px 7px;
+  vertical-align: top;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.orderConfirmTable th {
+  width: 34%;
+  background: #f4f9fc;
+  color: #0f3f68;
+  text-align: left;
+  white-space: nowrap;
+}
+.orderConfirmTable td {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.orderConfirmNote {
+  margin: 12px 0 0;
+  padding: 10px;
+  background: #fff8e8;
+  border-left: 5px solid #f4a33a;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.orderConfirmButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.orderConfirmButtons button {
+  margin: 0;
+  min-height: 50px;
+}
+.orderConfirmBack {
+  background: #6c8798 !important;
+}
+.orderConfirmSubmit {
+  background: #0057b8 !important;
+}
+html.orderConfirmOpen,
+html.orderConfirmOpen body {
+  overflow: hidden !important;
+}
+@media (max-width: 520px) {
+  .orderConfirmModal {
+    padding: 8px;
+  }
+  .orderConfirmCard {
+    padding: 14px;
+  }
+  .orderConfirmCard h3 {
+    font-size: 20px;
+  }
+  .orderConfirmTable th,
+  .orderConfirmTable td {
+    display: block;
+    width: 100%;
+  }
+  .orderConfirmTable th {
+    border-bottom: none;
+    padding-bottom: 2px;
+  }
+  .orderConfirmTable td {
+    padding-top: 2px;
+  }
+  .orderConfirmButtons {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== 任意アンケート ===== */
 .surveyBox {
   grid-column: 1 / -1;
@@ -3408,7 +3520,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 </div>
 </div>
 </div>
-<button class="deliverySubmitBtn" onclick="submitFreeDeliveryOrder()" type="button">この内容で申し込む</button>
+<button class="deliverySubmitBtn" onclick="openOrderConfirm()" type="button">この内容で申し込む</button>
 <div class="deliveryStatus" id="deliveryStatus"></div>
 <div class="deliveryComplete" id="deliveryComplete"></div>
 </div>
@@ -3528,6 +3640,22 @@ document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
 
 
 </script>
+
+<div class="orderConfirmModal" id="orderConfirmModal" role="dialog" aria-modal="true" aria-labelledby="orderConfirmTitle">
+  <div class="orderConfirmCard">
+    <h3 id="orderConfirmTitle">申込内容をご確認ください</h3>
+    <div id="orderConfirmBody"></div>
+    <p class="orderConfirmNote">
+      内容に間違いがなければ「この内容で申し込む」を押してください。<br>
+      修正する場合は「入力画面に戻る」を押してください。
+    </p>
+    <div class="orderConfirmButtons">
+      <button class="orderConfirmBack" type="button" onclick="closeOrderConfirm()">入力画面に戻る</button>
+      <button class="orderConfirmSubmit" id="orderConfirmSubmitButton" type="button" onclick="confirmAndSubmitOrder()">この内容で申し込む</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
@@ -4913,7 +5041,11 @@ function createStableNewspaperClone() {
     transformOrigin: "top left",
     zoom: "1",
     position: "relative",
-    boxSizing: "border-box"
+    boxSizing: "border-box",
+    background: "#ffffff",
+    border: "3px solid #222222",
+    padding: "7px",
+    boxShadow: "none"
   });
 
   clone.querySelectorAll(".focusFlash").forEach(el => el.classList.remove("focusFlash"));
@@ -5505,10 +5637,88 @@ function lockEditingAfterOrderComplete() {
 }
 
 
-async function submitFreeDeliveryOrder() {
+
+let pendingDeliveryForm = null;
+
+function escapeConfirmHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+function displayOptionalValue(value, fallback = "未入力") {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+function openOrderConfirm() {
+  const form = getDeliveryFormData();
+  if (!form) return;
+
+  const paper = getPaperMeta();
+  pendingDeliveryForm = form;
+
+  const subscriptionLabel = displayOptionalValue(form.subscriptionStatusLabel, "未回答");
+  const interestLabel = displayOptionalValue(form.interestStatusLabel, "未回答");
+
+  document.getElementById("orderConfirmBody").innerHTML = `
+    <table class="orderConfirmTable">
+      <tr><th>お名前</th><td>${escapeConfirmHtml(form.name)}</td></tr>
+      <tr><th>ふりがな</th><td>${escapeConfirmHtml(form.kana)}</td></tr>
+      <tr><th>電話番号</th><td>${escapeConfirmHtml(form.phone)}</td></tr>
+      <tr><th>お届け先住所</th><td>${escapeConfirmHtml(form.address)}</td></tr>
+      <tr><th>所属チーム・学校名</th><td>${escapeConfirmHtml(displayOptionalValue(form.team))}</td></tr>
+      <tr><th>学年</th><td>${escapeConfirmHtml(displayOptionalValue(form.grade))}</td></tr>
+      <tr><th>希望枚数</th><td>${escapeConfirmHtml(form.quantity)}部</td></tr>
+      <tr><th>連絡メモ</th><td>${escapeConfirmHtml(displayOptionalValue(form.memo, "なし"))}</td></tr>
+      <tr><th>購読状況</th><td>${escapeConfirmHtml(subscriptionLabel)}</td></tr>
+      <tr><th>ご希望</th><td>${escapeConfirmHtml(interestLabel)}</td></tr>
+      <tr><th>新聞名</th><td>${escapeConfirmHtml(displayOptionalValue(paper.sublogo))}</td></tr>
+      <tr><th>見出し</th><td>${escapeConfirmHtml(displayOptionalValue(paper.headline))}</td></tr>
+      <tr><th>記事</th><td>${escapeConfirmHtml(displayOptionalValue(paper.article))}</td></tr>
+      <tr><th>日付</th><td>${escapeConfirmHtml(displayOptionalValue(paper.date))}</td></tr>
+      <tr><th>記者名</th><td>${escapeConfirmHtml(displayOptionalValue(paper.reporter))}</td></tr>
+    </table>
+  `;
+
+  const modal = document.getElementById("orderConfirmModal");
+  modal.classList.add("open");
+  document.documentElement.classList.add("orderConfirmOpen");
+}
+
+function closeOrderConfirm() {
+  const modal = document.getElementById("orderConfirmModal");
+  modal.classList.remove("open");
+  document.documentElement.classList.remove("orderConfirmOpen");
+}
+
+async function confirmAndSubmitOrder() {
+  const button = document.getElementById("orderConfirmSubmitButton");
+  if (button.disabled) return;
+
+  button.disabled = true;
+  button.textContent = "送信しています…";
+
+  const confirmedForm = pendingDeliveryForm;
+  pendingDeliveryForm = null;
+
+  try {
+    closeOrderConfirm();
+    await submitFreeDeliveryOrder(confirmedForm);
+  } finally {
+    button.disabled = false;
+    button.textContent = "この内容で申し込む";
+  }
+}
+
+async function submitFreeDeliveryOrder(confirmedForm = null) {
   const status = document.getElementById("deliveryStatus");
   const complete = document.getElementById("deliveryComplete");
-  const form = getDeliveryFormData();
+  const form = confirmedForm || getDeliveryFormData();
   if (!form) return;
 
   status.style.display = "block";
