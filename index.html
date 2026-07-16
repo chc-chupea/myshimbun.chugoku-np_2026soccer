@@ -5088,8 +5088,6 @@ async function saveAsPDF() {
   const help = document.querySelector(".pdfSaveHelp");
   if (button && button.dataset.busy === "1") return;
 
-  // iPhone Safariなどのポップアップ遮断対策。ユーザー操作中に先に空タブを確保する。
-  const viewer = window.open("about:blank", "_blank");
 
   if (button) {
     button.dataset.busy = "1";
@@ -5110,15 +5108,11 @@ async function saveAsPDF() {
     const url = result && result.data && result.data.url;
     if (!url) throw new Error("PDF閲覧URLを取得できませんでした。");
 
-    if (viewer) {
-      viewer.location.replace(url);
-    } else {
-      // LINE内ブラウザ等で新規タブが遮断された場合の代替。
-      window.location.href = url;
-    }
+    // about:blankを先に開かず、取得できた30分URLへ同じタブで移動する。
+    // iPhone・Android・LINE内ブラウザでも空白タブが残りにくい方式。
+    window.location.assign(url);
     if (help) help.textContent = "PDFを開きました。この閲覧リンクは発行から30分間有効です。";
   } catch (error) {
-    if (viewer) viewer.close();
     console.error("PDF表示エラー:", error);
     if (help) help.textContent = "PDFを開けませんでした。通信状況を確認して、もう一度ボタンを押してください。";
     alert("PDFを開けませんでした。もう一度お試しください。");
