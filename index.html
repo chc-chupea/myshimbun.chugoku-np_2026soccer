@@ -5030,7 +5030,10 @@ async function buildCompletedPdfPackage() {
   fitArticleText();
 
   try {
-    const canvas = await renderStableNewspaperCanvas(3, clone => {
+    // 利用者向けPDFはスマホで開きやすい軽量版にする。
+    // CSS幅595px × 2.2倍 ≒ A4換算で約158dpi。
+    // 管理・印刷用PNGは別処理のため、従来どおり高画質のまま保存される。
+    const canvas = await renderStableNewspaperCanvas(2.2, clone => {
       addPdfManagementLabel(clone, receiptNo, quantity);
     });
 
@@ -5042,7 +5045,8 @@ async function buildCompletedPdfPackage() {
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: "a4"
+      format: "a4",
+      compress: true
     });
 
     const pageWidth = 210;
@@ -5065,11 +5069,22 @@ async function buildCompletedPdfPackage() {
 
     const x = (pageWidth - pdfWidth) / 2;
     const y = (pageHeight - pdfHeight) / 2;
-    const imgData = canvas.toDataURL("image/png");
-    pdf.addImage(imgData, "PNG", x, y, pdfWidth, pdfHeight);
+    // PNG埋め込みは容量が大きくなるため、閲覧用PDFだけJPEG化する。
+    // 画質0.82は文字の読みやすさを維持しつつ、スマホ向けに大幅軽量化できる設定。
+    const jpegQuality = 0.82;
+    const imgData = canvas.toDataURL("image/jpeg", jpegQuality);
+    pdf.addImage(imgData, "JPEG", x, y, pdfWidth, pdfHeight, undefined, "MEDIUM");
 
     const fileName = `${receiptNo}-chugoku-my-shinbun-a4.pdf`;
     const blob = pdf.output("blob");
+    console.info(
+      "軽量PDFを作成しました:",
+      (blob.size / 1024 / 1024).toFixed(2) + "MB",
+      "canvas:",
+      canvas.width + "x" + canvas.height,
+      "JPEG quality:",
+      jpegQuality
+    );
     const file = new File([blob], fileName, { type: "application/pdf" });
     return { pdf, blob, file, fileName };
   } finally {
@@ -5635,7 +5650,7 @@ async function submitFreeDeliveryOrder() {
 
     const receiptNo = await issueDailyReceiptNo(fb.db);
 
-    status.textContent = "新聞画像（PNG）とPDFを作成しています。少しお待ちください。";
+    status.textContent = "高画質PNGとスマホ向け軽量PDFを作成しています。少しお待ちください。";
     const pngBlob = await createNewspaperPngBlob(receiptNo, form.quantity);
     lastCompletedOrderForPdf = { receiptNo, quantity: form.quantity };
     const pdfPackage = await buildCompletedPdfPackage();
