@@ -3520,6 +3520,8 @@ document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-check-compat.js"></script>
 <script>
 let photoData = "";
 let photoObjectUrl = "";
@@ -5078,8 +5080,8 @@ async function buildCompletedPdfPackage() {
 }
 
 async function saveAsPDF() {
-  if (!lastCompletedOrderForPdf || !lastCompletedOrderForPdf.receiptNo) {
-    alert("先にお申し込みを完了してください。");
+  if (!lastCompletedOrderForPdf || !lastCompletedOrderForPdf.receiptNo || !lastCompletedOrderForPdf.pdfAccessToken) {
+    alert("PDF閲覧情報がありません。受付完了画面を閉じずに、もう一度お試しください。");
     return;
   }
 
@@ -5087,54 +5089,45 @@ async function saveAsPDF() {
   const help = document.querySelector(".pdfSaveHelp");
   if (button && button.dataset.busy === "1") return;
 
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    (window.matchMedia && window.matchMedia("(pointer: coarse)").matches && window.innerWidth <= 900);
+  // iPhone Safariなどのポップアップ遮断対策。ユーザー操作中に先に空タブを確保する。
+  const viewer = window.open("about:blank", "_blank");
 
   if (button) {
     button.dataset.busy = "1";
     button.disabled = true;
-    button.textContent = "PDFを作成しています…";
+    button.textContent = "PDFを開いています…";
   }
-  if (help) help.textContent = "A4・1ページのPDFを作成しています。少しお待ちください。";
+  if (help) help.textContent = "30分間だけ有効な閲覧リンクを発行しています。";
 
   try {
-    // PC・スマホとも、印刷画面を使わず同じPDF生成処理を使用する。
-    const pkg = await buildCompletedPdfPackage();
+    const fb = ensureFirebase();
+    if (!fb || !fb.functions) throw new Error("Cloud Functionsへ接続できません。");
 
-    // スマホは共有シートが使える場合のみ共有する。
-    if (isMobile && navigator.share && navigator.canShare && navigator.canShare({ files: [pkg.file] })) {
-      await navigator.share({
-        files: [pkg.file],
-        title: "中国新聞 My新聞 控え用PDF",
-        text: `受付番号 ${lastCompletedOrderForPdf.receiptNo} の控え用PDFです。`
-      });
-      if (help) help.textContent = "共有画面から「ファイルに保存」などを選んでください。";
-      return;
+    const issuePdfViewUrl = fb.functions.httpsCallable("issuePdfViewUrl");
+    const result = await issuePdfViewUrl({
+      receiptNo: lastCompletedOrderForPdf.receiptNo,
+      accessToken: lastCompletedOrderForPdf.pdfAccessToken
+    });
+    const url = result && result.data && result.data.url;
+    if (!url) throw new Error("PDF閲覧URLを取得できませんでした。");
+
+    if (viewer) {
+      viewer.location.replace(url);
+    } else {
+      // LINE内ブラウザ等で新規タブが遮断された場合の代替。
+      window.location.href = url;
     }
-
-    // PC、および共有非対応スマホはPDFファイルを直接保存する。
-    const url = URL.createObjectURL(pkg.blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = pkg.fileName;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
-
-    if (help) help.textContent = `「${pkg.fileName}」をPDFファイルとして保存しました。`;
+    if (help) help.textContent = "PDFを開きました。この閲覧リンクは発行から30分間有効です。";
   } catch (error) {
-    if (!(error && error.name === "AbortError")) {
-      console.error("PDF保存エラー:", error);
-      if (help) help.textContent = "PDFを作成できませんでした。ページを再読み込みせず、もう一度ボタンを押してください。";
-      alert("PDFを作成できませんでした。もう一度お試しください。");
-    }
+    if (viewer) viewer.close();
+    console.error("PDF表示エラー:", error);
+    if (help) help.textContent = "PDFを開けませんでした。通信状況を確認して、もう一度ボタンを押してください。";
+    alert("PDFを開けませんでした。もう一度お試しください。");
   } finally {
     if (button) {
       button.dataset.busy = "0";
       button.disabled = false;
-      button.textContent = "控え用A4 PDFを保存・共有";
+      button.textContent = "📄 PDFを見る";
     }
   }
 }
@@ -5402,6 +5395,8 @@ const FREE_DELIVERY_EVENT = {
   status: "WAIT"
 };
 
+const APP_CHECK_SITE_KEY = "YOUR_RECAPTCHA_ENTERPRISE_SITE_KEY";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDICGLLgoopc-Jrsud5JLTnYXrpyTm730E",
   authDomain: "chugoku-mynewspaper.firebaseapp.com",
@@ -5418,8 +5413,20 @@ function isFirebaseConfigured() {
 function ensureFirebase() {
   if (!isFirebaseConfigured()) return null;
   if (!window.firebase) throw new Error("Firebase SDKを読み込めませんでした。");
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  return { db: firebase.firestore(), storage: firebase.storage() };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    if (window.firebase.appCheck && APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith("YOUR_")) {
+      firebase.appCheck().activate(
+        new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
+        true
+      );
+    }
+  }
+  return {
+    db: firebase.firestore(),
+    storage: firebase.storage(),
+    functions: firebase.app().functions("asia-northeast1")
+  };
 }
 
 function scrollToDeliveryForm() {
@@ -5640,6 +5647,18 @@ function lockEditingAfterOrderComplete() {
 }
 
 
+function createPdfAccessToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Hex(value) {
+  const data = new TextEncoder().encode(String(value));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+}
+
 async function submitFreeDeliveryOrder() {
   const status = document.getElementById("deliveryStatus");
   const complete = document.getElementById("deliveryComplete");
@@ -5656,14 +5675,32 @@ async function submitFreeDeliveryOrder() {
 
     const receiptNo = await issueDailyReceiptNo(fb.db);
 
-    status.textContent = "新聞画像（PNG）を作成しています。少しお待ちください。";
+    status.textContent = "新聞画像（PNG）とPDFを作成しています。少しお待ちください。";
     const pngBlob = await createNewspaperPngBlob(receiptNo, form.quantity);
+    lastCompletedOrderForPdf = { receiptNo, quantity: form.quantity };
+    const pdfPackage = await buildCompletedPdfPackage();
     const paper = getPaperMeta();
 
     status.textContent = "申込データを送信しています。";
     const storagePath = `newspapers/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.png`;
     await fb.storage.ref(storagePath).put(pngBlob, { contentType: "image/png" });
     const imageUrl = await fb.storage.ref(storagePath).getDownloadURL();
+
+    // PDFは公開URLを発行せず、非公開パスだけをFirestoreへ保存する。
+    const pdfPath = `private-pdfs/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.pdf`;
+    const pdfDeleteAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await fb.storage.ref(pdfPath).put(pdfPackage.blob, {
+      contentType: "application/pdf",
+      cacheControl: "private, max-age=0, no-store",
+      customMetadata: {
+        receiptNo,
+        deleteAfter: pdfDeleteAt.toISOString()
+      }
+    });
+
+    // 受付番号だけを知る第三者がPDFを開けないよう、閲覧用秘密値はハッシュだけ保存する。
+    const pdfAccessToken = createPdfAccessToken();
+    const pdfAccessTokenHash = await sha256Hex(pdfAccessToken);
 
     const order = {
       receiptNo,
@@ -5692,6 +5729,9 @@ async function submitFreeDeliveryOrder() {
       reporter: paper.reporter,
       imageUrl,
       storagePath,
+      pdfPath,
+      pdfDeleteAt: firebase.firestore.Timestamp.fromDate(pdfDeleteAt),
+      pdfAccessTokenHash,
       labelText: "",
       status: FREE_DELIVERY_EVENT.status,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -5704,7 +5744,8 @@ async function submitFreeDeliveryOrder() {
 
     lastCompletedOrderForPdf = {
       receiptNo,
-      quantity: form.quantity
+      quantity: form.quantity,
+      pdfAccessToken
     };
 
     status.style.display = "none";
@@ -5715,7 +5756,8 @@ async function submitFreeDeliveryOrder() {
         <div class="receiptLabel">受付番号</div>
         <strong class="receiptNumber">${receiptNo}</strong>
         <p>完成した新聞は、後日お近くの中国新聞販売所からお届けします。</p>
-        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">📄 控え用PDFを保存</button>
+        <button id="pdfSaveAfterComplete" class="pdfSaveAfterComplete" type="button" onclick="saveAsPDF()">📄 PDFを見る</button>
+        <p class="pdfSaveHelp">PDFは30日間保管され、閲覧リンクは押すたびに30分間だけ有効です。</p>
       </div>
     `;
     lockEditingAfterOrderComplete();
