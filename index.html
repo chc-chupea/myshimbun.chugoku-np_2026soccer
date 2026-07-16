@@ -3521,7 +3521,6 @@ document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-check-compat.js"></script>
 <script>
 let photoData = "";
 let photoObjectUrl = "";
@@ -5395,7 +5394,6 @@ const FREE_DELIVERY_EVENT = {
   status: "WAIT"
 };
 
-const APP_CHECK_SITE_KEY = "YOUR_RECAPTCHA_ENTERPRISE_SITE_KEY";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDICGLLgoopc-Jrsud5JLTnYXrpyTm730E",
@@ -5415,12 +5413,6 @@ function ensureFirebase() {
   if (!window.firebase) throw new Error("Firebase SDKを読み込めませんでした。");
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
-    if (window.firebase.appCheck && APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith("YOUR_")) {
-      firebase.appCheck().activate(
-        new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
-        true
-      );
-    }
   }
   return {
     db: firebase.firestore(),
