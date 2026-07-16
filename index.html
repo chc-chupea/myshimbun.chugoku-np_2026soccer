@@ -3400,6 +3400,98 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   }
 }
 
+
+
+/* ===== 2026-07-16：④・⑦を横書き編集だけに統一 ===== */
+.articleHorizontalHelp {
+  margin: 8px 0 6px;
+  padding: 10px 12px;
+  background: #eef7ff;
+  border-left: 5px solid #2a8fd6;
+  border-radius: 8px;
+  color: #0f3f68;
+  font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+#step4 #articleInput.articleNativeEditor,
+#editPanel #editArticle.articleNativeEditor {
+  display: block !important;
+  position: static !important;
+  writing-mode: horizontal-tb !important;
+  -webkit-writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+
+  width: 100% !important;
+  min-height: 260px !important;
+  height: 38vh !important;
+  max-height: 520px !important;
+
+  margin: 10px 0 6px !important;
+  padding: 16px !important;
+  border: 3px solid #0f5e9c !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: #111 !important;
+
+  font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-size: 18px !important;
+  line-height: 1.9 !important;
+  letter-spacing: 0.02em !important;
+
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  resize: vertical !important;
+  white-space: pre-wrap !important;
+
+  caret-color: #0057b8 !important;
+  cursor: text !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+  touch-action: manipulation !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#editPanel #editArticle.articleNativeEditor {
+  width: calc(100% - 24px) !important;
+  margin-left: 12px !important;
+  margin-right: 12px !important;
+}
+
+#step4 #articleInput.articleNativeEditor:focus,
+#editPanel #editArticle.articleNativeEditor:focus {
+  outline: none !important;
+  border-color: #ff8a00 !important;
+  box-shadow:
+    0 0 0 4px rgba(255,138,0,0.20),
+    inset 0 0 0 1px rgba(255,138,0,0.25) !important;
+}
+
+/* 旧縦書き編集部品はPC・スマホとも完全非表示 */
+#wizardArticleLivePanel,
+#editArticleLivePanel,
+#wizardArticleLiveCanvas,
+#editArticleLiveCanvas,
+#mobileArticleEditor,
+#editMobileArticleEditor {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  #step4 #articleInput.articleNativeEditor,
+  #editPanel #editArticle.articleNativeEditor {
+    min-height: 300px !important;
+    height: 44vh !important;
+    font-size: 17px !important;
+    line-height: 1.85 !important;
+  }
+}
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -3486,13 +3578,8 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <summary><span class="sampleTitle">書き方の見本を見る</span> <span style="display:inline-block;background:#ff8a00;color:#fff;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:900;margin:0 6px;">コピペOK！</span><span style="font-size:0.9em;color:#555;">○や●だけ変えてもOK！書き足してもOK！</span></summary>
 <div class="hint">第6回中国新聞東広島芸陽会杯サッカー大会が8月23日、東広島運動公園であった。県内●市町から出場した計●チームが熱戦を展開した。<br/>厳しい暑さの中、選手は大きな声をかけ合ってボールを追ったり、試合の合間にかき氷で涼を取ったり…。仲間と夏の思い出を刻んだ。<br/>○○○（●●市）が決勝で○○○（●●市）を破り、初優勝を飾った。</div>
 </details>
-<div aria-live="polite" class="articleLivePanel" id="wizardArticleLivePanel">
-<div class="articleLiveTitle"><span></span><small>記事欄をタップして入力します</small></div>
-
-<canvas aria-label="" id="wizardArticleLiveCanvas" tabindex="0"></canvas>
-<div aria-label="" aria-multiline="true" class="mobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を書こう" id="mobileArticleEditor" role="textbox"></div><p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
-</div>
-<label class="articleInputLabel" for="articleInput">ここに記事を書こう</label>
+<label class="articleInputLabel" for="articleInput">記事を書こう</label>
+<p class="articleHorizontalHelp">横書きで入力してください。新聞には自動で縦書きに反映されます。</p>
 
 <textarea class="articleWritingArea articleNativeEditor" id="articleInput" placeholder="ここをタップして記事を書こう"></textarea>
 <button class="nextBtn" onclick="nextStep(5)">次へ</button>
@@ -3576,12 +3663,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 <button onclick="insertQuickArticle('feeling')" type="button">😊 感じたこと</button>
 </div>
 </details>
-<div aria-live="polite" class="articleLivePanel editArticleLivePanel" id="editArticleLivePanel">
-<div class="articleLiveTitle"><span></span><small>記事欄をタップして入力します</small></div>
-<canvas aria-label="" id="editArticleLiveCanvas" tabindex="0"></canvas>
-<div aria-label="" aria-multiline="true" class="mobileArticleEditor editMobileArticleEditor" contenteditable="true" data-placeholder="ここをタップして記事を直そう" id="editMobileArticleEditor" role="textbox"></div>
-<p class="articleInputNote">※ 入力中の数字や記号の見え方は、完成した新聞では読みやすく自動で整います。</p>
-</div>
+<p class="articleHorizontalHelp">横書きで修正してください。入力すると新聞の縦書き記事へすぐ反映されます。</p>
 <textarea class="articleWritingArea articleNativeEditor" id="editArticle" oninput="updatePreviewText()" placeholder="ここをタップして記事を直そう"></textarea>
 <div class="countLine" id="articleCount">目安：100〜260文字くらい。改行ごとに段落頭が一字下がります。</div>
 <div class="articleLengthNotice" id="articleLengthNotice" style="display:none;">記事の文字量に合わせて、広くなった記事欄の中で読みやすく自動調整します。</div>
