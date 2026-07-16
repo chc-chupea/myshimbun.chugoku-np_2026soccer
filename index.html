@@ -3520,7 +3520,6 @@ document.addEventListener("DOMContentLoaded", setupPhotoHoldButtons);
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
 <script>
 let photoData = "";
 let photoObjectUrl = "";
@@ -5113,6 +5112,461 @@ async function saveAsPDF() {
   }
 }
 
+function resetForm() {
+  lastCompletedOrderForPdf = null;
+  preparedPdfFile = null;
+  preparedPdfName = "";
+  preparingPdfPromise = null;
+  if (preparedPdfBlobUrl) {
+    URL.revokeObjectURL(preparedPdfBlobUrl);
+    preparedPdfBlobUrl = "";
+  }
+  const complete = document.getElementById("deliveryComplete");
+  if (complete) {
+    complete.style.display = "none";
+    complete.innerHTML = "";
+  }
+  hideWorkspace();
+  clearFocusFlash();
+  const previewNotice = document.getElementById("previewEditNotice");
+  if (previewNotice) previewNotice.style.display = "none";
+  nextStep(1);
+}
+
+applyPhotoTransform();
+</script>
+<script>
+/* ===== STEP2：見出しデザイン制御・安全版 ===== */
+window.selectedHeadlineBgColor = window.selectedHeadlineBgColor || "#0f5e9c";
+window.selectedHeadlineFontClass = window.selectedHeadlineFontClass || "fontHiraginoGothic";
+
+
+function getHeadlineLetterSpacing(fontClass) {
+  const map = {
+    fontHiraginoGothic: "0.04em",
+    fontHiraginoMincho: "0.08em",
+    fontZenMaru: "0.12em",
+    fontKaisei: "0.10em",
+    fontDot: "0.18em",
+    fontKiwi: "0.14em"
+  };
+  return map[fontClass] || "0.06em";
+}
+
+
+function applyHeadlineDesignSafe() {
+  const headline = document.getElementById("outHeadline");
+  if (!headline) return;
+
+  const color = window.selectedHeadlineBgColor || "#0f5e9c";
+  const fontClass = window.selectedHeadlineFontClass || "fontHiraginoGothic";
+
+  // CSS側の !important に負けないよう、変数とbackground-colorの両方に反映
+  document.documentElement.style.setProperty("--headline-bg-color", color);
+  headline.style.setProperty("--headline-bg-color", color);
+  headline.style.setProperty("background-color", color, "important");
+
+  headline.classList.remove("fontHiraginoGothic","fontHiraginoMincho","fontZenMaru","fontKaisei","fontDot","fontKiwi");
+  headline.classList.add(fontClass);
+
+  if (typeof getHeadlineLetterSpacing === "function") {
+    headline.style.letterSpacing = getHeadlineLetterSpacing(fontClass);
+  }
+}
+
+
+function setHeadlineBgColor(color) {
+  window.selectedHeadlineBgColor = color || "#0f5e9c";
+
+  const p1 = document.getElementById("headlineColorPicker");
+  const p2 = document.getElementById("editHeadlineColorPicker");
+
+  if (p1) p1.value = window.selectedHeadlineBgColor;
+  if (p2) p2.value = window.selectedHeadlineBgColor;
+
+  applyHeadlineDesignSafe();
+}
+
+function setHeadlineTextColor(color) {
+  window.selectedHeadlineTextColor = color || "#ffffff";
+
+  document.documentElement.style.setProperty(
+    '--headline-text-color',
+    window.selectedHeadlineTextColor
+  );
+  const headline = document.getElementById("outHeadline");
+  if (headline) {
+    headline.style.setProperty("--headline-text-color", window.selectedHeadlineTextColor);
+    headline.style.setProperty("color", window.selectedHeadlineTextColor, "important");
+  }
+
+  const p1 = document.getElementById("headlineTextColorPicker");
+  const p2 = document.getElementById("editHeadlineTextColorPicker");
+
+  if (p1) p1.value = window.selectedHeadlineTextColor;
+  if (p2) p2.value = window.selectedHeadlineTextColor;
+}
+
+/* ↓ここに追加 */
+
+function convertVerticalChars(text) {
+  return text
+    .replace(/【/g, "︻")
+    .replace(/】/g, "︼")
+    .replace(/「/g, "﹁")
+    .replace(/」/g, "﹂")
+    .replace(/（/g, "︵")
+    .replace(/）/g, "︶");
+}
+
+
+/* ↑ここまで追加 */
+
+
+function setHeadlineFontClass(fontClass) {
+  window.selectedHeadlineFontClass = fontClass || "fontHiraginoGothic";
+
+  document.querySelectorAll('input[name="headlineFontStart"]').forEach(el => {
+    el.checked = el.value === window.selectedHeadlineFontClass;
+  });
+
+  document.querySelectorAll('input[name="headlineFontEdit"]').forEach(el => {
+    el.checked = el.value === window.selectedHeadlineFontClass;
+  });
+
+  if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  if (typeof applyHeadlineDesignSafe === 'function') applyHeadlineDesignSafe();
+  setupLiveWizardPreview();
+});
+</script>
+<script>
+/* ===== STEP2-2：フォント選択肢の見た目更新 ===== */
+function refreshFontChoiceChecked() {
+  document.querySelectorAll(".fontChoice").forEach(label => {
+    const input = label.querySelector("input");
+    if (!input) return;
+    label.classList.toggle("checked", input.checked);
+  });
+}
+
+document.addEventListener("change", function(e) {
+  if (e.target && (e.target.name === "headlineFontStart" || e.target.name === "headlineFontEdit")) {
+    refreshFontChoiceChecked();
+  }
+});
+
+document.addEventListener("DOMContentLoaded", refreshFontChoiceChecked);
+
+/* ===== スマホ体験改善：拡大確認・編集復帰・記事入力補助 ===== */
+function openPreviewZoom() {
+  const modal = document.getElementById("previewZoomModal");
+  const cloneBox = document.getElementById("previewZoomClone");
+  if (!modal || !cloneBox) return;
+
+  cloneBox.innerHTML = "";
+  const clone = createStableNewspaperClone();
+  clone.style.margin = "0 auto 24px";
+  clone.style.boxShadow = "0 4px 18px rgba(0,0,0,0.35)";
+  cloneBox.appendChild(clone);
+
+  const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+  const scale = Math.max(0.55, Math.min(1.12, (viewportWidth - 28) / 595));
+  cloneBox.style.width = "595px";
+  cloneBox.style.transform = "scale(" + scale + ")";
+  cloneBox.style.transformOrigin = "top center";
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closePreviewZoom() {
+  const modal = document.getElementById("previewZoomModal");
+  const cloneBox = document.getElementById("previewZoomClone");
+  if (!modal || !cloneBox) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  cloneBox.innerHTML = "";
+  document.body.style.overflow = "";
+}
+
+function scrollToEditor() {
+  const preview = document.getElementById("previewColumn");
+  const editor = document.getElementById("editorColumn");
+  const target = window.innerWidth <= 900 ? (preview || editor) : editor;
+
+  if (target) {
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function insertQuickArticle(type) {
+  const samples = {
+    hit: "試合では、鋭いドリブルや力強いシュート、最後まであきらめずにボールを追う姿が観客を魅了しました。",
+    team: "仲間と励まし合い、パスをつないでゴールを目指す姿から、チームワークの大切さを感じました。",
+    feeling: "最後まであきらめずに挑戦する選手たちの姿を見て、私も何事にも全力で取り組みたいと思いました。"
+  };
+
+  const add = samples[type] || "";
+  if (!add) return;
+
+  const firstInput = document.getElementById("articleInput");
+  const editInput = document.getElementById("editArticle");
+  const firstEditor = document.getElementById("mobileArticleEditor");
+  const editEditor = document.getElementById("editMobileArticleEditor");
+
+  // 開いている画面の記事を基準にし、STEP4と仕上げ編集の両方へ同期する。
+  const editingMode = !!document.querySelector("#workspace[style*='display: flex'], #workspace[style*='display:flex']") ||
+    (editInput && editInput.closest("details") && editInput.closest("details").open);
+  const baseValue = editingMode && editInput ? editInput.value : (firstInput ? firstInput.value : (editInput ? editInput.value : ""));
+  const current = String(baseValue || "").trim();
+  const nextValue = current ? current + "\n" + add : add;
+
+  [firstInput, editInput].forEach(function(input) {
+    if (!input) return;
+    input.value = nextValue;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+
+  [firstEditor, editEditor].forEach(function(editor) {
+    if (!editor) return;
+    editor.textContent = nextValue;
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+
+  if (typeof window.updatePreviewText === "function") window.updatePreviewText();
+  if (typeof window.refreshLargeArticlePreview === "function") {
+    requestAnimationFrame(window.refreshLargeArticlePreview);
+  }
+
+  const visibleEditor = editingMode ? (editEditor || editInput) : (firstEditor || firstInput);
+  if (visibleEditor && typeof visibleEditor.focus === "function") {
+    visibleEditor.focus({ preventScroll: true });
+  }
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") closePreviewZoom();
+});
+
+</script>
+<div aria-hidden="true" class="previewZoomModal" id="previewZoomModal">
+<div class="previewZoomHeader">
+<div>新聞を大きく確認</div>
+<button onclick="closePreviewZoom()" type="button">閉じる</button>
+</div>
+<div class="previewZoomScroll" id="previewZoomScroll">
+<div class="previewZoomClone" id="previewZoomClone"></div>
+</div>
+</div>
+<script>
+/* ===== 無料イベント：1部無料・後日販売所お届け Firebase 接続版 ===== */
+const FREE_DELIVERY_EVENT = {
+  eventId: "higashihiroshima-geiyokai-soccer-2026",
+  eventName: "第6回中国新聞東広島芸陽会杯サッカー大会 My新聞づくり",
+  priceType: "free_first_copy",
+  deliveryMethod: "newspaper_sales_office",
+  status: "WAIT"
+};
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDICGLLgoopc-Jrsud5JLTnYXrpyTm730E",
+  authDomain: "chugoku-mynewspaper.firebaseapp.com",
+  projectId: "chugoku-mynewspaper",
+  storageBucket: "chugoku-mynewspaper.firebasestorage.app",
+  messagingSenderId: "673056332815",
+  appId: "1:673056332815:web:83ec39f8673e015d7d977a"
+};
+
+function isFirebaseConfigured() {
+  return firebaseConfig && firebaseConfig.apiKey && !String(firebaseConfig.apiKey).startsWith("YOUR_");
+}
+
+function ensureFirebase() {
+  if (!isFirebaseConfigured()) return null;
+  if (!window.firebase) throw new Error("Firebase SDKを読み込めませんでした。");
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  return {
+    db: firebase.firestore(),
+    storage: firebase.storage()
+  };
+}
+
+function scrollToDeliveryForm() {
+  const box = document.getElementById("deliveryFormBox");
+  if (box) box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function normalizePhoneForOrder(phone) {
+  return String(phone || "").replace(/[ー－−―‐\s-]/g, "");
+}
+
+function getJstDayKey() {
+  const parts = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+
+  const values = {};
+  parts.forEach(part => {
+    if (part.type !== "literal") values[part.type] = part.value;
+  });
+
+  return `${values.year}${values.month}${values.day}`;
+}
+
+async function issueDailyReceiptNo(db) {
+  const dayKey = getJstDayKey();
+  const counterId = `${FREE_DELIVERY_EVENT.eventId}_${dayKey}`;
+  const counterRef = db.collection("freeDeliveryCounters").doc(counterId);
+  let sequenceNo = 0;
+
+  await db.runTransaction(async transaction => {
+    const snapshot = await transaction.get(counterRef);
+    const currentNo = snapshot.exists
+      ? Number(snapshot.data().lastNo || 0)
+      : 0;
+
+    sequenceNo = currentNo + 1;
+
+    transaction.set(counterRef, {
+      eventId: FREE_DELIVERY_EVENT.eventId,
+      dayKey,
+      lastNo: sequenceNo,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  });
+
+  return `${dayKey}-${String(sequenceNo).padStart(4, "0")}`;
+}
+
+function getInputValue(id) {
+  const el = document.getElementById(id);
+  return el ? String(el.value || "").trim() : "";
+}
+
+function getCheckedRadioData(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return {
+    value: el ? el.value : "",
+    label: el ? (el.dataset.label || el.value) : ""
+  };
+}
+
+function getCheckedCheckboxData(name) {
+  const checked = [...document.querySelectorAll(`input[name="${name}"]:checked`)];
+  return {
+    value: checked.map(el => el.value).join(","),
+    label: checked.map(el => el.dataset.label || el.value).join("、")
+  };
+}
+
+function getDeliveryFormData() {
+  const name = getInputValue("customerName");
+  const kana = getInputValue("customerKana");
+  const phone = getInputValue("customerPhone");
+  const address = getInputValue("customerAddress");
+  const team = getInputValue("customerTeam");
+  const grade = getInputValue("customerGrade");
+  const quantity = 1;
+  const memo = getInputValue("customerMemo");
+  const subscription = getCheckedCheckboxData("subscriptionStatus");
+  const interest = getCheckedRadioData("interestStatus");
+  if (!name || !kana || !phone || !address) {
+    alert("お名前・ふりがな・電話番号・お届け先住所を入力してください。");
+    return null;
+  }
+  return {
+    name, kana, phone, normalizedPhone: normalizePhoneForOrder(phone), address, team, grade, quantity, memo,
+    subscriptionStatus: subscription.value,
+    subscriptionStatusLabel: subscription.label,
+    interestStatus: interest.value,
+    interestStatusLabel: interest.label
+  };
+}
+
+function getPaperMeta() {
+  return {
+    sublogo: getInputValue("editSublogo"),
+    headline: getInputValue("editHeadline"),
+    article: getInputValue("editArticle"),
+    date: getInputValue("editDate"),
+    reporter: getInputValue("editReporter")
+  };
+}
+
+async function createNewspaperPngBlob(receiptNo, quantity) {
+  if (typeof prepareHighResArticleForExport === "function") prepareHighResArticleForExport();
+  if (typeof fitArticleText === "function") fitArticleText();
+
+  const printCount = String(Number(quantity || 1)).padStart(2, "0");
+  const managementNo = `${receiptNo}-${printCount}`;
+
+  try {
+    const canvas = await renderStableNewspaperCanvas(3, clone => {
+      const label = document.createElement("div");
+      label.textContent = managementNo;
+      label.setAttribute("aria-hidden", "true");
+      Object.assign(label.style, {
+        position: "absolute",
+        right: "3px",
+        bottom: "3px",
+        zIndex: "9999",
+        padding: "1px 3px",
+        background: "#ffffff",
+        color: "#111111",
+        border: "0.5px solid #111111",
+        fontFamily: '"Yu Gothic", "Hiragino Sans", sans-serif',
+        fontSize: "4px",
+        fontWeight: "700",
+        lineHeight: "1.2",
+        letterSpacing: "0.03em",
+        whiteSpace: "nowrap",
+        boxShadow: "none",
+        borderRadius: "0"
+      });
+      clone.appendChild(label);
+    });
+
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error("PNG画像を作成できませんでした。")),
+        "image/png",
+        1.0
+      );
+    });
+  } finally {
+    if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
+  }
+}
+
+function buildDeliveryLabel(order) {
+  return [
+    `受付番号：${order.receiptNo}`,
+    `${order.address}`,
+    `${order.name} 様`,
+    `TEL：${order.phone}`,
+    `チーム：${order.team || "未入力"}`,
+    `学年：${order.grade || "未入力"}　希望枚数：${order.quantity || 1}`,
+    `購読状況：${order.subscriptionStatusLabel || "未回答"}`,
+    `興味：${order.interestStatusLabel || "未回答"}`,
+    `連絡メモ：${order.memo || "なし"}`,
+    `ステータス：${order.status}`
+  ].join("\n");
+}
+
+
 function lockEditingAfterOrderComplete() {
   document.body.classList.add("orderCompleted");
 
@@ -5187,13 +5641,12 @@ async function submitFreeDeliveryOrder() {
     const pdfPackage = await buildCompletedPdfPackage();
     const paper = getPaperMeta();
 
-    status.textContent = "申込データを送信しています。";
+    status.textContent = "PNGとPDFをFirebaseへ保存しています。";
     const storagePath = `newspapers/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.png`;
     await fb.storage.ref(storagePath).put(pngBlob, { contentType: "image/png" });
     const imageUrl = await fb.storage.ref(storagePath).getDownloadURL();
 
-    // PDFは通常URL方式で保存。URL文字列は利用者画面へ表示せず、ボタンから開く。
-    // 管理画面で削除するまで保存する。
+    // 通常URL方式：管理画面で削除するまでPDFを保存する。
     const pdfPath = `pdfs/${FREE_DELIVERY_EVENT.eventId}/${receiptNo}.pdf`;
     await fb.storage.ref(pdfPath).put(pdfPackage.blob, {
       contentType: "application/pdf",
@@ -5264,7 +5717,7 @@ async function submitFreeDeliveryOrder() {
     if (typeof showGuide === "function") showGuide();
     if (typeof restorePreviewArticleResolution === "function") restorePreviewArticleResolution();
     status.style.display = "block";
-    status.textContent = "送信に失敗しました。Firebase設定・通信状況・セキュリティルールを確認して、もう一度お試しください。";
+    status.textContent = "送信に失敗しました。Firebase設定・通信状況・Storage Rulesを確認して、もう一度お試しください。";
     console.error(err);
   }
 }
