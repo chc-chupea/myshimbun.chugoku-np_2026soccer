@@ -4578,7 +4578,149 @@ function drawArticleCanvas() {
 
   // 句読点は1マス内の右上へ配置する。
   const isPunctuation = ch =>
-    /[。、．，,.！？]/.test(ch || "");
+    /[。、．，,.]/.test(ch || "");
+
+  /*
+    日本語読点「、」専用ベクター
+    --------------------------------------------------
+    ASCIIカンマの輪郭ではなく、
+    小さな丸い起点＋左下へ払う短い斜線で「、」を明確に表現する。
+    フォント字形を使わないため、PC・スマホ・フォント差を受けにくい。
+  */
+  function drawJapaneseToten(ctx, x, y, fontSize) {
+    const dotRadius = Math.max(1.15, fontSize * 0.055);
+    const tailLength = Math.max(3.2, fontSize * 0.18);
+    const tailWidth = Math.max(1.0, fontSize * 0.042);
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    /*
+      これまでの「小さな丸い起点＋左下へ払う短い斜線」を
+      描画中心のまわりで右へ90度回転する。
+    */
+    ctx.rotate(Math.PI / 2);
+
+    ctx.fillStyle = "#111";
+    ctx.strokeStyle = "#111";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // 読点の丸い起点
+    ctx.beginPath();
+    ctx.arc(0, 0, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 元の左下払いを右へ90度回転した形
+    ctx.lineWidth = tailWidth;
+    ctx.beginPath();
+    ctx.moveTo(
+      -dotRadius * 0.15,
+      dotRadius * 0.60
+    );
+    ctx.quadraticCurveTo(
+      -tailLength * 0.30,
+      tailLength * 0.48,
+      -tailLength * 0.72,
+      tailLength
+    );
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  /*
+    通常の句読点
+    --------------------------------------------------
+    1マスを4等分した右上部分を、さらに4等分した右上エリアへ配置。
+    フォント字形を使わずCanvas線画で描くため、端末差と黒つぶれを抑える。
+  */
+  function drawNormalVerticalPunctuation(ctx, ch, cellX, cellY, fontSize) {
+    // セル右上1/4の、さらに右上1/4付近
+    const x = cellX + fontSize * 0.39;
+    const y = cellY + fontSize * 0.10;
+
+    ctx.save();
+    ctx.strokeStyle = "#111";
+    ctx.fillStyle = "#111";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (ch === "。" || ch === "．" || ch === ".") {
+      const radius = Math.max(1.35, fontSize * 0.072);
+      ctx.lineWidth = Math.max(0.9, fontSize * 0.038);
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (ch === "、") {
+      drawJapaneseToten(ctx, x, y, fontSize);
+    } else {
+      // 全角・半角カンマは日本語読点とは分けて描画
+      ctx.lineWidth = Math.max(1.0, fontSize * 0.045);
+      ctx.beginPath();
+      ctx.moveTo(x - fontSize * 0.025, y - fontSize * 0.035);
+      ctx.quadraticCurveTo(
+        x + fontSize * 0.040,
+        y + fontSize * 0.010,
+        x - fontSize * 0.010,
+        y + fontSize * 0.090
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  /*
+    行頭禁則時の句読点ぶら下げ
+    --------------------------------------------------
+    句読点だけが次列の先頭へ来る場合に限り、
+    直前文字と同じマスの右下へ配置する。
+  */
+  function drawHangingVerticalPunctuation(ctx, ch, previousX, previousY, fontSize) {
+    /*
+      行頭禁則時だけ、句読点を直前文字と同じマスの右下隅へ置く。
+      90度回転した読点の払いが左上方向へ伸びるため、
+      描画基準点をマスの右下寄りへ移し、直前文字との重なりを防ぐ。
+    */
+    /*
+      CanvasではY座標が大きいほど下へ移動する。
+      前回は 0.78 → 0.45 にしたため、逆に上へ移動していた。
+      今回は直前文字と同じマスの右下へ確実に置く。
+    */
+    const x = previousX + fontSize * 0.44;
+    const y = previousY + fontSize * 1.00;
+
+    ctx.save();
+    ctx.strokeStyle = "#111";
+    ctx.fillStyle = "#111";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (ch === "。" || ch === "．" || ch === ".") {
+      const radius = Math.max(1.45, fontSize * 0.078);
+      ctx.lineWidth = Math.max(0.95, fontSize * 0.040);
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (ch === "、") {
+      drawJapaneseToten(ctx, x, y, fontSize);
+    } else {
+      // 全角・半角カンマは日本語読点とは分けて描画
+      ctx.lineWidth = Math.max(1.05, fontSize * 0.048);
+      ctx.beginPath();
+      ctx.moveTo(x - fontSize * 0.025, y - fontSize * 0.040);
+      ctx.quadraticCurveTo(
+        x + fontSize * 0.045,
+        y + fontSize * 0.005,
+        x - fontSize * 0.010,
+        y + fontSize * 0.095
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
 
   /*
     閉じ括弧専用描画
@@ -4791,17 +4933,8 @@ function drawArticleCanvas() {
     if (x < padX) return false;
 
     if (isPunctuation(ch)) {
-      // 句読点はマスの右上へ小さく配置。
-      ctx.save();
-      ctx.font = "700 " + Math.round(fontSize * 0.68) + 'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(
-        ch,
-        x + fontSize * 0.34,
-        y + fontSize * 0.22
-      );
-      ctx.restore();
+      // 通常の句読点は、マス右上のさらに右上へ配置。
+      drawNormalVerticalPunctuation(ctx, ch, x, y, fontSize);
     } else if (isRotatedVerticalSymbol(ch)) {
       // 縦組み用の括弧類。互換字形へ置換せず、元の字形をセル中央で90度回転。
       ctx.save();
@@ -4906,17 +5039,17 @@ function drawArticleCanvas() {
         // 閉じ括弧だけを本文とは完全に分離して描画する。
         drawHangingClosingMark(ctx, ch, previousX, previousY, fontSize);
       } else {
-        // 句読点・感嘆符・疑問符は前の文字の右下へ小さく添える。
-        ctx.save();
-        const punctuationX = previousX + fontSize * 0.26;
-        const punctuationY = previousY + fontSize * 0.82;
-
-        ctx.font = "700 " + Math.round(fontSize * 0.56) +
-          'px "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif';
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(ch, punctuationX, punctuationY);
-        ctx.restore();
+        /*
+          句読点だけが列の先頭へ来る場合に限り、
+          前の文字と同じマスの右下へぶら下げる。
+        */
+        drawHangingVerticalPunctuation(
+          ctx,
+          ch,
+          previousX,
+          previousY,
+          fontSize
+        );
       }
 
       continue;
