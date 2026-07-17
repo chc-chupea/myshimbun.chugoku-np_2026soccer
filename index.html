@@ -3516,9 +3516,9 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   Kaisei Tokuminは字面が上寄りに見えやすいため、少し下へ補正。
 */
 .headline.fontHiraginoGothic .headlineText { transform: translateY(0); }
-.headline.fontHiraginoMincho .headlineText { transform: translateY(1px); }
+.headline.fontHiraginoMincho .headlineText { transform: translateY(2px); }
 .headline.fontZenMaru .headlineText { transform: translateY(1px); }
-.headline.fontKaisei .headlineText { transform: translateY(3px); }
+.headline.fontKaisei .headlineText { transform: translateY(4px); }
 .headline.fontDot .headlineText { transform: translateY(1px); }
 .headline.fontKiwi .headlineText { transform: translateY(2px); }
 
@@ -4564,7 +4564,7 @@ function drawArticleCanvas() {
   const rawArticleText = articleEl.dataset.rawText || "";
   const showArticlePlaceholder = !String(rawArticleText).trim() && !window.hideArticlePlaceholder;
   let text = showArticlePlaceholder
-    ? "ここに記事を書いてみよう！\n・楽しかったこと\n・がんばったこと\n・思い出に残ったこと\n自由に書いてみよう♪"
+    ? "ここに記事を書いてみよう！\n楽しかったこと・がんばったこと・思い出に残ったこと\n自由に書いてみよう♪"
     : rawArticleText;
   text = text.replace(/…/g, "︙");
 
