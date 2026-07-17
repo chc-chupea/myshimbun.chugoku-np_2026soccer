@@ -3492,6 +3492,36 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
   }
 }
 
+
+/* ===== 大見出し：フォント差による上下ずれを視覚補正 ===== */
+.headline {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 60px;
+  line-height: 1 !important;
+}
+
+.headlineText {
+  display: block;
+  width: 100%;
+  line-height: 1.05;
+  text-align: center;
+  transform: translateY(0);
+  transform-origin: center center;
+}
+
+/*
+  フォントごとの字面中心を帯の中心へ合わせる。
+  Kaisei Tokuminは字面が上寄りに見えやすいため、少し下へ補正。
+*/
+.headline.fontHiraginoGothic .headlineText { transform: translateY(0); }
+.headline.fontHiraginoMincho .headlineText { transform: translateY(1px); }
+.headline.fontZenMaru .headlineText { transform: translateY(1px); }
+.headline.fontKaisei .headlineText { transform: translateY(3px); }
+.headline.fontDot .headlineText { transform: translateY(1px); }
+.headline.fontKiwi .headlineText { transform: translateY(2px); }
+
 </style>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -3753,7 +3783,7 @@ body.directArticleMode #outArticle { touch-action: manipulation; }
 </div>
 <div class="paper-grid">
 <main class="main">
-<div class="headline" id="outHeadline">仲間と掴んだ 夏の一勝</div>
+<div class="headline" id="outHeadline"><span class="headlineText">仲間と掴んだ 夏の一勝</span></div>
 <div aria-label="写真配置エリア" class="photoFrame" id="photoFrame" tabindex="0">
 <img alt="記念写真" id="previewPhoto"/>
 <div class="photoGuide" id="photoGuide">PC：マウスで写真を動かせます／スマホ：1本指で移動、2本指で拡大・縮小・回転ができます</div>
@@ -3971,7 +4001,12 @@ function syncStartFieldsToEditor(redrawArticle = true) {
     updatePreviewText();
   } else {
     setSublogoText(sublogo);
-    document.getElementById("outHeadline").innerText = headline;
+    {
+      const headlineEl = document.getElementById("outHeadline");
+      const headlineTextEl = headlineEl ? headlineEl.querySelector(".headlineText") : null;
+      if (headlineTextEl) headlineTextEl.textContent = headline;
+      else if (headlineEl) headlineEl.textContent = headline;
+    }
     document.getElementById("outDate").innerText = formatSideDate(dateRaw);
     document.getElementById("topDate").innerText = formatTopDate(dateRaw) + "　";
     document.getElementById("outReporter").innerText = reporter;
@@ -4359,7 +4394,12 @@ function updatePreviewText() {
   const reporter = document.getElementById("editReporter").value.trim() || "記者 （氏名）";
 
   setSublogoText(sublogo);
-  document.getElementById("outHeadline").innerText = headline;
+  {
+      const headlineEl = document.getElementById("outHeadline");
+      const headlineTextEl = headlineEl ? headlineEl.querySelector(".headlineText") : null;
+      if (headlineTextEl) headlineTextEl.textContent = headline;
+      else if (headlineEl) headlineEl.textContent = headline;
+    }
   renderArticleText(article);
   updateArticleLengthNotice(article);
   document.getElementById("outDate").innerText = sideDate;
